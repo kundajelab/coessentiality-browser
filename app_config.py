@@ -3,7 +3,7 @@ import numpy as np, pandas as pd
 
 params = {}
 
-params['title'] = "Gene essentiality browser"
+params['title'] = "Gene browser"
 params['bg_color'] = '#000000'
 params['hm_colorvar_name'] = 'Ess.'
 params['hm_diverging'] = True
