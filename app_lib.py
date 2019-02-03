@@ -364,7 +364,7 @@ def display_heatmap_cb(
     }
 
 
-from gprofiler import GProfiler
+from gprofiler import gprofiler
 """
 Update GO enrichment panel.
 
