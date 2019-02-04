@@ -20,7 +20,7 @@ For more on jobs that take a while: set up workers https://github.com/WileyIntel
 # ================== Initialize Dash app ==================
 # =========================================================
 
-data_pfx = '/var/www/hodos/coessentiality/'
+data_pfx = '/var/www/coessentiality-browser/'
 
 # Load gene embedded coordinates.
 plot_data_df = pd.read_csv(data_pfx + app_config.params['plot_data_df_path'], sep="\t", index_col=False)
