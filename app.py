@@ -175,10 +175,10 @@ def run_update_landscape(
     if raw_data_to_use is None:
         raw_data_to_use = raw_data
     pointIDs_to_select = list(subset_store['_current_selected_data'].keys())
-    if 'highlight' in highlight_selected_points:
-        annotated_points = pointIDs_to_select
-    elif annotated_points is None:
+    if annotated_points is None:
         annotated_points = []
+    if (len(annotated_points) == 0) and 'highlight' in highlight_selected_points:
+        annotated_points = pointIDs_to_select
     absc_arr = plot_data_df[app_config.params['display_coordinates']['x']]
     ordi_arr = plot_data_df[app_config.params['display_coordinates']['y']]
     

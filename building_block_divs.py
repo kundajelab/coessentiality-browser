@@ -25,14 +25,15 @@ colorbar_font_macro = {
 
 style_unselected = {
     'marker': {
+        'size': 2.5, 
         'opacity': 1.0
     }
 }
 
 style_selected = {
     'marker': {
-        'size': 5.0, 
-        'opacity': 122.2
+        'size': 6.0, 
+        'opacity': 1.0
     }
 }
 
@@ -270,10 +271,10 @@ div_hm_ctrl = html.Div(
                 dcc.Checklist(
                     id='toggle-heatmap-selection', 
                     options=[
-                        {'label': 'Highlight upon selection', 'value': 'hm_override'}, 
+                        {'label': 'Highlight subselection', 'value': 'hm_override'}, 
                         {'label': 'Point to selected', 'value': 'highlight'}
                     ],
-                    values=['highlight'], 
+                    values=[], 
                     style={
                         'textAlign': 'left', 
                         'width': '80%', 

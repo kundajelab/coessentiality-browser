@@ -63,10 +63,10 @@ params['edge_width'] = 1
 params['incl_edges'] = False
 params['three_dims'] = False
 
-params['bg_marker_size'] = 2.4
-params['marker_size'] = 4.0
-params['bg_marker_opacity'] = 0.5
-params['marker_opacity'] = 1.0
+params['bg_marker_size_factor'] = 1.2
+params['marker_size_factor'] = 4.0
+params['bg_marker_opacity_factor'] = 0.5
+params['marker_opacity_factor'] = 1.0
 params['font_color'] = 'white'
 
 params['legend_bgcolor'] = '#000000'

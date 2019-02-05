@@ -149,8 +149,8 @@ def traces_scatter(
             'text': point_names, 
             'mode': 'markers', 
             'marker': {
-                'size': app_config.params['marker_size'], 
-                'opacity': app_config.params['marker_opacity'], 
+                'size': app_config.params['bg_marker_size_factor'], 
+                'opacity': app_config.params['bg_marker_opacity_factor'], 
                 'symbol': 'circle', 
                 'showscale': True, 
                 'colorbar': {
@@ -171,7 +171,7 @@ def traces_scatter(
                 'color': continuous_color_var, 
                 'colorscale': colorscale
             }, 
-            'unselected': building_block_divs.style_unselected, 
+            # 'unselected': building_block_divs.style_unselected, 
             'selected': building_block_divs.style_selected, 
             'type': 'scattergl'
         })
@@ -197,12 +197,12 @@ def traces_scatter(
                 'mode': 'markers', 
                 'opacity': trace_opacity, 
                 'marker': {
-                    'size': app_config.params['marker_size'] if str(idx) != 'Other' else app_config.params['bg_marker_size'], 
-                    'opacity': app_config.params['marker_opacity'] if str(idx) != 'Other' else app_config.params['bg_marker_opacity'], 
+                    'size': app_config.params['marker_size_factor'] if str(idx) != 'Unknown' else app_config.params['bg_marker_size_factor'], 
+                    'opacity': app_config.params['marker_opacity_factor'] if str(idx) != 'Unknown' else app_config.params['bg_marker_opacity_factor'], 
                     'symbol': 'circle', 
                     'color': trace_color
                 }, 
-                'unselected': building_block_divs.style_unselected, 
+                # 'unselected': building_block_divs.style_unselected, 
                 'selected': building_block_divs.style_selected
             }
             if not app_config.params['three_dims']:
@@ -286,7 +286,7 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
                 'text': hm_point_names_this_trace, 
                 'mode': 'markers', 
                 'marker': trace_markers, 
-                'unselected': building_block_divs.style_unselected, 
+                # 'unselected': building_block_divs.style_unselected, 
                 'selected': building_block_divs.style_selected, 
                 'type': 'scatter'
             }
@@ -296,6 +296,15 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
             fit_data = np.array([]) if len(hm_row_ndces) == 0 else fit_data[np.array(hm_row_ndces), :]
     return row_scat_traces, fit_data, all_hm_point_names
 
+
+def hm_hovertext(data, rownames, colnames):
+    pt_text = []
+    # First the rows, then the cols
+    for r in range(data.shape[0]):
+        pt_text.append(["Gene: {}".format(str(rownames[r])) for k in data[r, :]])
+        for c in range(data.shape[1]):
+            pt_text[r][c] += "<br>Cell line: {}<br>Essentiality score: {}".format(str(colnames[c]), str(data[r][c]))
+    return pt_text
 
 
 def display_heatmap_cb(
@@ -332,21 +341,20 @@ def display_heatmap_cb(
     
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
     row_scat_traces, fit_data, hm_point_names = hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster)
-    pt_text = np.zeros_like(fit_data).astype(str)
-    # pt_text = [ "Cell line: {}".format(x) for x in zip(pt_strings) ]
+    pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
         'z': fit_data, 
         'x': absc_labels, 
-        'hoverinfo': 'text+z',
-        'hovertext': pt_text, 
-        'colorscale': app_config.params['hm_colorscale'], 
+        'hoverinfo': 'text',
+        'text': pt_text, 
+        'colorscale': app_config.params['hm_colorscale'],
         'zmin': 0, 
         'colorbar': {
             'len': 0.3, 
             'thickness': 20, 
             'xanchor': 'left', 
             'yanchor': 'top', 
-            'title': 'Ess.',
+            'title': 'Ess. score',
             'titleside': 'top',
             'ticks': 'outside', 
             'titlefont': building_block_divs.colorbar_font_macro, 
