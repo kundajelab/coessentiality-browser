@@ -454,14 +454,19 @@ def display_goenrich_panel_func(selected_genes, topk=20):
             'x': top_go_logpvals[trace_locs],
             'y': ordi[trace_locs], 
             # 'y': top_go_termIDs[trace_locs],
-            'hovertext': top_go_termIDs[trace_locs], 
+            'hovertext': [
+                "-log(p): {}<br>{}<br>{}".format(
+                    str(top_go_logpvals[t]), 
+                    top_go_termnames[t], 
+                    top_go_termIDs[t]
+                ) for t in trace_locs], 
             'text': top_go_termnames[trace_locs], 
+            'hoverinfo': 'text', 
             'insidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
             'outsidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
             'marker': { 'color': c },      
             'textposition': 'auto', 
             'orientation': 'h', 
-            'hoverinfo': 'x+text', 
             'type': 'bar'
         })
     return {'data': panel_data, 'layout': panel_layout }
