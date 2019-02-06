@@ -36,6 +36,8 @@ additional_colorvars = []#app_config.params['additional_colorvars']
 raw_data = data_ess.values
 
 app = dash.Dash(__name__)    #, external_stylesheets=external_stylesheets)
+app.config.update({'routes_pathname_prefix':'/coessentiality/',
+                   'requests_pathname_prefix':'/coessentiality/'})
 server=app.server
 app.layout = building_block_divs.create_div_mainapp(
     point_names, 
