@@ -1,7 +1,7 @@
 certifi==2018.10.15
 chardet==3.0.4
 Click==7.0
-dash==0.31.1
+dash==0.35.3
 dash-core-components==0.39.0
 dash-html-components==0.13.2
 dash-renderer==0.15.1
