@@ -14,13 +14,17 @@ import app_config, app_lib, building_block_divs
 For more on jobs that take a while: set up workers https://github.com/WileyIntelligentSolutions/wiley-boilerplate-dash-app
 """
 
-
+_DEPLOY_LOCALLY = True
 
 # =========================================================
 # ================== Initialize Dash app ==================
 # =========================================================
 
-data_pfx = '/var/www/coessentiality-browser/'
+if not _DEPLOY_LOCALLY:
+    data_pfx = '/var/www/coessentiality-browser/'
+else:
+    data_pfx = '/Users/akshay/github/coessentiality-browser/'
+
 
 # Load gene embedded coordinates.
 plot_data_df = pd.read_csv(data_pfx + app_config.params['plot_data_df_path'], sep="\t", index_col=False)
@@ -36,8 +40,9 @@ additional_colorvars = []#app_config.params['additional_colorvars']
 raw_data = data_ess.values
 
 app = dash.Dash(__name__)    #, external_stylesheets=external_stylesheets)
-app.config.update({'routes_pathname_prefix':'/coessentiality/',
-                   'requests_pathname_prefix':'/coessentiality/'})
+if not _DEPLOY_LOCALLY:
+    app.config.update({'routes_pathname_prefix':'/coessentiality/', 'requests_pathname_prefix':'/coessentiality/'})
+
 server=app.server
 app.layout = building_block_divs.create_div_mainapp(
     point_names, 
@@ -218,6 +223,16 @@ def run_update_landscape(
             ordi_arr=ordi_arr
         )
 
+    
+def parse_upload_contents(contents, filename):
+    content_type, content_string = contents.split(',')
+    decoded = base64.b64decode(content_string)
+    return json.loads(decoded)
+    if 'csv' in filename:
+        df = pd.read_csv(io.StringIO(decoded.decode('utf-8')))
+    elif 'xls' in filename:
+        df = pd.read_excel(io.BytesIO(decoded))
+
 
 
 # ==============================================================================
@@ -263,6 +278,16 @@ def display_goenrich_panel(subset_store, dummy1, dummy2, topk):
     return app_lib.display_goenrich_panel_func(selected_genes, topk=int(topk))
 
 
+# https://community.plot.ly/t/download-raw-data/4700/7
+@app.callback(
+    Output('download-set-link', 'href'),
+    [Input('stored-pointsets', 'data')]
+)
+def save_selection(subset_store):
+    save_contents = json.dumps(subset_store['_current_selected_data'], indent=4)
+    return "data:text/json;charset=utf-8," + save_contents
+
+
 # Render selectable point subsets.
 @app.callback(
     Output('list-pointsets', 'options'), 
@@ -293,8 +318,10 @@ Contains control logic for subset selection and storage.
     Output('stored-pointsets', 'data'), 
     [Input('store-button', 'n_clicks'), 
      Input('list-pointsets', 'value'), 
-     Input('landscape-plot', 'selectedData')], 
-    [State('load-status', 'values'), 
+     Input('landscape-plot', 'selectedData'), 
+     Input('upload-pointsets', 'contents')],
+    [State('upload-pointsets', 'filename'), 
+     State('load-status', 'values'), 
      State('pointset-name', 'value'), 
      State('stored-pointsets', 'data')]
 )
@@ -302,6 +329,8 @@ def update_subset_storage(
     store_status, 
     selected_subsetIDs, 
     selected_landscape_points, 
+    file_contents, 
+    file_paths, 
     load_status, 
     newset_name, 
     subset_store
@@ -317,6 +346,11 @@ def update_subset_storage(
         (newset_name not in new_sets_dict) and 
         (newset_name != '')):
         new_sets_dict[newset_name] = new_sets_dict['_current_selected_data']
+    # Load a bunch of cell sets with names equal to their filenames.
+    if file_contents is not None and len(file_contents) > 0:
+        for contents, fname in zip(file_contents, file_paths):   # fname here is a relative (NOT an absolute) file path
+            fname_root = fname.split('/')[-1].split('.')[0]
+            new_sets_dict[fname_root] = parse_upload_contents(contents, fname)
     return new_sets_dict
 
 
@@ -331,26 +365,6 @@ def update_landscape_seldata(hm_selected, hm_override_status, old_ls_data):
         return hm_selected
     else:
         return old_ls_data
-
-
-"""
-@app.callback(
-    Output('landscape-plot', 'selectedData'), 
-    [Input('plot-selection-button', 'n_clicks')], 
-    [State('stored-pointsets', 'data')]
-)
-def update_landscape_seldata(nclick_sync, subset_store):
-    toret_list = []
-    for point_ID in subset_store['_current_selected_data']:
-        new_point_info = subset_store['_current_selected_data'][point_ID]
-        toret_list.append({
-            'text': point_ID, 
-            'pointIndex': new_point_info['pointIndex'], 
-            'pointNumber': new_point_info['pointIndex'], 
-            'curveNumber': new_point_info['curveNumber']
-        })
-    return { 'points': toret_list, 'range': None }
-"""
 
 
 """

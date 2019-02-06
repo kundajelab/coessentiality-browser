@@ -460,22 +460,27 @@ div_serialization = html.Div(
     className='row', 
     children=[
         html.Div(
-            className='six columns', 
+            className='four columns', 
             children=[
-                dcc.Input(
-                    id='save-pointset-filename', 
-                    type='text', 
-                    placeholder='Save gene set to file...', 
-                    value='', 
-                    style={'textAlign': 'center', 'width': '100%'}
+                html.A(
+                    'Download gene set selection',
+                    id='download-set-link',
+                    download="selected_set.json", 
+                    href="",
+                    target="_blank", 
+                    style={
+                        'textAlign': 'center', 
+                        'width': '100%', 
+                        #'padding-top': '0px', 
+                        'color': app_config.params['font_color']
+                    }
                 )], 
-            style={'padding-top': '0px'}
         ), 
         html.Div(
-            className='six columns', 
+            className='eight columns', 
             children=[
                 dcc.Upload(
-                    id='upload-data',
+                    id='upload-pointsets',
                     children=html.Div([
                         'Load gene set from file...'
                     ]),
