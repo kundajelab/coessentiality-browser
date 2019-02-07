@@ -252,11 +252,23 @@ def create_div_select_dataset(dataset_options):
     return html.Div(
         className='row', 
         children=[
-            dcc.Dropdown(
-                id='sourcedata-select', 
-                options = [ {'value': dn, 'label': dn} for dn in dataset_options ], # style={'height': '30px'}, 
-                placeholder="Load dataset...", 
-                value=dataset_options[0]
+            html.Div(
+                className='four columns', 
+                children=[
+                    html.P(
+                        "Browse dataset: ", 
+                        style=style_text_box
+                    )], 
+                style={'padding-top': '10px'}
+            ), 
+            html.Div(
+                className='eight columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='sourcedata-select', 
+                        options = [ {'value': dn, 'label': dn} for dn in dataset_options ], # style={'height': '30px'}, 
+                        value=dataset_options[0]
+                    )]
             )], 
         style=style_outer_dialog_box
     )
@@ -328,6 +340,7 @@ def create_div_go_ctrl(point_names):
                     dcc.Dropdown(
                         id='geneset-select', 
                         options = [ {'value': gn, 'label': gn} for gn in point_names ], # style={'height': '30px'}, 
+                        value = [], 
                         placeholder="Gene set for enrichment", multi=True
                     )], 
                 style={'padding-top': '0px'}
@@ -338,7 +351,8 @@ def create_div_go_ctrl(point_names):
                     html.P(
                         "# terms to display: ",
                         style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
-                    )]
+                    )], 
+                style={'padding-top': '7px'}
             ),
             html.Div(
                 className='three columns', 
@@ -448,7 +462,7 @@ div_serialization = html.Div(
             className='four columns', 
             children=[
                 html.A(
-                    'Download gene set selection',
+                    'Save gene set selection',
                     id='download-set-link',
                     download="selected_set.json", 
                     href="",

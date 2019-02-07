@@ -137,7 +137,7 @@ def run_update_main_heatmap(
     landscape_scatter_fig, 
     point_names_to_use, 
     raw_data_to_use, 
-    num_points_to_sample=10000, 
+    num_points_to_sample=10000
 ):
     # Start by taking the currently selected points, and add points explicitly selected in landscape.
     pointIDs_to_display = list(subset_store['_current_selected_data'].keys())
@@ -262,24 +262,19 @@ def display_test(
 """
 
 
+# Link currently selected data to output of gene set selector, so it can be picked too.
 @app.callback(
     Output('goenrich-panel', 'figure'),
     [Input('geneset-select', 'value'), 
      Input('select-topk-goterms', 'n_submit'),
-     Input('select-topk-goterms', 'n_blur')],
+     Input('select-topk-goterms', 'n_blur'), 
+     Input('stored-pointsets', 'data')],
     [State('select-topk-goterms', 'value')]
 )
-def display_goenrich_panel(selected_genes, dummy1, dummy2, topk):
+def display_goenrich_panel(selected_genes, dummy1, dummy2, subset_store, topk):
+    if len(selected_genes) == 0:
+        selected_genes = list(subset_store['_current_selected_data'].keys())
     return app_lib.display_goenrich_panel_func(selected_genes, topk=int(topk))
-
-
-# # Link currently selected data to output of gene set selector, so it can be picked too.
-# @app.callback(
-#     Output('geneset-select', 'value'), 
-#     [Input('stored-pointsets', 'data')]
-# )
-# def update_geneset(subset_store):
-#     return list(subset_store['_current_selected_data'].keys())
 
 
 # https://community.plot.ly/t/download-raw-data/4700/7
@@ -418,9 +413,9 @@ def update_landscape(
     dataset_names = [x.split('/')[-1].split('.')[0] for x in app_config.params['plot_data_df_path']]
     if sourcedata_select in dataset_names:
         ndx_selected = dataset_names.index(sourcedata_select)
-        data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
     else:
-        data_df = None
+        ndx_selected = 0
+    data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
     return run_update_landscape(
         color_scheme, annotated_points, subset_store, highlight_selected_points, data_df, point_names, raw_data
     )
