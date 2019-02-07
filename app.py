@@ -14,22 +14,18 @@ import app_config, app_lib, building_block_divs
 For more on jobs that take a while: set up workers https://github.com/WileyIntelligentSolutions/wiley-boilerplate-dash-app
 """
 
-_DEPLOY_LOCALLY = True
+
+    
 
 # =========================================================
 # ================== Initialize Dash app ==================
 # =========================================================
 
-if not _DEPLOY_LOCALLY:
-    data_pfx = '/var/www/coessentiality-browser/'
-else:
-    data_pfx = '/Users/akshay/github/coessentiality-browser/'
-
 
 # Load gene embedded coordinates.
-plot_data_df = pd.read_csv(data_pfx + app_config.params['plot_data_df_path'], sep="\t", index_col=False)
+plot_data_df = pd.read_csv(app_config.params['plot_data_df_path'][0], sep="\t", index_col=False)
 # graph_adj = sp.sparse.load_npz(app_config.params['adj_mat_path'])
-data_ess = pd.read_csv(data_pfx + 'data/essentiality.tsv.gz', index_col=0, header=0, sep='\t')
+data_ess = pd.read_csv(app_config.params['raw_ess_data_path'], index_col=0, header=0, sep='\t')
 data_ess = data_ess[data_ess.columns[:-4]]   # Only first 481 cols put through GLS, so isolate these
 
 point_names = np.array(plot_data_df['gene_names'])
@@ -40,7 +36,7 @@ additional_colorvars = []#app_config.params['additional_colorvars']
 raw_data = data_ess.values
 
 app = dash.Dash(__name__)    #, external_stylesheets=external_stylesheets)
-if not _DEPLOY_LOCALLY:
+if not app_config._DEPLOY_LOCALLY:
     app.config.update({'routes_pathname_prefix':'/coessentiality/', 'requests_pathname_prefix':'/coessentiality/'})
 
 server=app.server
@@ -95,16 +91,15 @@ Update the main graph panel with selected points annotated, using the given data
 """
 def highlight_landscape_func(
     annotated_points, 
+    data_df, 
+    point_names_to_use, 
     color_var=app_config.params['default_color_var'], # Could be an array of continuous colors!
     continuous_color=app_config.params['continuous_color'], 
     colorscale=app_config.params['colorscale'], 
-    point_names_to_use=None, 
     selectedpoint_ids=[], 
     absc_arr=None, 
     ordi_arr=None
 ):
-    if point_names_to_use is None:
-        point_names_to_use = point_names
     annots = []
     looked_up_ndces = np.where(np.in1d(point_names_to_use, annotated_points))[0]
     for point_ndx in looked_up_ndces:
@@ -127,7 +122,7 @@ def highlight_landscape_func(
             'ay': -50 
         })
     toret = app_lib.build_main_scatter(
-        plot_data_df, 
+        data_df, 
         color_var, 
         colorscale, 
         annots=annots, 
@@ -140,13 +135,10 @@ def run_update_main_heatmap(
     view_option, 
     subset_store, 
     landscape_scatter_fig, 
+    point_names_to_use, 
+    raw_data_to_use, 
     num_points_to_sample=10000, 
-    point_names_to_use=None, raw_data_to_use=None     # These two should match if either is provided
 ):
-    if point_names_to_use is None:
-        point_names_to_use = point_names
-    if raw_data_to_use is None:
-        raw_data_to_use = raw_data
     # Start by taking the currently selected points, and add points explicitly selected in landscape.
     pointIDs_to_display = list(subset_store['_current_selected_data'].keys())
 #     if landscape_selected_data is not None:
@@ -177,17 +169,17 @@ def run_update_landscape(
     annotated_points,      # Selected points annotated
     subset_store,       # Store of selected point subsets.
     highlight_selected_points, 
-    raw_data_to_use=None
+    data_df, 
+    point_names, 
+    raw_data_to_use
 ):
-    if raw_data_to_use is None:
-        raw_data_to_use = raw_data
     pointIDs_to_select = list(subset_store['_current_selected_data'].keys())
     if annotated_points is None:
         annotated_points = []
     if (len(annotated_points) == 0) and 'highlight' in highlight_selected_points:
         annotated_points = pointIDs_to_select
-    absc_arr = plot_data_df[app_config.params['display_coordinates']['x']]
-    ordi_arr = plot_data_df[app_config.params['display_coordinates']['y']]
+    absc_arr = data_df[app_config.params['display_coordinates']['x']]
+    ordi_arr = data_df[app_config.params['display_coordinates']['y']]
     
     # Check if a continuous feature is chosen to be plotted.
     if ((color_scheme != app_config.params['default_color_var']) and 
@@ -204,6 +196,8 @@ def run_update_landscape(
             new_colors = np.mean(raw_data_to_use[:, feat_ndces], axis=1)
         return highlight_landscape_func(
             annotated_points, 
+            data_df, 
+            point_names, 
             color_var=new_colors, 
             continuous_color=True, 
             colorscale=app_config.params['colorscale_continuous'], 
@@ -215,6 +209,8 @@ def run_update_landscape(
         colorscale = app_config.params['colorscale_discrete']
         return highlight_landscape_func(
             annotated_points, 
+            data_df, 
+            point_names, 
             color_var=color_scheme, 
             continuous_color=False, 
             colorscale=colorscale, 
@@ -265,17 +261,25 @@ def display_test(
     )
 """
 
-#,[State('select-topk-goterms', 'value')]
+
 @app.callback(
     Output('goenrich-panel', 'figure'),
-    [Input('stored-pointsets', 'data'),
+    [Input('geneset-select', 'value'), 
      Input('select-topk-goterms', 'n_submit'),
      Input('select-topk-goterms', 'n_blur')],
     [State('select-topk-goterms', 'value')]
 )
-def display_goenrich_panel(subset_store, dummy1, dummy2, topk):
-    selected_genes = list(subset_store['_current_selected_data'].keys())
+def display_goenrich_panel(selected_genes, dummy1, dummy2, topk):
     return app_lib.display_goenrich_panel_func(selected_genes, topk=int(topk))
+
+
+# # Link currently selected data to output of gene set selector, so it can be picked too.
+# @app.callback(
+#     Output('geneset-select', 'value'), 
+#     [Input('stored-pointsets', 'data')]
+# )
+# def update_geneset(subset_store):
+#     return list(subset_store['_current_selected_data'].keys())
 
 
 # https://community.plot.ly/t/download-raw-data/4700/7
@@ -386,6 +390,8 @@ def update_main_heatmap(
         view_option, 
         subset_store, 
         landscape_scatter_fig, 
+        point_names, 
+        raw_data, 
         num_points_to_sample=num_points_to_sample
     )
 
@@ -398,17 +404,25 @@ Update the main graph panel.
     [Input('landscape_color', 'value'), 
      Input('points_annot', 'value'), 
      Input('stored-pointsets', 'data'), 
+     Input('sourcedata-select', 'value'), 
      Input('toggle-heatmap-selection', 'values')]
 )
 def update_landscape(
     color_scheme,          # Feature(s) selected to plot as color.
     annotated_points,      # Selected points annotated
-    subset_store,       # Store of selected point subsets.
+    subset_store,          # Store of selected point subsets.
+    sourcedata_select, 
     highlight_selected_points
 ):
     print('Color scheme: {}'.format(color_scheme))
+    dataset_names = [x.split('/')[-1].split('.')[0] for x in app_config.params['plot_data_df_path']]
+    if sourcedata_select in dataset_names:
+        ndx_selected = dataset_names.index(sourcedata_select)
+        data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
+    else:
+        data_df = None
     return run_update_landscape(
-        color_scheme, annotated_points, subset_store, highlight_selected_points
+        color_scheme, annotated_points, subset_store, highlight_selected_points, data_df, point_names, raw_data
     )
 
 

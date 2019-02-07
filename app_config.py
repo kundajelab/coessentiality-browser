@@ -3,7 +3,21 @@ import numpy as np, pandas as pd
 
 params = {}
 
-params['title'] = "Gene browser"
+params['title'] = "Gene coessentiality browser"
+
+
+_DEPLOY_LOCALLY = True
+
+if not _DEPLOY_LOCALLY:
+    data_pfx = '/var/www/coessentiality-browser/'
+else:
+    data_pfx = '/Users/akshay/github/coessentiality-browser/'
+
+params['plot_data_df_path'] = ["{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in [
+    "_GLS02_CO49_RC49", "_GLS01_CO99", "_GLS01_RC99", "_GLS1_CO0"]]
+params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
+params['dataset_options'] = [x.split('/')[-1].split('.')[0] for x in params['plot_data_df_path']]
+
 params['bg_color'] = '#000000'
 params['hm_colorvar_name'] = 'Ess.'
 params['hm_diverging'] = True
@@ -76,10 +90,5 @@ params['legend_font_color'] = 'white'
 params['legend_font_size'] = 16
 params['hm_font_size'] = 6
 
-# sffix = "_GLS1_CO0"
-# sffix = "_GLS01_RC99"
-# sffix = "_GLS01_CO99"
-sffix = "_GLS02_CO49_RC49"
-params['plot_data_df_path'] = "data/vizdf{}.csv".format(sffix)
 
 # Some things are best left to depend on the size of the data - opacity changes with number of points plotted!

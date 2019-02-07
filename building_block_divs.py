@@ -247,6 +247,21 @@ def create_div_align_selection(options_list):
     )
 
 
+# Default dataset first in the given list of dataset options.
+def create_div_select_dataset(dataset_options):
+    return html.Div(
+        className='row', 
+        children=[
+            dcc.Dropdown(
+                id='sourcedata-select', 
+                options = [ {'value': dn, 'label': dn} for dn in dataset_options ], # style={'height': '30px'}, 
+                placeholder="Load dataset...", 
+                value=dataset_options[0]
+            )], 
+        style=style_outer_dialog_box
+    )
+
+
 
 
 # ================================================
@@ -303,38 +318,41 @@ div_hm_ctrl = html.Div(
 )
 
 
-div_go_ctrl = html.Div(
-    className='row', 
-    children=[
-        html.Div(
-            className='five columns', 
-            children=[
-                html.P(
-                    "Gene set enrichment", 
-                    style=style_text_box
-                )]
-        ),
-        html.Div(
-            className='four columns',
-            children=[
-		html.P(
-                    "# terms to display: ",
-                    style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
-                )]
-        ),
-        html.Div(
-            className='three columns', 
-            children=[
-                dcc.Input(
-                    id='select-topk-goterms', 
-                    type='text', 
-                    value='20', 
-                    style={'textAlign': 'center', 'width': '100%'}
-                )
-            ]
-        )], 
-    style=style_outer_dialog_box
-)
+def create_div_go_ctrl(point_names):
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='six columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='geneset-select', 
+                        options = [ {'value': gn, 'label': gn} for gn in point_names ], # style={'height': '30px'}, 
+                        placeholder="Gene set for enrichment", multi=True
+                    )], 
+                style={'padding-top': '0px'}
+            ), 
+            html.Div(
+                className='three columns',
+                children=[
+                    html.P(
+                        "# terms to display: ",
+                        style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
+                    )]
+            ),
+            html.Div(
+                className='three columns', 
+                children=[
+                    dcc.Input(
+                        id='select-topk-goterms', 
+                        type='text', 
+                        value='20', 
+                        style={'textAlign': 'center', 'width': '100%'}
+                    )
+                ]
+            )], 
+        style=style_outer_dialog_box
+    )
 
 
 div_ctrl_landscape = html.Div(
@@ -381,22 +399,6 @@ div_ctrl_landscape = html.Div(
         )]
 )
 
-def create_div_landscapes(point_names, feat_names, more_colorvars):
-    return html.Div(
-        className="seven columns",
-        children=[
-            # div_ctrl_landscape,
-            dcc.Graph(
-                id='landscape-plot',
-                config={'displaylogo': False, 'displayModeBar': True},
-                style={ 'height': '100vh'}
-            ),
-            div_landscape_select, 
-            create_div_plotcolor(feat_names, more_colorvars),
-            create_div_annot(point_names)
-        ]
-    )
-
 
 div_select_points = html.Div(
     className='row', 
@@ -435,23 +437,6 @@ div_select_points = html.Div(
                 )], 
             style={'padding-top': '5px'}
         )
-#         html.Div(
-#             className='four columns', 
-#             children=[
-#                 dcc.Checklist(
-#                     id='store-status', 
-#                     options=[
-#                         {'label': 'Store subset', 'value': 'store'}
-#                     ],
-#                     values=[], 
-#                     style={
-#                         'textAlign': 'center', 
-#                         'width': '80%', 
-#                         'color': app_config.params['font_color']
-#                     }
-#                 )], 
-#             style={'padding-top': '10px'}
-#         )
     ]
 )
 
@@ -604,7 +589,8 @@ def create_div_landscapes(point_names, feat_names, more_colorvars):
                 id='landscape-plot',
                 config={'displaylogo': False, 'displayModeBar': True},
 		style={ 'height': '100vh'}
-            ),
+            ), 
+            create_div_select_dataset(app_config.params['dataset_options']), 
             div_landscape_select
         ]
     )
@@ -618,7 +604,7 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars, align_options
             create_div_annot(point_names), 
             div_hm_ctrl,
             div_hm_panel, 
-            div_go_ctrl, 
+            create_div_go_ctrl(point_names), 
             div_go_panel
             # create_div_align_selection(align_options_list), 
             # div_reviz_scatter, 
