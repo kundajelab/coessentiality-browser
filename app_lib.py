@@ -125,7 +125,9 @@ def traces_scatter(
     data_df, 
     color_var, 
     colorscale, 
-    selected_point_ids
+    selected_point_ids, 
+    bg_marker_size=app_config.params['bg_marker_size_factor'], 
+    marker_size=app_config.params['marker_size_factor']
 ):
     traces_list = []
     display_ndces = app_config.params['display_coordinates']
@@ -149,7 +151,7 @@ def traces_scatter(
             'text': point_names, 
             'mode': 'markers', 
             'marker': {
-                'size': app_config.params['bg_marker_size_factor'], 
+                'size': bg_marker_size, 
                 'opacity': app_config.params['bg_marker_opacity_factor'], 
                 'symbol': 'circle', 
                 'showscale': True, 
@@ -197,7 +199,7 @@ def traces_scatter(
                 'mode': 'markers', 
                 'opacity': trace_opacity, 
                 'marker': {
-                    'size': app_config.params['marker_size_factor'] if str(idx) != 'Unknown' else app_config.params['bg_marker_size_factor'], 
+                    'size': marker_size if str(idx) != 'Unknown' else bg_marker_size, 
                     'opacity': app_config.params['marker_opacity_factor'] if str(idx) != 'Unknown' else app_config.params['bg_marker_opacity_factor'], 
                     'symbol': 'circle', 
                     'color': trace_color
@@ -219,12 +221,18 @@ def layout_scatter(annots):
     return new_layout
 
 
-def build_main_scatter(data_df, color_var, colorscale, annots=[], selected_point_ids=[]):
+def build_main_scatter(data_df, color_var, colorscale, 
+                       bg_marker_size=app_config.params['bg_marker_size_factor'], 
+                       marker_size=app_config.params['marker_size_factor'], 
+                       annots=[], selected_point_ids=[]
+                      ):
     trace_list = traces_scatter(
         data_df, 
         color_var, 
         colorscale, 
-        selected_point_ids
+        selected_point_ids, 
+        bg_marker_size=bg_marker_size, 
+        marker_size=marker_size
     )
     return { 
         'data': trace_list, 

@@ -256,7 +256,7 @@ def create_div_select_dataset(dataset_options):
                 className='four columns', 
                 children=[
                     html.P(
-                        "Browse dataset: ", 
+                        "Browse layout: ", 
                         style=style_text_box
                     )], 
                 style={'padding-top': '10px'}
@@ -594,6 +594,58 @@ div_hm_panel = html.Div(
 )
 
 
+# Default dataset first in the given list of dataset options.
+def create_div_cosmetic_panel():
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='two columns', 
+                children=[
+                    html.P(
+                        "Interface options: ", 
+                        style=style_text_box
+                    )], 
+                style={'padding-top': '10px'}
+            ), 
+            html.Div(
+                className='five columns', 
+                children=[
+                    dcc.Slider(
+                        id='slider-bg-marker-size-factor', # marks={ 4: {'label': '4'} }
+                        min=0, max=8, step=0.2, 
+                        value=app_config.params['bg_marker_size_factor']
+                    ), 
+                    html.Div(
+                        id='display-bg-marker-size-factor', 
+                        style={
+                            'textAlign': 'center', 
+                            'color': app_config.params['font_color'], 
+                            'padding-top': '10px'
+                        }
+                    )]
+            ), 
+            html.Div(
+                className='five columns', 
+                children=[
+                    dcc.Slider(
+                        id='slider-marker-size-factor',
+                        min=0, max=8, step=0.2, 
+                        value=app_config.params['marker_size_factor']
+                    ), 
+                    html.Div(
+                        id='display-marker-size-factor', 
+                        style={
+                            'textAlign': 'center', 
+                            'color': app_config.params['font_color'], 
+                            'padding-top': '10px'
+                        }
+                    )]
+            )], 
+        style=style_outer_dialog_box
+    )
+
+
 def create_div_landscapes(point_names, feat_names, more_colorvars):
     return html.Div(
         className="seven columns",
@@ -610,7 +662,7 @@ def create_div_landscapes(point_names, feat_names, more_colorvars):
     )
 
 
-def create_div_sidepanels(point_names, feat_names, more_colorvars, align_options_list):
+def create_div_sidepanels(point_names, feat_names, more_colorvars):
     return html.Div(
         className='five columns', 
         children=[
@@ -620,7 +672,6 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars, align_options
             div_hm_panel, 
             create_div_go_ctrl(point_names), 
             div_go_panel
-            # create_div_align_selection(align_options_list), 
             # div_reviz_scatter, 
             # html.Div([ html.Pre(id='test-select-data', style={ 'color': app_config.params['font_color'], 'overflowX': 'scroll' } ) ])     # For testing purposes only!
         ],
@@ -633,7 +684,7 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars, align_options
 Main layout.
 """
 
-def create_div_mainapp(point_names, feat_names, more_colorvars=[], align_options_list=['Unaligned', 'Aligned']):
+def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
     return html.Div(
         className="container", 
         children=[
@@ -650,15 +701,16 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[], align_options
                 className="row", 
                 children=[
                     create_div_landscapes(point_names, feat_names, more_colorvars), 
-                    create_div_sidepanels(point_names, feat_names, more_colorvars, align_options_list)
+                    create_div_sidepanels(point_names, feat_names, more_colorvars)
                 ]
             ), 
+            create_div_cosmetic_panel(), 
             html.Div(
                 className='row', 
                 children=[ 
                     dcc.Markdown(
                         """Queries? Requests? Contact [Akshay Balsubramani](abalsubr@stanford.edu). """ 
-                        + """Source [repository](https://github.com/kundajelab/hodos)."""
+                        + """Source [repository](https://github.com/kundajelab/coessentiality-browser)."""
                         )], 
                 style={
                     'textAlign': 'center', 

@@ -43,8 +43,7 @@ server=app.server
 app.layout = building_block_divs.create_div_mainapp(
     point_names, 
     feat_names, 
-    more_colorvars=additional_colorvars, 
-    align_options_list=['Unaligned', 'Aligned']
+    more_colorvars=additional_colorvars
 )
 
 
@@ -93,6 +92,8 @@ def highlight_landscape_func(
     annotated_points, 
     data_df, 
     point_names_to_use, 
+    bg_marker_size=app_config.params['bg_marker_size_factor'], 
+    marker_size=app_config.params['marker_size_factor'], 
     color_var=app_config.params['default_color_var'], # Could be an array of continuous colors!
     continuous_color=app_config.params['continuous_color'], 
     colorscale=app_config.params['colorscale'], 
@@ -126,7 +127,9 @@ def highlight_landscape_func(
         color_var, 
         colorscale, 
         annots=annots, 
-        selected_point_ids=selectedpoint_ids
+        selected_point_ids=selectedpoint_ids, 
+        bg_marker_size=bg_marker_size, 
+        marker_size=marker_size
     )
     return toret
 
@@ -171,7 +174,9 @@ def run_update_landscape(
     highlight_selected_points, 
     data_df, 
     point_names, 
-    raw_data_to_use
+    raw_data_to_use, 
+    bg_marker_size, 
+    marker_size
 ):
     pointIDs_to_select = list(subset_store['_current_selected_data'].keys())
     if annotated_points is None:
@@ -203,7 +208,9 @@ def run_update_landscape(
             colorscale=app_config.params['colorscale_continuous'], 
             selectedpoint_ids=pointIDs_to_select, 
             absc_arr=absc_arr, 
-            ordi_arr=ordi_arr
+            ordi_arr=ordi_arr, 
+            bg_marker_size=bg_marker_size, 
+            marker_size=marker_size
         )
     else:    # color_scheme is a col ID indexing a discrete column.
         colorscale = app_config.params['colorscale_discrete']
@@ -216,7 +223,9 @@ def run_update_landscape(
             colorscale=colorscale, 
             selectedpoint_ids=pointIDs_to_select, 
             absc_arr=absc_arr, 
-            ordi_arr=ordi_arr
+            ordi_arr=ordi_arr, 
+            bg_marker_size=bg_marker_size, 
+            marker_size=marker_size
         )
 
     
@@ -295,6 +304,22 @@ def save_selection(subset_store):
 def update_subset_options(stored_setlist):
     toret = [] if stored_setlist is None else [ {'label': s, 'value': s} for s in stored_setlist.keys()]
     return toret
+
+
+@app.callback(
+    Output('display-bg-marker-size-factor', 'children'), 
+    [Input('slider-bg-marker-size-factor', 'value')]
+)
+def update_bgmarker_size(bg_size):
+    return 'Unannotated marker size: {}'.format(bg_size)
+
+
+@app.callback(
+    Output('display-marker-size-factor', 'children'), 
+    [Input('slider-marker-size-factor', 'value')]
+)
+def update_marker_size(marker_size):
+    return 'Marker size: {}'.format(marker_size)
 
 
 # Update dialogs.
@@ -400,24 +425,25 @@ Update the main graph panel.
      Input('points_annot', 'value'), 
      Input('stored-pointsets', 'data'), 
      Input('sourcedata-select', 'value'), 
-     Input('toggle-heatmap-selection', 'values')]
+     Input('toggle-heatmap-selection', 'values'), 
+     Input('slider-bg-marker-size-factor', 'value'), 
+     Input('slider-marker-size-factor', 'value')]
 )
 def update_landscape(
     color_scheme,          # Feature(s) selected to plot as color.
     annotated_points,      # Selected points annotated
     subset_store,          # Store of selected point subsets.
     sourcedata_select, 
-    highlight_selected_points
+    highlight_selected_points, 
+    bg_marker_size, 
+    marker_size
 ):
     print('Color scheme: {}'.format(color_scheme))
-    dataset_names = [x.split('/')[-1].split('.')[0] for x in app_config.params['plot_data_df_path']]
-    if sourcedata_select in dataset_names:
-        ndx_selected = dataset_names.index(sourcedata_select)
-    else:
-        ndx_selected = 0
+    dataset_names = app_config.params['dataset_options']
+    ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
     data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
     return run_update_landscape(
-        color_scheme, annotated_points, subset_store, highlight_selected_points, data_df, point_names, raw_data
+        color_scheme, annotated_points, subset_store, highlight_selected_points, data_df, point_names, raw_data, bg_marker_size, marker_size
     )
 
 
