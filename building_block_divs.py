@@ -179,7 +179,8 @@ def create_div_plotcolor(feat_names, more_colorvars):
                             {'value': gn, 'label': gn} for gn in feat_names 
                         ], 
                         value=app_config.params['default_color_var'], 
-                        placeholder="Select colors to plot"
+                        placeholder="Select colors to plot", 
+                        clearable=False
                     )], 
                 style={'padding-top': '0px'}
             )], 
@@ -274,60 +275,65 @@ def create_div_select_dataset(dataset_options):
     )
 
 
+# Synchronizing landscape plot with heatmap.
+def create_div_sync_selection():
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='five columns', 
+                children=[
+                    html.Button(
+                        'Select all in heatmap', 
+                        id='hm-selectall-button', 
+                        style=style_text_box, 
+                        n_clicks=0
+                    )], style={'display': 'none'}
+            ), 
+            html.Div(
+                className='three columns', 
+                children=[
+                    dcc.Checklist(
+                        id='toggle-sync-actions', 
+                        options=[
+                            {'label': 'Highlight', 'value': 'highlight'}, 
+                            {'label': 'Zoom', 'value': 'zoom'}
+                        ],
+                        values=[], 
+                        style={
+                            'textAlign': 'left', 
+                            'width': '80%', 
+                            'color': app_config.params['font_color']
+                        }
+                    )], 
+                style={'padding-top': '0px'}
+            ), 
+            html.Div(
+                className='four columns', 
+                children=[
+                    dcc.RadioItems(
+                        id='main-heatmap-roworder', 
+                        options=[ 
+                            {'label': 'Cocluster', 'value': 'Cocluster'}, 
+                            {'label': 'Sort by color', 'value': 'Sort by color'}], 
+                        style=legend_font_macro, 
+                        labelStyle={
+                            # 'display': 'inline-block', 
+                            'margin-right': '5px'
+                        }, 
+                        value='Sort by color'
+                    )]
+            )
+        ], 
+        style=style_outer_dialog_box
+    )
+
+
 
 
 # ================================================
 # ==================== Layout ====================
 # ================================================
-
-
-div_hm_ctrl = html.Div(
-    className='row', 
-    children=[
-        html.Div(
-            className='three columns', 
-            children=[
-                html.P(
-                    "Heatmap: select genes at left", 
-                    style=style_text_box
-                )]
-        ), 
-        html.Div(
-            className='five columns', 
-            children=[
-                dcc.Checklist(
-                    id='toggle-heatmap-selection', 
-                    options=[
-                        {'label': 'Highlight subselection', 'value': 'hm_override'}, 
-                        {'label': 'Point to selected', 'value': 'highlight'}
-                    ],
-                    values=[], 
-                    style={
-                        'textAlign': 'left', 
-                        'width': '80%', 
-                        'color': app_config.params['font_color']
-                    }
-                )], 
-            style={'padding-top': '5px'}
-        ), 
-        html.Div(
-            className='four columns', 
-            children=[
-                dcc.RadioItems(
-                    id='main-heatmap-roworder', 
-                    options=[ 
-                        {'label': 'Cocluster', 'value': 'Cocluster'}, 
-                        {'label': 'Sort by color', 'value': 'Sort by color'}], 
-                    style=legend_font_macro, 
-                    labelStyle={
-                        # 'display': 'inline-block', 
-                        'margin-right': '5px'
-                    }, 
-                    value='Sort by color'
-                )]
-        )], 
-    style=style_outer_dialog_box
-)
 
 
 def create_div_go_ctrl(point_names):
@@ -441,15 +447,20 @@ div_select_points = html.Div(
         ), 
         html.Div(
             className='four columns', 
-            children=[ 
-                html.Button(
-                    id='store-button', 
-                    children='Store subset', 
-                    n_clicks=0, 
-                    n_clicks_timestamp=0,
-                    style=style_text_box
+            children=[
+                dcc.Checklist(
+                    id='store-status', 
+                    options=[
+                        {'label': 'Store subset', 'value': 'store'}
+                    ],
+                    values=[], 
+                    style={
+                        'textAlign': 'center', 
+                        'width': '80%', 
+                        'color': app_config.params['font_color']
+                    }
                 )], 
-            style={'padding-top': '5px'}
+            style={'padding-top': '10px'}
         )
     ]
 )
@@ -666,10 +677,10 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars):
     return html.Div(
         className='five columns', 
         children=[
+            create_div_sync_selection(), 
+            div_hm_panel, 
             create_div_plotcolor(feat_names, more_colorvars),
             create_div_annot(point_names), 
-            div_hm_ctrl,
-            div_hm_panel, 
             create_div_go_ctrl(point_names), 
             div_go_panel
             # div_reviz_scatter, 

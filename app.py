@@ -144,10 +144,6 @@ def run_update_main_heatmap(
 ):
     # Start by taking the currently selected points, and add points explicitly selected in landscape.
     pointIDs_to_display = list(subset_store['_current_selected_data'].keys())
-#     if landscape_selected_data is not None:
-#         these_selections = [ p['text'] for p in landscape_selected_data['points'] ]
-#         pointIDs_to_display = np.union1d(pointIDs_to_display, these_selections)
-    
     # Subsample down to a max #points, for smoothly interactive heatmap display.
     if len(pointIDs_to_display) > num_points_to_sample:
         pointIDs_to_display = np.random.choice(pointIDs_to_display, num_points_to_sample, replace=False)
@@ -176,16 +172,16 @@ def run_update_landscape(
     point_names, 
     raw_data_to_use, 
     bg_marker_size, 
-    marker_size
+    marker_size, 
+    other_selected=[]
 ):
-    pointIDs_to_select = list(subset_store['_current_selected_data'].keys())
+    pointIDs_to_select = other_selected if (len(other_selected) > 0) else list(subset_store['_current_selected_data'].keys())
     if annotated_points is None:
         annotated_points = []
-    if (len(annotated_points) == 0) and 'highlight' in highlight_selected_points:
+    if (len(annotated_points) == 0) and highlight_selected_points:
         annotated_points = pointIDs_to_select
     absc_arr = data_df[app_config.params['display_coordinates']['x']]
     ordi_arr = data_df[app_config.params['display_coordinates']['y']]
-    
     # Check if a continuous feature is chosen to be plotted.
     if ((color_scheme != app_config.params['default_color_var']) and 
         (color_scheme not in additional_colorvars) and 
@@ -213,14 +209,13 @@ def run_update_landscape(
             marker_size=marker_size
         )
     else:    # color_scheme is a col ID indexing a discrete column.
-        colorscale = app_config.params['colorscale_discrete']
         return highlight_landscape_func(
             annotated_points, 
             data_df, 
             point_names, 
             color_var=color_scheme, 
             continuous_color=False, 
-            colorscale=colorscale, 
+            colorscale=app_config.params['colorscale_discrete'], 
             selectedpoint_ids=pointIDs_to_select, 
             absc_arr=absc_arr, 
             ordi_arr=ordi_arr, 
@@ -340,7 +335,7 @@ Contains control logic for subset selection and storage.
 """
 @app.callback(
     Output('stored-pointsets', 'data'), 
-    [Input('store-button', 'n_clicks'), 
+    [Input('store-status', 'values'), 
      Input('list-pointsets', 'value'), 
      Input('landscape-plot', 'selectedData'), 
      Input('upload-pointsets', 'contents')],
@@ -360,35 +355,22 @@ def update_subset_storage(
     subset_store
 ):
     new_sets_dict = {} if subset_store is None else subset_store
-    if 'load' in load_status:    # Update _current_selected_data with union of loaded subsets if applicable.
+    if 'load' in load_status:    # Update _current_selected_data by loading subsets.
         new_sets_dict['_current_selected_data'] = union_of_selections(selected_subsetIDs, subset_store)
-    else:   # Update _current_selected_data with new selected data, from the main plot / heatmap.
+    else:   # Update _current_selected_data from the main plot / heatmap.
         new_sets_dict['_current_selected_data'] = make_store_points(selected_landscape_points)
     # Finally store current selected data as a new set if in that mode.
-    # if 'store' in store_status:
-    if ((newset_name is not None) and 
-        (newset_name not in new_sets_dict) and 
-        (newset_name != '')):
-        new_sets_dict[newset_name] = new_sets_dict['_current_selected_data']
+    if 'store' in store_status:
+        if ((newset_name is not None) and 
+            (newset_name not in new_sets_dict) and 
+            (newset_name != '')):
+            new_sets_dict[newset_name] = new_sets_dict['_current_selected_data']
     # Load a bunch of cell sets with names equal to their filenames.
     if file_contents is not None and len(file_contents) > 0:
         for contents, fname in zip(file_contents, file_paths):   # fname here is a relative (NOT an absolute) file path
             fname_root = fname.split('/')[-1].split('.')[0]
             new_sets_dict[fname_root] = parse_upload_contents(contents, fname)
     return new_sets_dict
-
-
-@app.callback(
-    Output('landscape-plot', 'selectedData'), 
-    [Input('main-heatmap', 'selectedData'), 
-     Input('toggle-heatmap-selection', 'values')], 
-    [State('landscape-plot', 'selectedData')]
-)
-def update_landscape_seldata(hm_selected, hm_override_status, old_ls_data):
-    if 'hm_override' in hm_override_status:
-        return hm_selected
-    else:
-        return old_ls_data
 
 
 """
@@ -425,9 +407,11 @@ Update the main graph panel.
      Input('points_annot', 'value'), 
      Input('stored-pointsets', 'data'), 
      Input('sourcedata-select', 'value'), 
-     Input('toggle-heatmap-selection', 'values'), 
+     Input('toggle-sync-actions', 'values'), 
      Input('slider-bg-marker-size-factor', 'value'), 
-     Input('slider-marker-size-factor', 'value')]
+     Input('slider-marker-size-factor', 'value'), 
+     Input('hm-selectall-button', 'n_clicks'), 
+     Input('main-heatmap', 'selectedData')]
 )
 def update_landscape(
     color_scheme,          # Feature(s) selected to plot as color.
@@ -436,14 +420,31 @@ def update_landscape(
     sourcedata_select, 
     highlight_selected_points, 
     bg_marker_size, 
-    marker_size
+    marker_size, 
+    syncbutton_clicks, 
+    heatmap_selected
 ):
     print('Color scheme: {}'.format(color_scheme))
     dataset_names = app_config.params['dataset_options']
     ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
     data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
+    if ('zoom' in highlight_selected_points):
+        pass # TODO filter
+    if ((heatmap_selected is None) or ('points' not in heatmap_selected)):
+        selectedset = []
+    else:
+        selectedset = [x['text'] for x in heatmap_selected['points']]
     return run_update_landscape(
-        color_scheme, annotated_points, subset_store, highlight_selected_points, data_df, point_names, raw_data, bg_marker_size, marker_size
+        color_scheme, 
+        annotated_points, 
+        subset_store, 
+        'highlight' in highlight_selected_points, 
+        data_df, 
+        point_names, 
+        raw_data, 
+        bg_marker_size, 
+        marker_size, 
+        other_selected=selectedset
     )
 
 

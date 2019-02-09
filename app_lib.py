@@ -134,7 +134,6 @@ def traces_scatter(
     cumu_color_dict = {}
     # Check to see if color_var is continuous or discrete and plot points accordingly
     if isinstance(color_var, (list, tuple, np.ndarray)):     # Color_var is an array, not a col index.
-        # colorscale = app_config.params['colorscale_continuous']
         continuous_color_var = color_var
         point_names = list(data_df['gene_names'])
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
@@ -166,19 +165,13 @@ def traces_scatter(
                     'titlefont': building_block_divs.colorbar_font_macro, 
                     'tickfont': building_block_divs.colorbar_font_macro
                 }, 
-                'line': { 
-                    'color': '#ffffff', 
-                    'width': 0.2
-                }, 
                 'color': continuous_color_var, 
                 'colorscale': colorscale
             }, 
-            # 'unselected': building_block_divs.style_unselected, 
             'selected': building_block_divs.style_selected, 
             'type': 'scattergl'
         })
     else:    # Categorical color scheme, one trace per color
-        # colorscale = app_config.params['colorscale_discrete']
         cnt = 0
         print('Colorscale length: {}'.format(len(colorscale)))
         for idx, val in data_df.groupby(color_var):
@@ -204,7 +197,6 @@ def traces_scatter(
                     'symbol': 'circle', 
                     'color': trace_color
                 }, 
-                # 'unselected': building_block_divs.style_unselected, 
                 'selected': building_block_divs.style_selected
             }
             if not app_config.params['three_dims']:
@@ -311,7 +303,7 @@ def hm_hovertext(data, rownames, colnames):
     for r in range(data.shape[0]):
         pt_text.append(["Gene: {}".format(str(rownames[r])) for k in data[r, :]])
         for c in range(data.shape[1]):
-            pt_text[r][c] += "<br>Cell line: {}<br>Essentiality score: {}".format(str(colnames[c]), str(data[r][c]))
+            pt_text[r][c] += "<br>Cell line: {}<br>Essentiality score: {}".format(str(colnames[c]), str(round(data[r][c], 2)))
     return pt_text
 
 
