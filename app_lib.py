@@ -242,6 +242,10 @@ def build_main_scatter(data_df, color_var, colorscale,
 def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
     row_scat_traces = []
     all_hm_point_names = []
+    hmscat_mode = 'markers'
+    # Decide if few enough points are around to display row labels
+    if len(hm_point_names) <= 35:
+        hmscat_mode = 'markers+text'
     if (scatter_fig is not None) and ('data' in scatter_fig):
         pts_so_far = 0
         # Re-sort rows or not? should be >=1 trace, so can check if first is continuous
@@ -286,7 +290,9 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
                 'xaxis': 'x2', 
                 'hoverinfo': 'text+name', 
                 'text': hm_point_names_this_trace, 
-                'mode': 'markers', 
+                'mode': hmscat_mode, 
+                'textposition': 'center left', 
+                'textfont': building_block_divs.hm_font_macro, 
                 'marker': trace_markers, 
                 'selected': building_block_divs.style_selected, 
                 'type': 'scatter'
@@ -314,7 +320,7 @@ def display_heatmap_cb(
     hm_point_names,    # (unique!) row labels of hm_raw_data
     scatter_fig,    # Scatterplot panel which this is mirroring.
     view_cocluster,  
-    scatter_frac_domain=0.05
+    scatter_frac_domain=0.10
 ):
     fit_data = hm_raw_data
     if not app_config.params['hm_diverging']:
@@ -346,6 +352,7 @@ def display_heatmap_cb(
     hm_trace = {
         'z': fit_data, 
         'x': absc_labels, 
+        # 'y': hm_point_names, 
         'hoverinfo': 'text',
         'text': pt_text, 
         'colorscale': app_config.params['hm_colorscale'],

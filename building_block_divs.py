@@ -23,6 +23,12 @@ colorbar_font_macro = {
     'color': app_config.params['legend_font_color'] 
 }
 
+hm_font_macro = {
+    'family': 'sans-serif', 
+    'size': 8, 
+    'color': app_config.params['legend_font_color'] 
+}
+
 style_unselected = {
     'marker': {
         'size': 2.5, 
@@ -92,7 +98,7 @@ style_legend = {
 
 def create_hm_layout(scatter_frac_domain):
     hm_layout = {
-        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 20 }, 
+        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 30 }, 
         'clickmode': 'event+select',  # https://github.com/plotly/plotly.js/pull/2944/
         'hovermode': 'closest', 
         'uirevision': 'Default dataset', 
@@ -113,11 +119,12 @@ def create_hm_layout(scatter_frac_domain):
         }, 
         'xaxis2': {
             'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
-            'domain': [0, scatter_frac_domain]
+            'domain': [0, scatter_frac_domain], 
+            'range': [-1, 0.1]
         }, 
         'yaxis': {
             'automargin': True, 
-            'showticklabels': False, 
+            'showticklabels': False, #'side': 'right', 
             'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False 
         }, 
         'legend': style_legend, 
