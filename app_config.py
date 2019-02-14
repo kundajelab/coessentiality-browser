@@ -6,7 +6,7 @@ params = {}
 params['title'] = "Gene coessentiality browser"
 
 
-_DEPLOY_LOCALLY = True
+_DEPLOY_LOCALLY = False
 
 if not _DEPLOY_LOCALLY:
     data_pfx = '/var/www/coessentiality-browser/'
@@ -78,7 +78,7 @@ params['edge_width'] = 1
 params['incl_edges'] = False
 params['three_dims'] = False
 
-params['bg_marker_size_factor'] = 1.2
+params['bg_marker_size_factor'] = 3.6
 params['marker_size_factor'] = 4.0
 params['bg_marker_opacity_factor'] = 0.5
 params['marker_opacity_factor'] = 1.0
