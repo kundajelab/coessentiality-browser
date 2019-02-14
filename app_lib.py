@@ -475,7 +475,7 @@ g:GOSt API (in class header of gprofiler.py).
 """
 def display_goenrich_panel_func(selected_genes, topk=20):
     panel_layout = {
-        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 0}, 
+        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 25}, 
         'hovermode': 'closest',
         'orientation': 90,
         'autosize': True,

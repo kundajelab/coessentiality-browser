@@ -451,7 +451,6 @@ def update_subset_storage(
         # Logic to display points as selected from an auxplot (most recently used for selection). 
         # A small subset selected_heatmap_points should not change selected_landscape_points, but should change _current_selected_data
         last_hlight_panel = aux_highlighted.pop('_last_panel_highlighted', None)
-        print(len(aux_highlighted))
         if last_hlight_panel == 'landscape':
             new_sets_dict['_current_selected_data'] = aux_highlighted
         elif last_hlight_panel == 'heatmap':

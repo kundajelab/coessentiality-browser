@@ -92,7 +92,7 @@ style_legend = {
 
 def create_hm_layout(scatter_frac_domain):
     hm_layout = {
-        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 0 }, 
+        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 20 }, 
         'clickmode': 'event+select',  # https://github.com/plotly/plotly.js/pull/2944/
         'hovermode': 'closest', 
         'uirevision': 'Default dataset', 
@@ -129,7 +129,7 @@ def create_hm_layout(scatter_frac_domain):
 
 def create_scatter_layout(annotations):
     return {
-        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 0}, 
+        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 20}, 
         'clickmode': 'event+select',  # https://github.com/plotly/plotly.js/pull/2944/
         'hovermode': 'closest', 
         'uirevision': 'Default dataset',     # https://github.com/plotly/plotly.js/pull/3236
@@ -589,8 +589,7 @@ div_go_panel = html.Div(
     children = [
         dcc.Graph(
             id='goenrich-panel', 
-            # style={ 'height': '30vh' }, 
-            config={'displaylogo': False}
+            config={'displaylogo': False, 'displayModeBar': True}
         )]
 )
 
@@ -626,7 +625,7 @@ def create_div_hm_panel():
             dcc.Graph(
                 id='main-heatmap', 
                 style={ 'height': '55vh' }, 
-                config={'displaylogo': False}
+                config={'displaylogo': False, 'displayModeBar': True}
             )]
     )
 
