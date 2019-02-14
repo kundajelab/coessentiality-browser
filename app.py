@@ -83,6 +83,18 @@ def make_store_points(selectedData_points):
     else:
         return {}
 
+    
+def make_selected(stored_dict):
+    toret = { 'range': None }
+    toret['points'] = [
+        {
+            'pointIndex': stored_dict[k]['pointIndex'], 
+            'curveNumber': stored_dict[k]['curveNumber'], 
+            'text': k, 
+            'pointNumber': stored_dict[k]['pointIndex']
+        } for k in stored_dict
+    ]
+    return toret
 
 
 """
@@ -142,7 +154,6 @@ def run_update_main_heatmap(
     raw_data_to_use, 
     num_points_to_sample=10000
 ):
-    # Start by taking the currently selected points, and add points explicitly selected in landscape.
     pointIDs_to_display = list(subset_store['_current_selected_data'].keys())
     # Subsample down to a max #points, for smoothly interactive heatmap display.
     if len(pointIDs_to_display) > num_points_to_sample:
@@ -173,9 +184,9 @@ def run_update_landscape(
     raw_data_to_use, 
     bg_marker_size, 
     marker_size, 
-    other_selected=[]
+    highlighted_points=[]
 ):
-    pointIDs_to_select = other_selected if (len(other_selected) > 0) else list(subset_store['_current_selected_data'].keys())
+    pointIDs_to_select = highlighted_points if (len(highlighted_points) > 0) else list(subset_store['_current_selected_data'].keys())
     if annotated_points is None:
         annotated_points = []
     if (len(annotated_points) == 0) and highlight_selected_points:
@@ -240,30 +251,36 @@ def parse_upload_contents(contents, filename):
 # ==============================================================================
 
 
-"""
-# FOR TESTING ONLY
 @app.callback(
     Output('test-select-data', 'children'),
-    [Input('landscape-plot', 'selectedData'), 
+    [Input('toggle-debug-panels', 'values'), 
+     Input('landscape-plot', 'selectedData'), 
      Input('stored-pointsets', 'data'), 
-     Input('main-heatmap', 'selectedData')]
+     Input('main-heatmap', 'selectedData'), 
+     Input('stored-most-recently-highlighted', 'data')]
 )
 def display_test(
+    debug_options, 
     sel_data, 
     data_store, 
-    hmsel_data
+    hmsel_data, 
+    hlight_store
 ):
-    toret = ""
     see_hm = "0" if hmsel_data is None else str(len(hmsel_data['points']))
     see_sel = "0" if sel_data is None else str(len(sel_data['points']))
+    see_hlight = "{}\t{}".format(hlight_store['_last_panel_highlighted'], len(hlight_store.keys()) - 1)
+    toret = ""
     for setname in data_store:
         toret = toret + "{}\t{}\n".format(len(data_store[setname]), setname)
-    return "***STORED SELECTED DATA***\n{}\n***Landscape SELECTED DATA***\n{}\n***Heatmap SELECTED DATA***\n{}".format(
-        toret, 
-        see_sel, 
-        see_hm
-    )
-"""
+    if 'debug-panel' in debug_options:
+        return "***STORED SELECTED DATA***\n{}\n***Landscape SELECTED DATA***\n{}\n***Heatmap SELECTED DATA***\n{}\n***Most recently used panel:\t{}".format(
+            toret, 
+            see_sel, 
+            see_hm, 
+            see_hlight
+        )
+    else:
+        return ""
 
 
 # Link currently selected data to output of gene set selector, so it can be picked too.
@@ -297,7 +314,12 @@ def save_selection(subset_store):
     [Input('stored-pointsets', 'data')]
 )
 def update_subset_options(stored_setlist):
-    toret = [] if stored_setlist is None else [ {'label': s, 'value': s} for s in stored_setlist.keys()]
+    toret = []
+    blacklist = ['_current_subselected_data', '_current_selected_data']
+    if stored_setlist is not None:
+        for s in stored_setlist.keys():
+            if s not in blacklist:
+                toret.append({'label': s, 'value': s})
     return toret
 
 
@@ -315,6 +337,72 @@ def update_bgmarker_size(bg_size):
 )
 def update_marker_size(marker_size):
     return 'Marker size: {}'.format(marker_size)
+
+
+@app.callback(
+    Output('stored-landscape-selected', 'data'), 
+    [Input('landscape-plot', 'selectedData')]
+)
+def update_stored_landscape_data(landscape_data):
+    return make_store_points(landscape_data)
+
+
+@app.callback(
+    Output('landscape-plot', 'selectedData'), 
+    [Input('stored-pointsets', 'data')]
+)
+def update_selected_landscape_data(subset_store):
+    return make_selected(subset_store['_current_selected_data'])
+
+
+# The following determines what the most recently called auxiliary panel dictated to highlight.
+@app.callback(
+    Output('stored-most-recently-highlighted', 'data'), 
+    [Input('stored-landscape-selected', 'modified_timestamp'), 
+     Input('hm-highlight-button', 'n_clicks_timestamp')], 
+    [State('landscape-plot', 'selectedData'), 
+     State('main-heatmap', 'selectedData')]
+)
+def update_most_recently_highlighted(
+    landscape_time, 
+    hm_time, 
+    landscape_selection, 
+    hm_selection
+):
+    recent_times = np.array([
+        int(landscape_time), int(hm_time), 0
+    ])
+    most_recent_time = max(recent_times)
+    if most_recent_time == int(landscape_time):
+        rec_panel = 'landscape'
+        data_selection = landscape_selection
+    elif most_recent_time == int(hm_time):
+        rec_panel = 'heatmap'
+        data_selection = hm_selection
+    # TODO add more aux panels here. keys should be _last_panel_highlighted as well as cell IDs in highlighted subset.
+    toret = make_store_points(data_selection)
+    toret['_last_panel_highlighted'] = rec_panel
+    return toret
+
+
+import dash_core_components as dcc
+import plotly.figure_factory as ff
+@app.callback(
+    Output('hm-feat-control', 'children'), 
+    [Input('toggle-hm-feat-panels', 'values')]
+)
+def update_hm_control_panel(panel_list):
+    graphs = []
+    cell_cluster_list = np.array([])  # List of cluster IDs for resp. cells
+    cell_color_list = np.array([])
+    if 'bars' in panel_list:
+        graphs.append(
+            app_lib.generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list))
+    if 'dendrogram' in panel_list:
+        X = np.random.rand(15, 15)
+        dendro = ff.create_dendrogram(X)
+        graphs.append(dcc.Graph(figure=dendro))
+    return graphs
 
 
 # Update dialogs.
@@ -337,29 +425,39 @@ Contains control logic for subset selection and storage.
     Output('stored-pointsets', 'data'), 
     [Input('store-status', 'values'), 
      Input('list-pointsets', 'value'), 
-     Input('landscape-plot', 'selectedData'), 
+     Input('stored-most-recently-highlighted', 'data'), 
      Input('upload-pointsets', 'contents')],
     [State('upload-pointsets', 'filename'), 
      State('load-status', 'values'), 
      State('pointset-name', 'value'), 
-     State('stored-pointsets', 'data')]
+     State('stored-pointsets', 'data'), 
+     State('toggle-hm-zoom', 'values')]
 )
 def update_subset_storage(
     store_status, 
     selected_subsetIDs, 
-    selected_landscape_points, 
+    aux_highlighted, 
     file_contents, 
     file_paths, 
     load_status, 
     newset_name, 
-    subset_store
+    subset_store, 
+    zoom_hm_selected
 ):
     new_sets_dict = {} if subset_store is None else subset_store
     if 'load' in load_status:    # Update _current_selected_data by loading subsets.
         new_sets_dict['_current_selected_data'] = union_of_selections(selected_subsetIDs, subset_store)
     else:   # Update _current_selected_data from the main plot / heatmap.
-        new_sets_dict['_current_selected_data'] = make_store_points(selected_landscape_points)
-    # Finally store current selected data as a new set if in that mode.
+        # Logic to display points as selected from an auxplot (most recently used for selection). 
+        # A small subset selected_heatmap_points should not change selected_landscape_points, but should change _current_selected_data
+        last_hlight_panel = aux_highlighted.pop('_last_panel_highlighted', None)
+        print(len(aux_highlighted))
+        if last_hlight_panel == 'landscape':
+            new_sets_dict['_current_selected_data'] = aux_highlighted
+        elif last_hlight_panel == 'heatmap':
+            if 'on' in zoom_hm_selected:
+                new_sets_dict['_current_selected_data'] = aux_highlighted
+    # Store current selected data as a new set if in that mode.
     if 'store' in store_status:
         if ((newset_name is not None) and 
             (newset_name not in new_sets_dict) and 
@@ -379,8 +477,8 @@ Update the main heatmap.
 @app.callback(
     Output('main-heatmap', 'figure'),
     [Input('main-heatmap-roworder', 'value'), 
-     Input('stored-pointsets', 'data'), 
-     Input('landscape-plot', 'figure')]
+     Input('stored-pointsets', 'data')], 
+    [State('landscape-plot', 'figure')]
 )
 def update_main_heatmap(
     view_option, 
@@ -407,44 +505,38 @@ Update the main graph panel.
      Input('points_annot', 'value'), 
      Input('stored-pointsets', 'data'), 
      Input('sourcedata-select', 'value'), 
-     Input('toggle-sync-actions', 'values'), 
+     Input('toggle-landscape-whiten', 'values'), 
+     Input('stored-most-recently-highlighted', 'data'), 
      Input('slider-bg-marker-size-factor', 'value'), 
-     Input('slider-marker-size-factor', 'value'), 
-     Input('hm-selectall-button', 'n_clicks'), 
-     Input('main-heatmap', 'selectedData')]
+     Input('slider-marker-size-factor', 'value')]
 )
 def update_landscape(
     color_scheme,          # Feature(s) selected to plot as color.
     annotated_points,      # Selected points annotated
     subset_store,          # Store of selected point subsets.
     sourcedata_select, 
-    highlight_selected_points, 
+    whiten_hm_selected, 
+    aux_highlighted, 
     bg_marker_size, 
-    marker_size, 
-    syncbutton_clicks, 
-    heatmap_selected
+    marker_size
 ):
     print('Color scheme: {}'.format(color_scheme))
     dataset_names = app_config.params['dataset_options']
     ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
     data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
-    if ('zoom' in highlight_selected_points):
-        pass # TODO filter
-    if ((heatmap_selected is None) or ('points' not in heatmap_selected)):
-        selectedset = []
-    else:
-        selectedset = [x['text'] for x in heatmap_selected['points']]
+    recently_highlighted = [x for x in aux_highlighted.keys()]
+    recently_highlighted.remove('_last_panel_highlighted')
     return run_update_landscape(
         color_scheme, 
         annotated_points, 
         subset_store, 
-        'highlight' in highlight_selected_points, 
+        'on' in whiten_hm_selected, 
         data_df, 
         point_names, 
         raw_data, 
         bg_marker_size, 
         marker_size, 
-        other_selected=selectedset
+        highlighted_points=recently_highlighted    # List of most recently highlighted cells.
     )
 
 

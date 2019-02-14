@@ -284,20 +284,20 @@ def create_div_sync_selection():
                 className='five columns', 
                 children=[
                     html.Button(
-                        'Select all in heatmap', 
-                        id='hm-selectall-button', 
+                        id='hm-highlight-button', 
+                        children='<< Highlight from heatmap', 
                         style=style_text_box, 
-                        n_clicks=0
-                    )], style={'display': 'none'}
+                        n_clicks='0', 
+                        n_clicks_timestamp='0'
+                    )], style={'padding-top': '5px'}
             ), 
             html.Div(
                 className='three columns', 
                 children=[
                     dcc.Checklist(
-                        id='toggle-sync-actions', 
+                        id='toggle-hm-zoom', 
                         options=[
-                            {'label': 'Highlight', 'value': 'highlight'}, 
-                            {'label': 'Zoom', 'value': 'zoom'}
+                            {'label': 'Zoom', 'value': 'on'}
                         ],
                         values=[], 
                         style={
@@ -492,7 +492,7 @@ div_serialization = html.Div(
                 dcc.Upload(
                     id='upload-pointsets',
                     children=html.Div([
-                        'Load gene set from file...'
+                        'Load gene set from file(s)...'
                     ]),
                     style=style_upload, 
                     multiple=True
@@ -594,15 +594,41 @@ div_go_panel = html.Div(
         )]
 )
 
-div_hm_panel = html.Div(
-    className="row",
-    children = [
-        dcc.Graph(
-            id='main-heatmap', 
-            style={ 'height': '55vh' }, 
-            config={'displaylogo': False}
-	)]
-)
+
+def create_div_landscape_ctrl():
+    return html.Div(
+        className='row', 
+            children=[
+            dcc.Checklist(
+                id='toggle-landscape-whiten', 
+                options=[
+                    {'label': 'Whiten', 'value': 'on'}
+                ],
+                values=[], 
+                style={
+                    'textAlign': 'left', 
+                    'width': '80%', 
+                    'color': app_config.params['font_color']
+                }
+            )], 
+        style={'padding-top': '0px'}
+    )
+
+
+def create_div_hm_panel():
+    return html.Div(
+        className="row",
+        children = [
+            html.Div(
+                id='hm-feat-control', 
+                children=[]
+            ), 
+            dcc.Graph(
+                id='main-heatmap', 
+                style={ 'height': '55vh' }, 
+                config={'displaylogo': False}
+            )]
+    )
 
 
 # Default dataset first in the given list of dataset options.
@@ -620,7 +646,7 @@ def create_div_cosmetic_panel():
                 style={'padding-top': '10px'}
             ), 
             html.Div(
-                className='five columns', 
+                className='three columns', 
                 children=[
                     dcc.Slider(
                         id='slider-bg-marker-size-factor', # marks={ 4: {'label': '4'} }
@@ -637,7 +663,7 @@ def create_div_cosmetic_panel():
                     )]
             ), 
             html.Div(
-                className='five columns', 
+                className='three columns', 
                 children=[
                     dcc.Slider(
                         id='slider-marker-size-factor',
@@ -652,7 +678,52 @@ def create_div_cosmetic_panel():
                             'padding-top': '10px'
                         }
                     )]
-            )], 
+            ), 
+            html.Div(
+                className='four columns', 
+                children=[
+                    dcc.Checklist(
+                        id='toggle-hm-feat-panels', 
+                        options=[
+                            {'label': 'Per-cluster', 'value': 'bars'}, 
+                            {'label': 'Dendrogram', 'value': 'dendrogram'}, 
+                            {'label': 'Heatmap', 'value': 'heatmap'}
+                        ],
+                        values=[], 
+                        style={
+                            'textAlign': 'left', 
+                            'width': '80%', 
+                            'color': app_config.params['font_color']
+                        }, 
+                        labelStyle={
+                            'display': 'inline-block', 
+                            'margin-right': '5px'
+                        }
+                    )], 
+                style={'padding-top': '0px'}
+            ), 
+            html.Div(
+                className='row', 
+                children=[
+                    dcc.Checklist(
+                        id='toggle-debug-panels', 
+                        options=[
+                            {'label': 'Debug panel', 'value': 'debug-panel'}
+                        ],
+                        values=[], 
+                        style={
+                            'textAlign': 'left', 
+                            'width': '80%', 
+                            'color': app_config.params['font_color']
+                        }, 
+                        labelStyle={
+                            'display': 'inline-block', 
+                            'margin-right': '5px'
+                        }
+                    )], 
+                style={'padding-top': '0px'}
+            )
+        ], 
         style=style_outer_dialog_box
     )
 
@@ -677,14 +748,14 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars):
     return html.Div(
         className='five columns', 
         children=[
+            create_div_landscape_ctrl(), 
             create_div_sync_selection(), 
-            div_hm_panel, 
+            create_div_hm_panel(), 
             create_div_plotcolor(feat_names, more_colorvars),
             create_div_annot(point_names), 
             create_div_go_ctrl(point_names), 
             div_go_panel
-            # div_reviz_scatter, 
-            # html.Div([ html.Pre(id='test-select-data', style={ 'color': app_config.params['font_color'], 'overflowX': 'scroll' } ) ])     # For testing purposes only!
+            # div_reviz_scatter
         ],
         style=style_invis_dialog_box
     )
@@ -716,6 +787,7 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
                 ]
             ), 
             create_div_cosmetic_panel(), 
+            html.Div([ html.Pre(id='test-select-data', style={ 'color': app_config.params['font_color'], 'overflowX': 'scroll' } ) ]),     # For testing purposes only!
             html.Div(
                 className='row', 
                 children=[ 
@@ -731,7 +803,17 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
             ), 
             dcc.Store(
                 id='stored-pointsets', 
-                data={ '_current_selected_data': {}}    # _current_selected_data is maintained as the short-term state of a point subset.
+                data={ '_current_selected_data': {} }    # Maintained as the short-term state of a point subset.
+            ), 
+            dcc.Store(
+                id='stored-landscape-selected', 
+                data={ }, 
+                modified_timestamp='0'
+            ), 
+            dcc.Store(
+                id='stored-most-recently-highlighted', 
+                data={ '_last_panel_highlighted': 'landscape' }, 
+                modified_timestamp='0'
             )
         ],
         style={ 

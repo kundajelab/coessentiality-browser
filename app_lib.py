@@ -141,6 +141,7 @@ def traces_scatter(
         if app_config.params['qnorm_plot']:
             continuous_color_var = quantile_norm(continuous_color_var)
             colorbar_title = 'Percentile'
+        pt_text = ["{}<br>Quantile: {}".format(point_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
         traces_list.append({ 
             'name': 'Data', 
             'x': data_df[display_ndces['x']], 
@@ -240,13 +241,13 @@ def build_main_scatter(data_df, color_var, colorscale,
 
 def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
     row_scat_traces = []
+    all_hm_point_names = []
     if (scatter_fig is not None) and ('data' in scatter_fig):
         pts_so_far = 0
         # Re-sort rows or not? should be >=1 trace, so can check if first is continuous
         resort_rows = (not view_cocluster)
         is_continuous_color = None
         hm_row_ndces = []
-        all_hm_point_names = []
         for trace in scatter_fig['data']:
             trace_markers = trace['marker']
             if 'line' in trace_markers:
@@ -259,14 +260,15 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
             hm_point_ndces_this_trace = np.where(np.isin(hm_point_names, hm_point_names_this_trace))[0]        # this trace's row indices in heatmap
             y_coords_this_trace = np.arange(len(hm_point_names))[hm_point_ndces_this_trace]
             
-            # At this point, rows are sorted in order of co-clustering. Now sort points by color within each trace. 
+            # At this point, rows are sorted in order of co-clustering. 
+            # Now sort points by color within each trace. 
             # This does nothing if the colors are discrete (many traces), and is just for continuous plotting.
             if resort_rows:   # Row order determined by sorting, and continuous variable being plotted
                 y_coords_this_trace = np.arange(pts_so_far, pts_so_far+num_in_trace)
                 if is_continuous_color:
                     # Extract subset of rows in heatmap
-                    m_vals = np.array(trace_markers['color'])[hm_point_ndces_this_trace]
-                    resorted_ndces_this_trace = np.argsort(m_vals)
+                    resorted_ndces_this_trace = np.argsort(
+                        np.array(trace_markers['color'])[hm_point_ndces_this_trace])
                     trace_markers['color'] = np.array(trace_markers['color'])[resorted_ndces_this_trace]
                     # TODO y_coords_this_trace = y_coords_this_trace[resorted_ndces_this_trace]
                 else:
@@ -286,7 +288,6 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
                 'text': hm_point_names_this_trace, 
                 'mode': 'markers', 
                 'marker': trace_markers, 
-                # 'unselected': building_block_divs.style_unselected, 
                 'selected': building_block_divs.style_selected, 
                 'type': 'scatter'
             }
@@ -303,7 +304,7 @@ def hm_hovertext(data, rownames, colnames):
     for r in range(data.shape[0]):
         pt_text.append(["Gene: {}".format(str(rownames[r])) for k in data[r, :]])
         for c in range(data.shape[1]):
-            pt_text[r][c] += "<br>Cell line: {}<br>Essentiality score: {}".format(str(colnames[c]), str(round(data[r][c], 2)))
+            pt_text[r][c] += "<br>Cell line: {}<br>Essentiality score: {}".format(str(colnames[c]), str(round(data[r][c], 3)))
     return pt_text
 
 
@@ -370,6 +371,72 @@ def display_heatmap_cb(
         'data': [ hm_trace ] + row_scat_traces, 
         'layout': building_block_divs.create_hm_layout(scatter_frac_domain) 
     }
+
+
+def generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list, featID='Gene'):
+    cluster_IDs = np.unique(cell_cluster_list)
+    plot_values = np.zeros((len(cluster_IDs), raw_data.shape[1]))
+    for i in range(len(cluster_IDs)):
+        plot_values[i, :] = np.mean(raw_data[cell_cluster_list == cluster_IDs[i], :], axis=0)
+    panel_layout = {
+        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 0}, 
+        'hovermode': 'closest', 
+        'autosize': True,
+        'xaxis': {
+            'title': {'text': featID, 'font': building_block_divs.legend_font_macro }, 
+            'tickfont': building_block_divs.legend_font_macro 
+        }, 
+        'yaxis': {
+            'showticklabels': False,
+            'automargin': True, 
+            'ticks': 'outside', 
+            'tickcolor': app_config.params['legend_font_color']
+        },
+        'plot_bgcolor': app_config.params['bg_color'],
+        'paper_bgcolor': app_config.params['bg_color'], 
+        'showlegend': True, 
+        'legend': {
+            'font': building_block_divs.legend_font_macro
+        }
+    }
+    go_results = np.array(gp.gprofile(selected_genes))
+    top_go_logpvals = np.array([])
+    top_go_termnames = np.array([])
+    top_go_dbIDs = np.array([])
+    if go_results.shape[0] > 0:
+        go_results = go_results[:topk, :]
+        top_go_logpvals = -np.log10(go_results[:,2].astype(float))
+        top_go_dbIDs = go_results[:,9]
+        top_go_termnames = go_results[:,11]
+    database_colors = { 'MF': '#CB3C19'}
+    database_IDs = {'MF': 'Molecular function'}
+    bar_colors = np.array([database_colors[x] for x in top_go_dbIDs])
+    panel_data = []
+    ordi = np.arange(len(top_go_dbIDs))[::-1]
+    for c in np.unique(bar_colors):
+        trace_locs = np.where(bar_colors == c)[0]
+        trace_locs = trace_locs[::-1]      # Reverse because it's better.
+        panel_data.append({
+            'name': database_IDs[top_go_dbIDs[trace_locs[0]]], 
+            'x': top_go_logpvals[trace_locs],
+            'y': ordi[trace_locs], 
+            'hovertext': [
+                "-log(p): {}<br>{}<br>{}".format(
+                    str(round(top_go_logpvals[t], 2)), 
+                    top_go_termnames[t]
+                ) for t in trace_locs], 
+            'text': top_go_termnames[trace_locs], 
+            'hoverinfo': 'text', 
+            'insidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
+            'outsidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
+            'marker': { 'color': c },      
+            'textposition': 'auto', 
+            'orientation': 'h', 
+            'type': 'bar'
+        })
+    return {'data': panel_data, 'layout': panel_layout }
+
+
 
 
 from gprofiler import GProfiler
@@ -456,7 +523,7 @@ def display_goenrich_panel_func(selected_genes, topk=20):
             # 'y': top_go_termIDs[trace_locs],
             'hovertext': [
                 "-log(p): {}<br>{}<br>{}".format(
-                    str(top_go_logpvals[t]), 
+                    str(round(top_go_logpvals[t], 2)), 
                     top_go_termnames[t], 
                     top_go_termIDs[t]
                 ) for t in trace_locs], 
