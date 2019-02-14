@@ -13,11 +13,10 @@ if not _DEPLOY_LOCALLY:
 else:
     data_pfx = '/Users/akshay/github/coessentiality-browser/'
 
-params['plot_data_df_path'] = ["{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in [
-    "_GLS02_CO49_RC49", "_GLS01_CO99", "_GLS01_RC99", "_GLS1_CO0"]]
+params['plot_data_df_path'] = ["{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in ["_GLS01_CO99", "_GLS01_RC99", "_GLS1_CO0", "_GLS02_CO49_RC49"]]
 params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
 # params['dataset_options'] = [x.split('/')[-1].split('.')[0] for x in params['plot_data_df_path']]
-params['dataset_options'] = ["Default", "Emphasize all cluster-one clusters", "Emphasize colored Roarke clusters", "Emphasize GLS"]
+params['dataset_options'] = ["Emphasize all cluster-one clusters", "Emphasize colored Roarke clusters", "Emphasize GLS", "Mixed"]
 
 params['bg_color'] = '#000000'
 params['hm_colorvar_name'] = 'Ess.'
