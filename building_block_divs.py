@@ -120,7 +120,7 @@ def create_hm_layout(scatter_frac_domain):
         'xaxis2': {
             'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
             'domain': [0, scatter_frac_domain], 
-            'range': [-1, 0.1]
+            'range': [-1, 0.2]
         }, 
         'yaxis': {
             'automargin': True, 
@@ -482,7 +482,7 @@ div_serialization = html.Div(
                 html.A(
                     'Save gene set selection',
                     id='download-set-link',
-                    download="selected_set.json", 
+                    download="selected_set.csv", 
                     href="",
                     target="_blank", 
                     style={
@@ -712,6 +712,22 @@ def create_div_cosmetic_panel():
                 className='row', 
                 children=[
                     dcc.Checklist(
+                        id='toggle-future-panels', 
+                        options=[
+                            {'label': 'Diff. feature sets', 'value': 'diff_features'}
+                        ],
+                        values=[], 
+                        style={
+                            'textAlign': 'left', 
+                            'width': '80%', 
+                            'color': app_config.params['font_color']
+                        }, 
+                        labelStyle={
+                            'display': 'inline-block', 
+                            'margin-right': '5px'
+                        }
+                    ), 
+                    dcc.Checklist(
                         id='toggle-debug-panels', 
                         options=[
                             {'label': 'Debug panel', 'value': 'debug-panel'}
@@ -730,6 +746,32 @@ def create_div_cosmetic_panel():
                 style={'padding-top': '0px'}
             )
         ], 
+        style=style_outer_dialog_box
+    )
+
+
+def create_div_diff_features():
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='six columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='diff-foreset-select', 
+                        placeholder="Select foreground set"
+                    )], 
+                style={'padding-top': '0px'}
+            ), 
+            html.Div(
+                className='six columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='diff-backset-select', 
+                        placeholder="Select background set"
+                    )], 
+                style={'padding-top': '0px'}
+            )], 
         style=style_outer_dialog_box
     )
 
@@ -791,6 +833,10 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
                     create_div_landscapes(point_names, feat_names, more_colorvars), 
                     create_div_sidepanels(point_names, feat_names, more_colorvars)
                 ]
+            ), 
+            html.Div(
+                id='hm-future-panels', 
+                children=[]
             ), 
             create_div_cosmetic_panel(), 
             html.Div([ html.Pre(id='test-select-data', style={ 'color': app_config.params['font_color'], 'overflowX': 'scroll' } ) ]),     # For testing purposes only!
