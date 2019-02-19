@@ -127,7 +127,8 @@ def traces_scatter(
     colorscale, 
     selected_point_ids, 
     bg_marker_size=app_config.params['bg_marker_size_factor'], 
-    marker_size=app_config.params['marker_size_factor']
+    marker_size=app_config.params['marker_size_factor'], 
+    style_selected=building_block_divs.style_selected
 ):
     traces_list = []
     display_ndces = app_config.params['display_coordinates']
@@ -169,7 +170,7 @@ def traces_scatter(
                 'color': continuous_color_var, 
                 'colorscale': colorscale
             }, 
-            'selected': building_block_divs.style_selected, 
+            'selected': style_selected, 
             'type': 'scattergl'
         })
     else:    # Categorical color scheme, one trace per color
@@ -198,7 +199,7 @@ def traces_scatter(
                     'symbol': 'circle', 
                     'color': trace_color
                 }, 
-                'selected': building_block_divs.style_selected
+                'selected': style_selected
             }
             if not app_config.params['three_dims']:
                 trace_info.update({'type': 'scattergl'})
@@ -214,18 +215,24 @@ def layout_scatter(annots):
     return new_layout
 
 
-def build_main_scatter(data_df, color_var, colorscale, 
+def build_main_scatter(data_df, color_var, colorscale, highlight=False, 
                        bg_marker_size=app_config.params['bg_marker_size_factor'], 
                        marker_size=app_config.params['marker_size_factor'], 
-                       annots=[], selected_point_ids=[]
+                       annots=[], selected_point_ids=[], 
+                       style_selected = building_block_divs.style_selected
                       ):
+    if highlight:
+        style_selected['marker']['color'] = 'white'
+    else:
+        style_selected['marker'].pop('color', None)    # Remove color if exists
     trace_list = traces_scatter(
         data_df, 
         color_var, 
         colorscale, 
         selected_point_ids, 
         bg_marker_size=bg_marker_size, 
-        marker_size=marker_size
+        marker_size=marker_size, 
+        style_selected=style_selected
     )
     return { 
         'data': trace_list, 

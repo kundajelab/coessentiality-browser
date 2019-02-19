@@ -250,7 +250,7 @@ def parse_upload_contents(contents, filename):
 @app.callback(
     Output('test-select-data', 'children'),
     [Input('toggle-debug-panels', 'values'), 
-     Input('landscape-plot', 'selectedData'), 
+     Input('stored-landscape-selected', 'data'), 
      Input('stored-pointsets', 'data'), 
      Input('main-heatmap', 'selectedData'), 
      Input('stored-most-recently-highlighted', 'data')]
@@ -263,7 +263,7 @@ def display_test(
     hlight_store
 ):
     see_hm = "0" if hmsel_data is None else str(len(hmsel_data['points']))
-    see_sel = "0" if sel_data is None else str(len(sel_data['points']))
+    see_sel = "0" if sel_data is None else str(len(sel_data))
     see_hlight = "{}\t{}".format(hlight_store['_last_panel_highlighted'], len(hlight_store.keys()) - 1)
     toret = ""
     for setname in data_store:
