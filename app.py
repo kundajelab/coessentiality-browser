@@ -232,7 +232,7 @@ def run_update_landscape(
 def parse_upload_contents(contents, filename):
     content_type, content_string = contents.split(',')
     decoded = base64.b64decode(content_string)
-    return decoded.decode('utf-8').split('\n')
+    return decoded.decode('utf-8').splitlines()
     if 'json' in filename:
         return json.loads(decoded)
     elif 'csv' in filename:
