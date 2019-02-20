@@ -24,6 +24,8 @@ For more on jobs that take a while: set up workers https://github.com/WileyIntel
 
 # Load gene embedded coordinates.
 plot_data_df = pd.read_csv(app_config.params['plot_data_df_path'][0], sep="\t", index_col=False)
+plot_data_df['custom_colors'] = 'Unannotated'
+
 # graph_adj = sp.sparse.load_npz(app_config.params['adj_mat_path'])
 data_ess = pd.read_csv(app_config.params['raw_ess_data_path'], index_col=0, header=0, sep='\t')
 data_ess = data_ess[data_ess.columns[:-4]]   # Only first 481 cols put through GLS, so isolate these
@@ -31,7 +33,12 @@ data_ess = data_ess[data_ess.columns[:-4]]   # Only first 481 cols put through G
 point_names = np.array(plot_data_df['gene_names'])
 feat_names = data_ess.columns
 cancer_types = data_ess.columns.str.split('_').str[1:].str.join(' ').str.capitalize().str.replace('Haematopoietic and lymphoid tissue', 'Hematopoietic/lymphoid')
-additional_colorvars = []#app_config.params['additional_colorvars']
+
+ctypes = [x for x in np.unique(cancer_types)]
+colorlist = app_config.cmap_celltypes
+cell_line_colordict = dict([x for x in zip(ctypes, colorlist[0:len(ctypes)])])
+
+additional_colorvars = ['roarke_clusters']
 
 raw_data = data_ess.values
 
@@ -542,6 +549,7 @@ def update_landscape(
     dataset_names = app_config.params['dataset_options']
     ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
     data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
+    data_df['custom_colors'] = 'Unannotated'
     style_selected = building_block_divs.style_selected
     
     recently_highlighted = [x for x in aux_highlighted.keys()]

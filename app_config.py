@@ -21,7 +21,7 @@ params['dataset_options'] = ["Emphasize all cluster-one clusters", "Emphasize co
 params['bg_color'] = '#000000'
 params['hm_colorvar_name'] = 'Ess.'
 params['hm_diverging'] = True
-params['default_color_var'] = 'roarke_clusters'
+params['default_color_var'] = 'custom_colors'
 
 
 
@@ -38,6 +38,9 @@ params['continuous_color'] = False
 # ======================================================
 
 # Custom colorscales.
+
+cmap_celltypes = ["#f7ff00","#fabebe","#ff8300","#f000ff","#74ee15","#4363d8","#001eff","#ff3300","#cab2d6","#008080","#808000","#bcf60c","#bec1d4","#fb9a99","#ffd8b1","#3cb44b","#bc5300","#ffe119","#33ccff","#911eb4","#46f0f0","#d220c8","#e6beff","#e6194b","#aaffc3","#000075"]
+
 # Perceptually uniform blackbody, good for black background as in https://github.com/kennethmoreland-com/kennethmoreland-com.github.io/blob/master/color-advice/black-body/black-body.ipynb
 cmap_custom_blackbody = [[0.0, "#000000"], [0.39, "#b22222"], [0.58, "#e36905"], [0.84, "#eed214"], [1.0, "#ffffff"]]
 

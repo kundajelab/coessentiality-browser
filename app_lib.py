@@ -194,8 +194,8 @@ def traces_scatter(
                 'mode': 'markers', 
                 'opacity': trace_opacity, 
                 'marker': {
-                    'size': marker_size if str(idx) != 'Unknown' else bg_marker_size, 
-                    'opacity': app_config.params['marker_opacity_factor'] if str(idx) != 'Unknown' else app_config.params['bg_marker_opacity_factor'], 
+                    'size': marker_size if str(idx) in ['Unknown', 'Unannotated'] else bg_marker_size, 
+                    'opacity': app_config.params['marker_opacity_factor'] if str(idx) in ['Unknown', 'Unannotated'] else app_config.params['bg_marker_opacity_factor'], 
                     'symbol': 'circle', 
                     'color': trace_color
                 }, 
@@ -223,6 +223,7 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
                       ):
     if highlight:
         style_selected['marker']['color'] = 'white'
+        # style_selected['marker']['size'] = 10     # TODO: Change this back on unhighlighting.
     else:
         style_selected['marker'].pop('color', None)    # Remove color if exists
     trace_list = traces_scatter(
