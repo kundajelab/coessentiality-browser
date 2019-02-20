@@ -608,7 +608,8 @@ def create_div_landscape_ctrl():
             dcc.Checklist(
                 id='toggle-landscape-whiten', 
                 options=[
-                    {'label': 'Whiten', 'value': 'on'}
+                    {'label': 'Indicate', 'value': 'arrow'}, 
+                    {'label': 'Highlight', 'value': 'highlight'}
                 ],
                 values=[], 
                 style={

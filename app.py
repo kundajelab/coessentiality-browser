@@ -100,10 +100,11 @@ def highlight_landscape_func(
     point_names_to_use, 
     bg_marker_size=app_config.params['bg_marker_size_factor'], 
     marker_size=app_config.params['marker_size_factor'], 
+    style_selected=building_block_divs.style_selected, 
     color_var=app_config.params['default_color_var'], # Could be an array of continuous colors!
-    continuous_color=app_config.params['continuous_color'], 
     colorscale=app_config.params['colorscale'], 
     selectedpoint_ids=[], 
+    highlight_selected=False, 
     absc_arr=None, 
     ordi_arr=None
 ):
@@ -132,10 +133,12 @@ def highlight_landscape_func(
         data_df, 
         color_var, 
         colorscale, 
+        highlight=highlight_selected, 
         annots=annots, 
         selected_point_ids=selectedpoint_ids, 
         bg_marker_size=bg_marker_size, 
-        marker_size=marker_size
+        marker_size=marker_size, 
+        style_selected=style_selected
     )
     return toret
 
@@ -173,17 +176,19 @@ def run_update_landscape(
     annotated_points,      # Selected points annotated
     subset_store,       # Store of selected point subsets.
     highlight_selected_points, 
+    indicate_selected_points, 
     data_df, 
     point_names, 
     raw_data_to_use, 
     bg_marker_size, 
     marker_size, 
+    style_selected, 
     highlighted_points=[]
 ):
     pointIDs_to_select = highlighted_points if (len(highlighted_points) > 0) else list(subset_store['_current_selected_data'].keys())
     if annotated_points is None:
         annotated_points = []
-    if (len(annotated_points) == 0) and highlight_selected_points:
+    if (len(annotated_points) == 0) and indicate_selected_points:
         annotated_points = pointIDs_to_select
     absc_arr = data_df[app_config.params['display_coordinates']['x']]
     ordi_arr = data_df[app_config.params['display_coordinates']['y']]
@@ -205,13 +210,14 @@ def run_update_landscape(
             data_df, 
             point_names, 
             color_var=new_colors, 
-            continuous_color=True, 
             colorscale=app_config.params['colorscale_continuous'], 
             selectedpoint_ids=pointIDs_to_select, 
+            highlight_selected=highlight_selected_points, 
             absc_arr=absc_arr, 
             ordi_arr=ordi_arr, 
             bg_marker_size=bg_marker_size, 
-            marker_size=marker_size
+            marker_size=marker_size, 
+            style_selected=style_selected
         )
     else:    # color_scheme is a col ID indexing a discrete column.
         return highlight_landscape_func(
@@ -219,13 +225,14 @@ def run_update_landscape(
             data_df, 
             point_names, 
             color_var=color_scheme, 
-            continuous_color=False, 
             colorscale=app_config.params['colorscale_discrete'], 
             selectedpoint_ids=pointIDs_to_select, 
+            highlight_selected=highlight_selected_points, 
             absc_arr=absc_arr, 
             ordi_arr=ordi_arr, 
             bg_marker_size=bg_marker_size, 
-            marker_size=marker_size
+            marker_size=marker_size, 
+            style_selected=style_selected
         )
 
     
@@ -526,7 +533,7 @@ def update_landscape(
     annotated_points,      # Selected points annotated
     subset_store,          # Store of selected point subsets.
     sourcedata_select, 
-    whiten_hm_selected, 
+    lightup_selected, 
     aux_highlighted, 
     bg_marker_size, 
     marker_size
@@ -535,18 +542,22 @@ def update_landscape(
     dataset_names = app_config.params['dataset_options']
     ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
     data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
+    style_selected = building_block_divs.style_selected
+    
     recently_highlighted = [x for x in aux_highlighted.keys()]
     recently_highlighted.remove('_last_panel_highlighted')
     return run_update_landscape(
         color_scheme, 
         annotated_points, 
         subset_store, 
-        'on' in whiten_hm_selected, 
+        'highlight' in lightup_selected, 
+        'arrow' in lightup_selected, 
         data_df, 
         point_names, 
         raw_data, 
         bg_marker_size, 
         marker_size, 
+        style_selected, 
         highlighted_points=recently_highlighted    # List of most recently highlighted cells.
     )
 
