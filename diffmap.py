@@ -37,7 +37,10 @@ def compute_coclustering(
     model.fit(fit_data + tol_bicluster)
     ordered_rows = np.argsort(model.row_labels_)
     ordered_cols = np.argsort(model.column_labels_)
-    return ordered_rows, ordered_cols
+    return (
+        ordered_rows, ordered_cols, 
+        model.row_labels_[ordered_rows], model.column_labels_[ordered_cols]
+    )
 
 
 """

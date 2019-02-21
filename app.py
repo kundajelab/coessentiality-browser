@@ -156,6 +156,7 @@ def run_update_main_heatmap(
     landscape_scatter_fig, 
     point_names_to_use, 
     raw_data_to_use, 
+    feat_select=False, 
     num_points_to_sample=10000
 ):
     pointIDs_to_display = list(subset_store['_current_selected_data'].keys())
@@ -174,6 +175,7 @@ def run_update_main_heatmap(
         subset_point_names, 
         landscape_scatter_fig, 
         cocluster_mode, 
+        feat_select=feat_select, 
         feat_group_names=cancer_types, 
         feat_colordict=cell_line_colordict
     )
@@ -504,12 +506,14 @@ Update the main heatmap.
 @app.callback(
     Output('main-heatmap', 'figure'),
     [Input('main-heatmap-roworder', 'value'), 
-     Input('stored-pointsets', 'data')], 
+     Input('stored-pointsets', 'data'), 
+     Input('toggle-hm-cols', 'values')], 
     [State('landscape-plot', 'figure')]
 )
 def update_main_heatmap(
     view_option, 
     subset_store, 
+    hm_col_panel, 
     landscape_scatter_fig, 
     num_points_to_sample=10000
 ):
@@ -519,7 +523,8 @@ def update_main_heatmap(
         landscape_scatter_fig, 
         point_names, 
         raw_data, 
-        num_points_to_sample=num_points_to_sample
+        num_points_to_sample=num_points_to_sample, 
+        feat_select=('on' in hm_col_panel)
     )
 
 

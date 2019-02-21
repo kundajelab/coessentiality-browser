@@ -247,7 +247,7 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
 # ========================================================
 
 
-def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
+def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=None):
     row_scat_traces = []
     all_hm_point_names = []
     hmscat_mode = 'markers'
@@ -312,26 +312,37 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
     return row_scat_traces, fit_data, all_hm_point_names
 
 
-def hm_col_scatter(fit_data, feat_colordict, reordered_groups=None, reordered_featnames=None):
+def hm_col_plot(
+    fit_data, feat_colordict, 
+    reordered_groups=None, reordered_featnames=None, col_clustIDs=None
+):
     if reordered_featnames is None:
         reordered_featnames = feat_colordict.keys()
     if reordered_groups is None:
         reordered_groups = reordered_featnames
+    transform_col_order = np.arange(fit_data.shape[1])
+    # Sort genes by color within each cluster, editing ordered_cols appropriately.
+    for cid in np.unique(col_clustIDs):
+        ndcesc = np.where(col_clustIDs == cid)[0]
+        clust_colors = reordered_groups[ndcesc]
+        # print(np.sort(clust_colors))
+        new_order_perclust = np.argsort(clust_colors)
+        transform_col_order[ndcesc] = transform_col_order[ndcesc][new_order_perclust]
+    
     col_scat_traces = []
-    hmscat_mode = 'markers'
-    hm_col_ndces = []
+    fit_data = fit_data[:, transform_col_order]
+    reordered_groups = reordered_groups[transform_col_order]
+    reordered_featnames = reordered_featnames[transform_col_order]
     for feat_group in feat_colordict:
         trace_marker = {
-            'size': 1, #app_config.params['marker_size_factor'], 
-            'opacity': app_config.params['marker_opacity_factor'], 
-            'symbol': 'circle', 
+#             'size': 1, #app_config.params['marker_size_factor'], 
+#             'opacity': app_config.params['marker_opacity_factor'], 
+#             'symbol': 'circle', 
             'color': feat_colordict[feat_group]
         }
         feat_ndces_this_trace = np.where(reordered_groups == feat_group)[0]
-        # Of the point names, choose the ones in this trace and get their indices...
         feat_names_this_trace = reordered_featnames[feat_ndces_this_trace]
         x_coords_this_trace = feat_names_this_trace# np.arange(len(reordered_featnames))[feat_ndces_this_trace]
-        hm_col_ndces.extend(feat_ndces_this_trace)
         new_trace = {
             'name': feat_group, 
             'x': x_coords_this_trace, 
@@ -339,7 +350,7 @@ def hm_col_scatter(fit_data, feat_colordict, reordered_groups=None, reordered_fe
             'yaxis': 'y2', 
             'hoverinfo': 'text+name', 
             'text': feat_names_this_trace, 
-            'mode': hmscat_mode, 
+            'mode': 'markers', 
             'textposition': 'top center', 
             'textfont': building_block_divs.hm_font_macro, 
             'marker': trace_marker, 
@@ -368,6 +379,7 @@ def display_heatmap_cb(
     view_cocluster, 
     feat_colordict=None, 
     feat_group_names=None, 
+    feat_select=False, 
     scatter_frac_domain=0.10, 
     scatter_frac_range=0.08
 ):
@@ -387,8 +399,10 @@ def display_heatmap_cb(
         fit_data = qtiles
     # Spectral coclustering to cluster the heatmap. We always order rows (points) by spectral projection, 
     # But cols (features) can have different orderings for different viewing options.
+    row_clustIDs = np.zeros(fit_data.shape[0])
+    col_clustIDs = np.zeros(fit_data.shape[1])
     if (fit_data.shape[0] > 1):
-        ordered_rows, ordered_cols = dm.compute_coclustering(fit_data)
+        ordered_rows, ordered_cols, row_clustIDs, col_clustIDs = dm.compute_coclustering(fit_data)
         fit_data = fit_data[ordered_rows, :]
         hm_point_names = hm_point_names[ordered_rows]
     else:
@@ -399,11 +413,16 @@ def display_heatmap_cb(
     
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
     row_scat_traces, fit_data, hm_point_names = hm_row_scatter(
-        fit_data, scatter_fig, hm_point_names, view_cocluster
+        fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
     )
-    col_scat_traces, fit_data = hm_col_scatter(
-        fit_data, feat_colordict, reordered_groups=absc_group_labels, reordered_featnames=absc_labels
-    )
+    if feat_select:
+        col_scat_traces, fit_data = hm_col_plot(
+            fit_data, feat_colordict, 
+            reordered_groups=absc_group_labels, reordered_featnames=absc_labels, 
+            col_clustIDs=col_clustIDs
+        )
+    else:
+        col_scat_traces = []
     pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
         'z': fit_data, 
@@ -509,23 +528,19 @@ from gprofiler import GProfiler
 """
 Update GO enrichment panel.
 
-g:GOSt API (in class header of gprofiler.py).
-
+g:GOSt API (in class header of gprofiler.py):
 * ``all_results`` - (*Boolean*) All results, including those deemed not significant.
 * ``ordered`` - (*Boolean*) Ordered query.
 * ``exclude_iea`` - (*Boolean*) Exclude electronic GO annotations.
 * ``underrep`` - (*Boolean*) Measure underrepresentation.
-* ``evcodes`` - (*Boolean*) Request evidence codes in output as the
-  final column.
+* ``evcodes`` - (*Boolean*) Request evidence codes in output as the final column.
 * ``hier_sorting`` - (*Boolean*) Sort output into subgraphs.
 * ``hier_filtering`` - (*Boolean*) Hierarchical filtering.
 * ``max_p_value`` - (*Float*) Custom p-value threshold.
 * ``min_set_size`` - (*Int*) Minimum size of functional category.
 * ``max_set_size`` - (*Int*) Maximum size of functional category.
-* ``min_isect_size`` - (*Int*) Minimum size of query / functional
-  category intersection.
-* ``max_isect_size`` - (*Int*) Maximum size of query / functional
-  category intersection.
+* ``min_isect_size`` - (*Int*) Minimum size of query / functional category intersection.
+* ``max_isect_size`` - (*Int*) Maximum size of query / functional category intersection.
 * ``correction_method`` - Algorithm used for multiple testing correction, one of:
   - ``GProfiler.THR_GSCS`` **Default** g:SCS.
   - ``GProfiler.THR_FDR`` Benjamini-Hochberg FDR.

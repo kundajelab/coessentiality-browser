@@ -306,7 +306,7 @@ def create_div_sync_selection():
                     )], style={'padding-top': '5px'}
             ), 
             html.Div(
-                className='three columns', 
+                className='two columns', 
                 children=[
                     dcc.Checklist(
                         id='toggle-hm-zoom', 
@@ -323,7 +323,24 @@ def create_div_sync_selection():
                 style={'padding-top': '0px'}
             ), 
             html.Div(
-                className='four columns', 
+                className='two columns', 
+                children=[
+                    dcc.Checklist(
+                        id='toggle-hm-cols', 
+                        options=[
+                            {'label': 'Cell line select', 'value': 'on'}
+                        ],
+                        values=[], 
+                        style={
+                            'textAlign': 'left', 
+                            'width': '80%', 
+                            'color': app_config.params['font_color']
+                        }
+                    )], 
+                style={'padding-top': '0px'}
+            ), 
+            html.Div(
+                className='three columns', 
                 children=[
                     dcc.RadioItems(
                         id='main-heatmap-roworder', 
