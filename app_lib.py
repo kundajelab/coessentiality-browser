@@ -312,6 +312,44 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster):
     return row_scat_traces, fit_data, all_hm_point_names
 
 
+def hm_col_scatter(fit_data, feat_colordict, reordered_groups=None, reordered_featnames=None):
+    if reordered_featnames is None:
+        reordered_featnames = feat_colordict.keys()
+    if reordered_groups is None:
+        reordered_groups = reordered_featnames
+    col_scat_traces = []
+    hmscat_mode = 'markers'
+    hm_col_ndces = []
+    for feat_group in feat_colordict:
+        trace_marker = {
+            'size': 1, #app_config.params['marker_size_factor'], 
+            'opacity': app_config.params['marker_opacity_factor'], 
+            'symbol': 'circle', 
+            'color': feat_colordict[feat_group]
+        }
+        feat_ndces_this_trace = np.where(reordered_groups == feat_group)[0]
+        # Of the point names, choose the ones in this trace and get their indices...
+        feat_names_this_trace = reordered_featnames[feat_ndces_this_trace]
+        x_coords_this_trace = feat_names_this_trace# np.arange(len(reordered_featnames))[feat_ndces_this_trace]
+        hm_col_ndces.extend(feat_ndces_this_trace)
+        new_trace = {
+            'name': feat_group, 
+            'x': x_coords_this_trace, 
+            'y': np.zeros(len(feat_names_this_trace)), 
+            'yaxis': 'y2', 
+            'hoverinfo': 'text+name', 
+            'text': feat_names_this_trace, 
+            'mode': hmscat_mode, 
+            'textposition': 'top center', 
+            'textfont': building_block_divs.hm_font_macro, 
+            'marker': trace_marker, 
+            'selected': building_block_divs.style_selected, 
+            'type': 'scatter'
+        }
+        col_scat_traces.append(new_trace)
+    return col_scat_traces, fit_data
+
+
 def hm_hovertext(data, rownames, colnames):
     pt_text = []
     # First the rows, then the cols
@@ -327,8 +365,11 @@ def display_heatmap_cb(
     feat_names,     # col labels of hm_raw_data
     hm_point_names,    # (unique!) row labels of hm_raw_data
     scatter_fig,    # Scatterplot panel which this is mirroring.
-    view_cocluster,  
-    scatter_frac_domain=0.10
+    view_cocluster, 
+    feat_colordict=None, 
+    feat_group_names=None, 
+    scatter_frac_domain=0.10, 
+    scatter_frac_range=0.08
 ):
     fit_data = hm_raw_data
     if not app_config.params['hm_diverging']:
@@ -336,6 +377,7 @@ def display_heatmap_cb(
     # Identify (interesting) genes to plot. Currently: high-variance genes
     feat_ndces = interesting_feat_ndces(fit_data)
     absc_labels = feat_names[feat_ndces]
+    absc_group_labels = feat_group_names[feat_ndces]
     fit_data = fit_data[:, feat_ndces]
     # Quantile normalize the data if necessary to better detect patterns.
     if app_config.params['hm_qnorm_plot']:
@@ -353,9 +395,15 @@ def display_heatmap_cb(
         ordered_cols = np.arange(fit_data.shape[1])
     fit_data = fit_data[:, ordered_cols]
     absc_labels = absc_labels[ordered_cols]
+    absc_group_labels = absc_group_labels[ordered_cols]
     
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
-    row_scat_traces, fit_data, hm_point_names = hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster)
+    row_scat_traces, fit_data, hm_point_names = hm_row_scatter(
+        fit_data, scatter_fig, hm_point_names, view_cocluster
+    )
+    col_scat_traces, fit_data = hm_col_scatter(
+        fit_data, feat_colordict, reordered_groups=absc_group_labels, reordered_featnames=absc_labels
+    )
     pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
         'z': fit_data, 
@@ -383,10 +431,13 @@ def display_heatmap_cb(
         hm_trace['zmin'] = -max_magnitude
         hm_trace['zmax'] = max_magnitude
     return {
-        'data': [ hm_trace ] + row_scat_traces, 
-        'layout': building_block_divs.create_hm_layout(scatter_frac_domain) 
+        'data': [ hm_trace ] + row_scat_traces + col_scat_traces, 
+        'layout': building_block_divs.create_hm_layout(scatter_frac_domain, scatter_frac_range) 
     }
 
+
+"""
+# TODO: Finish this function, which plots mean feature values over each heatmap cluster.
 
 def generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list, featID='Gene'):
     cluster_IDs = np.unique(cell_cluster_list)
@@ -414,7 +465,7 @@ def generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list, featID
             'font': building_block_divs.legend_font_macro
         }
     }
-    go_results = np.array(gp.gprofile(selected_genes))
+    go_results = np.array(selected_genes)
     top_go_logpvals = np.array([])
     top_go_termnames = np.array([])
     top_go_dbIDs = np.array([])
@@ -450,7 +501,7 @@ def generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list, featID
             'type': 'bar'
         })
     return {'data': panel_data, 'layout': panel_layout }
-
+"""
 
 
 
@@ -534,8 +585,8 @@ def display_goenrich_panel_func(selected_genes, topk=20):
         panel_data.append({
             'name': database_IDs[top_go_dbIDs[trace_locs[0]]], 
             'x': top_go_logpvals[trace_locs],
-            'y': ordi[trace_locs], 
-            # 'y': top_go_termIDs[trace_locs],
+            # 'y': ordi[trace_locs], 
+            'y': top_go_termIDs[trace_locs],
             'hovertext': [
                 "-log(p): {}<br>{}<br>{}".format(
                     str(round(top_go_logpvals[t], 2)), 

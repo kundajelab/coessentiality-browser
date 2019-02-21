@@ -173,7 +173,9 @@ def run_update_main_heatmap(
         feat_names, 
         subset_point_names, 
         landscape_scatter_fig, 
-        cocluster_mode
+        cocluster_mode, 
+        feat_group_names=cancer_types, 
+        feat_colordict=cell_line_colordict
     )
     return hm_fig
 

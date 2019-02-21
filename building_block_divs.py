@@ -96,7 +96,7 @@ style_legend = {
 }
 
 
-def create_hm_layout(scatter_frac_domain):
+def create_hm_layout(scatter_frac_domain, scatter_frac_range):
     hm_layout = {
         'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 30 }, 
         'clickmode': 'event+select',  # https://github.com/plotly/plotly.js/pull/2944/
@@ -125,9 +125,16 @@ def create_hm_layout(scatter_frac_domain):
         'yaxis': {
             'automargin': True, 
             'showticklabels': False, #'side': 'right', 
-            'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False 
+            'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
+            'domain': [0, 1-scatter_frac_range] 
+        }, 
+        'yaxis2': {
+            'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
+            'domain': [1-scatter_frac_range, 1], 
+            'range': [-0.2, 1]
         }, 
         'legend': style_legend, 
+        'showlegend': False, 
         'plot_bgcolor': app_config.params['bg_color'], 
         'paper_bgcolor': app_config.params['bg_color']
     }
@@ -616,6 +623,9 @@ def create_div_landscape_ctrl():
                     'textAlign': 'left', 
                     'width': '80%', 
                     'color': app_config.params['font_color']
+                }, 
+                labelStyle={
+                    'display': 'inline-block'
                 }
             )], 
         style={'padding-top': '0px'}
@@ -692,7 +702,8 @@ def create_div_cosmetic_panel():
                     dcc.Checklist(
                         id='toggle-hm-feat-panels', 
                         options=[
-                            {'label': 'Per-cluster', 'value': 'bars'}, 
+                            {'label': 'Cell line selection', 'value': 'bars'}, 
+                            {'label': 'Per-cluster', 'value': 'percluster'}, 
                             {'label': 'Dendrogram', 'value': 'dendrogram'}, 
                             {'label': 'Heatmap', 'value': 'heatmap'}
                         ],
