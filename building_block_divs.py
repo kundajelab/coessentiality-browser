@@ -874,8 +874,8 @@ Main layout.
 import numpy as np
 
 def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
-    go_termIDs = np.load(params['gotermIDs_path'])
-    go_termnames = np.load(params['gotermnames_path'])
+    go_termIDs = np.load(app_config.params['gotermIDs_path'])
+    go_termnames = np.load(app_config.params['gotermnames_path'])
     return html.Div(
         className="container", 
         children=[
