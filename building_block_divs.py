@@ -96,7 +96,20 @@ style_legend = {
 }
 
 
-def create_hm_layout(scatter_frac_domain, scatter_frac_range):
+def create_hm_layout(
+    scatter_frac_domain, scatter_frac_range, show_legend=False, clustersep_coords=None
+):
+    print(clustersep_coords)
+    shape_list = []
+    for x in clustersep_coords:
+        shape_list.append({
+            'type': 'line',
+            'x0': x, 'x1': x, 'y0': -0.3, 'y1': 0.3, 'yref': 'y2', 
+            'line': {
+                'color': 'white',
+                'width': 2
+            }
+        })
     hm_layout = {
         'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 30 }, 
         'clickmode': 'event+select',  # https://github.com/plotly/plotly.js/pull/2944/
@@ -131,12 +144,13 @@ def create_hm_layout(scatter_frac_domain, scatter_frac_range):
         'yaxis2': {
             'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
             'domain': [1-scatter_frac_range, 1], 
-            'range': [-0.2, 1]
+            'range': [-0.2, 0.5]
         }, 
         'legend': style_legend, 
-        'showlegend': False, 
+        'showlegend': show_legend, 
         'plot_bgcolor': app_config.params['bg_color'], 
-        'paper_bgcolor': app_config.params['bg_color']
+        'paper_bgcolor': app_config.params['bg_color'], 
+        'shapes': shape_list
     }
     return hm_layout
 
@@ -295,7 +309,7 @@ def create_div_sync_selection():
         className='row', 
         children=[
             html.Div(
-                className='five columns', 
+                className='six columns', 
                 children=[
                     html.Button(
                         id='hm-highlight-button', 
@@ -328,7 +342,8 @@ def create_div_sync_selection():
                     dcc.Checklist(
                         id='toggle-hm-cols', 
                         options=[
-                            {'label': 'Cell line select', 'value': 'on'}
+                            {'label': 'Cell line select', 'value': 'on'}, 
+                            {'label': 'Cell line legend', 'value': 'legend'}
                         ],
                         values=[], 
                         style={
@@ -340,7 +355,7 @@ def create_div_sync_selection():
                 style={'padding-top': '0px'}
             ), 
             html.Div(
-                className='three columns', 
+                className='two columns', 
                 children=[
                     dcc.RadioItems(
                         id='main-heatmap-roworder', 
@@ -367,7 +382,7 @@ def create_div_sync_selection():
 # ================================================
 
 
-def create_div_go_ctrl(point_names):
+def create_div_go_ctrl(point_names, go_termIDs, go_termnames):
     return html.Div(
         className='row', 
         children=[
@@ -376,7 +391,7 @@ def create_div_go_ctrl(point_names):
                 children=[
                     dcc.Dropdown(
                         id='geneset-select', 
-                        options = [ {'value': gn, 'label': gn} for gn in point_names ], # style={'height': '30px'}, 
+                        options = [ {'value': gn, 'label': gn} for gn in point_names ], 
                         value = [], 
                         placeholder="Gene set for enrichment", multi=True
                     )], 
@@ -401,6 +416,20 @@ def create_div_go_ctrl(point_names):
                         style={'textAlign': 'center', 'width': '100%'}
                     )
                 ]
+            ), 
+            html.Div(
+                className='row', 
+                children=[
+                    dcc.Dropdown(
+                        id='goterm-lookup', 
+                        options = [{'value': '{}'.format(go_termIDs[i]), 
+                                    'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} 
+                                   for i in range(len(go_termIDs)) ], 
+                        value = [], 
+                        placeholder="Look up GO term...", 
+                        multi=True
+                    )], 
+                style={'padding-top': '0px'}
             )], 
         style=style_outer_dialog_box
     )
@@ -821,7 +850,7 @@ def create_div_landscapes(point_names, feat_names, more_colorvars):
     )
 
 
-def create_div_sidepanels(point_names, feat_names, more_colorvars):
+def create_div_sidepanels(point_names, feat_names, more_colorvars, go_termIDs, go_termnames):
     return html.Div(
         className='five columns', 
         children=[
@@ -830,7 +859,7 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars):
             create_div_hm_panel(), 
             create_div_plotcolor(feat_names, more_colorvars),
             create_div_annot(point_names), 
-            create_div_go_ctrl(point_names), 
+            create_div_go_ctrl(point_names, go_termIDs, go_termnames), 
             div_go_panel
             # div_reviz_scatter
         ],
@@ -842,8 +871,11 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars):
 """
 Main layout.
 """
+import numpy as np
 
 def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
+    go_termIDs = np.load('gotermIDs.npy')
+    go_termnames = np.load('gotermnames.npy')
     return html.Div(
         className="container", 
         children=[
@@ -860,7 +892,7 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
                 className="row", 
                 children=[
                     create_div_landscapes(point_names, feat_names, more_colorvars), 
-                    create_div_sidepanels(point_names, feat_names, more_colorvars)
+                    create_div_sidepanels(point_names, feat_names, more_colorvars, go_termIDs, go_termnames)
                 ]
             ), 
             html.Div(

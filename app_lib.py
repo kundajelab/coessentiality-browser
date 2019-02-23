@@ -381,7 +381,8 @@ def display_heatmap_cb(
     feat_group_names=None, 
     feat_select=False, 
     scatter_frac_domain=0.10, 
-    scatter_frac_range=0.08
+    scatter_frac_range=0.08, 
+    show_legend=False
 ):
     fit_data = hm_raw_data
     if not app_config.params['hm_diverging']:
@@ -405,12 +406,13 @@ def display_heatmap_cb(
         ordered_rows, ordered_cols, row_clustIDs, col_clustIDs = dm.compute_coclustering(fit_data)
         fit_data = fit_data[ordered_rows, :]
         hm_point_names = hm_point_names[ordered_rows]
+#         row_clustIDs = row_clustIDs[ordered_rows]
+#         col_clustIDs = col_clustIDs[ordered_cols]
     else:
         ordered_cols = np.arange(fit_data.shape[1])
     fit_data = fit_data[:, ordered_cols]
     absc_labels = absc_labels[ordered_cols]
     absc_group_labels = absc_group_labels[ordered_cols]
-    
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
     row_scat_traces, fit_data, hm_point_names = hm_row_scatter(
         fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
@@ -449,9 +451,18 @@ def display_heatmap_cb(
         max_magnitude = np.percentile(np.abs(fit_data), 99) if fit_data.shape[0] > 0 else 2
         hm_trace['zmin'] = -max_magnitude
         hm_trace['zmax'] = max_magnitude
+    # assemble coordinates of lines adumbrating clusters.
+    clustersep_line_coords = []
+    for cid in np.unique(col_clustIDs):
+        ndcesc = np.where(col_clustIDs == cid)[0]
+        clustersep_line_coords.append(np.min(ndcesc) - 0.5)
+    clustersep_line_coords.append(fit_data.shape[1] + 0.5)
+    
     return {
         'data': [ hm_trace ] + row_scat_traces + col_scat_traces, 
-        'layout': building_block_divs.create_hm_layout(scatter_frac_domain, scatter_frac_range) 
+        'layout': building_block_divs.create_hm_layout(
+            scatter_frac_domain, scatter_frac_range, show_legend=show_legend, clustersep_coords=clustersep_line_coords
+        ) 
     }
 
 
@@ -525,9 +536,24 @@ def generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list, featID
 
 
 from gprofiler import GProfiler
+
+
+# Given a gene set, returns GO+other database enrichment results using gProfiler.
+def get_goenrichment_from_genes(gene_list):
+    gp = GProfiler("MyToolName/0.1")
+    return np.array(gp.gprofile(gene_list))
+
+
+# Given a GO term ID, returns a list of genes under that ID using gProfiler.
+def get_genes_from_goterm(termID):
+    gp = GProfiler("MyToolName/0.2")
+    go_results = np.array(gp.gconvert(termID, target="GO"))
+    return np.unique([x[4] for x in go_results])
+
+
 """
 Update GO enrichment panel.
-
+https://biit.cs.ut.ee/gprofiler/page/apis. or 
 g:GOSt API (in class header of gprofiler.py):
 * ``all_results`` - (*Boolean*) All results, including those deemed not significant.
 * ``ordered`` - (*Boolean*) Ordered query.
@@ -577,8 +603,7 @@ def display_goenrich_panel_func(selected_genes, topk=20):
             'font': building_block_divs.legend_font_macro
         }
     }
-    gp = GProfiler("MyToolName/0.1")
-    go_results = np.array(gp.gprofile(selected_genes))
+    go_results = get_goenrichment_from_genes(selected_genes) 
     top_go_logpvals = np.array([])
     top_go_termnames = np.array([])
     top_go_dbIDs = np.array([])

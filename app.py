@@ -157,7 +157,8 @@ def run_update_main_heatmap(
     point_names_to_use, 
     raw_data_to_use, 
     feat_select=False, 
-    num_points_to_sample=10000
+    num_points_to_sample=10000, 
+    show_legend=False
 ):
     pointIDs_to_display = list(subset_store['_current_selected_data'].keys())
     # Subsample down to a max #points, for smoothly interactive heatmap display.
@@ -177,7 +178,8 @@ def run_update_main_heatmap(
         cocluster_mode, 
         feat_select=feat_select, 
         feat_group_names=cancer_types, 
-        feat_colordict=cell_line_colordict
+        feat_colordict=cell_line_colordict, 
+        show_legend=show_legend
     )
     return hm_fig
 
@@ -446,6 +448,21 @@ def update_numselected_counter(
     return '# selected: {}'.format(num_selected)
 
 
+# Handle lookups of GO terms and return a gene set.
+@app.callback(
+    Output('geneset-select', 'value'), 
+    [Input('goterm-lookup', 'value')]
+)
+def update_goterm_lookup(
+    goterms_req
+):
+    tmpl = [app_lib.get_genes_from_goterm(termID) for termID in goterms_req]
+    if len(tmpl) == 0:
+        return ""
+    sel_genes = np.concatenate(tmpl)
+    return list(np.unique(sel_genes))
+
+
 """
 Updates the stored dictionary of saved subsets. 
 Contains control logic for subset selection and storage.
@@ -524,7 +541,8 @@ def update_main_heatmap(
         point_names, 
         raw_data, 
         num_points_to_sample=num_points_to_sample, 
-        feat_select=('on' in hm_col_panel)
+        feat_select=('on' in hm_col_panel), 
+        show_legend=('legend' in hm_col_panel)
     )
 
 
