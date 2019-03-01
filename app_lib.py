@@ -2,7 +2,10 @@
 # Author: Akshay Balsubramani
 
 import base64, io, os, time, json, numpy as np, scipy as sp, pandas as pd, diffmap as dm
-import app_config, building_block_divs
+import app_config, building_block_divs, goterm_caller
+from goatools.associations import read_ncbi_gene2go
+from goatools.test_data.genes_NCBI_9606_ProteinCoding import GENEID2NT
+import re
 import umap
 from sklearn.decomposition import TruncatedSVD
 
@@ -456,7 +459,8 @@ def display_heatmap_cb(
     for cid in np.unique(col_clustIDs):
         ndcesc = np.where(col_clustIDs == cid)[0]
         clustersep_line_coords.append(np.min(ndcesc) - 0.5)
-    clustersep_line_coords.append(fit_data.shape[1] + 0.5)
+    if len(fit_data.shape) > 1:
+        clustersep_line_coords.append(fit_data.shape[1] - 0.5)
     
     return {
         'data': [ hm_trace ] + row_scat_traces + col_scat_traces, 
@@ -509,49 +513,47 @@ def generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list, featID
     bar_colors = np.array([database_colors[x] for x in top_go_dbIDs])
     panel_data = []
     ordi = np.arange(len(top_go_dbIDs))[::-1]
-    for c in np.unique(bar_colors):
-        trace_locs = np.where(bar_colors == c)[0]
-        trace_locs = trace_locs[::-1]      # Reverse because it's better.
-        panel_data.append({
-            'name': database_IDs[top_go_dbIDs[trace_locs[0]]], 
-            'x': top_go_logpvals[trace_locs],
-            'y': ordi[trace_locs], 
-            'hovertext': [
-                "-log(p): {}<br>{}<br>{}".format(
-                    str(round(top_go_logpvals[t], 2)), 
-                    top_go_termnames[t]
-                ) for t in trace_locs], 
-            'text': top_go_termnames[trace_locs], 
-            'hoverinfo': 'text', 
-            'insidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
-            'outsidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
-            'marker': { 'color': c },      
-            'textposition': 'auto', 
-            'orientation': 'h', 
-            'type': 'bar'
-        })
     return {'data': panel_data, 'layout': panel_layout }
 """
 
 
 
-from gprofiler import GProfiler
-
 
 # Given a gene set, returns GO+other database enrichment results using gProfiler.
 def get_goenrichment_from_genes(gene_list):
-    gp = GProfiler("MyToolName/0.1")
-    return np.array(gp.gprofile(gene_list))
+    return goterm_caller.gprofiler(gene_list)
 
 
-# Given a GO term ID, returns a list of genes under that ID using gProfiler.
-def get_genes_from_goterm(termID):
-    gp = GProfiler("MyToolName/0.2")
-    go_results = np.array(gp.gconvert(termID, target="GO"))
-    return np.unique([x[4] for x in go_results])
+# Given a regex GO term query, returns a combined list of genes under that ID using GO's association files.
+def get_genes_from_goterm(goterm_re_str):
+    go2geneids_human = read_ncbi_gene2go("gene2go", taxids=[9606], go2geneids=True)
+    srchhelp = goterm_caller.GoSearch("data/go-basic.obo", go2items=go2geneids_human)
+    gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
+    toret = []
+    for gid in srchhelp.get_items(gos):
+        geneID = GENEID2NT.get(gid, None)
+        if geneID is not None:
+            toret.append(geneID)
+    return toret
 
 
 """
+# Given a list of GO term IDs, returns a combined list of genes under that ID using gProfiler.
+def get_genes_from_goterm(goterms_req):
+    tmpl = []
+    for termID in goterms_req:
+        gp = GProfiler("MyToolName/0.2")
+        go_results = np.array(gp.gconvert(termID, target="GO"))
+        tmpl.append(np.unique([x[4] for x in go_results]))
+    if len(tmpl) == 0:
+        return ""
+    sel_genes = np.concatenate(tmpl)
+    sieved_genes = []
+    for g in sel_genes:
+        if g is not None:
+            sieved_genes.append(g)
+    return list(np.unique(sieved_genes))
+
 Update GO enrichment panel.
 https://biit.cs.ut.ee/gprofiler/page/apis. or 
 g:GOSt API (in class header of gprofiler.py):
@@ -603,17 +605,20 @@ def display_goenrich_panel_func(selected_genes, topk=20):
             'font': building_block_divs.legend_font_macro
         }
     }
-    go_results = get_goenrichment_from_genes(selected_genes) 
+    if len(selected_genes) == 0:
+        return {'data': [], 'layout': panel_layout }
+    go_results = get_goenrichment_from_genes(selected_genes)
     top_go_logpvals = np.array([])
     top_go_termnames = np.array([])
     top_go_dbIDs = np.array([])
-    if go_results.shape[0] > 0:
-        go_results = go_results[:topk, :]
-        top_go_logpvals = -np.log10(go_results[:,2].astype(float))
-        top_go_dbIDs = go_results[:,9]
-        top_go_termnames = go_results[:,11]
-        top_go_termIDs = go_results[:,8]
-        top_go_queryhits = go_results[:,13]
+    if (go_results is not None) and (go_results.shape[0] > 0):
+        x = np.array(np.argsort(go_results['p.value']))
+        go_results = go_results.iloc[x[:topk], :]
+        top_go_logpvals = -np.log10(go_results['p.value'].astype(float))
+        top_go_dbIDs = go_results['domain']
+        top_go_termnames = go_results['term.name']
+        top_go_termIDs = go_results['term.id']
+        top_go_queryhits = go_results['intersection']
     database_colors = { 'MF': '#CB3C19', 'BP': '#FA9D18', 'CC': '#198520', 'keg': '#D9869B', 'rea': '#335ACC', 'tf': '#4F6E9B', 'mir': '#53B8AD', 'hpa': '#542DB1', 'cor': '#6AAB19', 'hp': '#8C0784'}
     database_IDs = {'MF': 'Molecular function', 'BP': 'Biological process', 'CC': 'Cellular component', 'keg': 'KEGG', 'rea': 'REAC', 'tf': 'TF', 'mir': 'MIRNA', 'hpa': 'HPA', 'cor': 'CORUM', 'hp': 'HP'}
     bar_colors = np.array([database_colors[x] for x in top_go_dbIDs])
@@ -628,7 +633,7 @@ def display_goenrich_panel_func(selected_genes, topk=20):
             # 'y': ordi[trace_locs], 
             'y': top_go_termIDs[trace_locs],
             'hovertext': [
-                "-log(p): {}<br>{}<br>{}".format(
+                "-log10(p): {}<br>{}<br>{}".format(
                     str(round(top_go_logpvals[t], 2)), 
                     top_go_termnames[t], 
                     top_go_termIDs[t]

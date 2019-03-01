@@ -15,7 +15,6 @@ For more on jobs that take a while: set up workers https://github.com/WileyIntel
 """
 
 
-    
 
 # =========================================================
 # ================== Initialize Dash app ==================
@@ -269,31 +268,35 @@ def parse_upload_contents(contents, filename):
 
 @app.callback(
     Output('test-select-data', 'children'),
-    [Input('toggle-debug-panels', 'values'), 
+    [Input('stored-panel-settings', 'data'), 
      Input('stored-landscape-selected', 'data'), 
      Input('stored-pointsets', 'data'), 
      Input('main-heatmap', 'selectedData'), 
-     Input('stored-most-recently-highlighted', 'data')]
+     Input('stored-most-recently-highlighted', 'data'), 
+     Input('stored-selected-cols', 'data')]
 )
 def display_test(
-    debug_options, 
+    panel_data, 
     sel_data, 
     data_store, 
     hmsel_data, 
-    hlight_store
+    hlight_store, 
+    goterms_sel
 ):
     see_hm = "0" if hmsel_data is None else str(len(hmsel_data['points']))
     see_sel = "0" if sel_data is None else str(len(sel_data))
     see_hlight = "{}\t{}".format(hlight_store['_last_panel_highlighted'], len(hlight_store.keys()) - 1)
+    see_gn = str(len(goterms_sel))
     toret = ""
     for setname in data_store:
-        toret = toret + "{}\t{}\n".format(len(data_store[setname]), setname)
-    if 'debug-panel' in debug_options:
-        return "***STORED SELECTED DATA***\n{}\n***Landscape SELECTED DATA***\n{}\n***Heatmap SELECTED DATA***\n{}\n***Most recently used panel:\t{}".format(
+        toret = toret + "{}\t{}\n".format(data_store[setname], setname)
+    if panel_data['debug_panel']:
+        return "***STORED SELECTED DATA***\n{}\n***Landscape SELECTED DATA***\n{}\n***Heatmap SELECTED DATA***\n{}\n***Most recently used panel:\t{}\nGO term lookup***:\t{}".format(
             toret, 
             see_sel, 
             see_hm, 
-            see_hlight
+            see_hlight, 
+            see_gn
         )
     else:
         return ""
@@ -373,6 +376,29 @@ def update_selected_landscape_data(subset_store):
     return make_selected(subset_store['_current_selected_data'])
 
 
+# Updates the stored dictionary of boolean panel config variables.
+@app.callback(
+    Output('stored-panel-settings', 'data'), 
+    [Input('toggle-debug-panels', 'values')]
+)
+def update_panel_settings_store(debug_options):
+    return {
+        'debug_panel': ('debug-panel' in debug_options)
+    }
+
+
+@app.callback(
+    Output('stored-selected-cols', 'data'), 
+    [Input('goterm-lookup', 'n_submit')], 
+    [State('goterm-lookup', 'value')]
+)
+def update_goterm_search(lookup_submit, lookup_val):
+    toret = {}
+    for x in app_lib.get_genes_from_goterm(lookup_val):
+        toret[x.Symbol] = x.description
+    return toret
+
+
 # The following determines what the most recently called auxiliary panel dictated to highlight.
 @app.callback(
     Output('stored-most-recently-highlighted', 'data'), 
@@ -448,21 +474,6 @@ def update_numselected_counter(
     return '# selected: {}'.format(num_selected)
 
 
-# Handle lookups of GO terms and return a gene set.
-@app.callback(
-    Output('geneset-select', 'value'), 
-    [Input('goterm-lookup', 'value')]
-)
-def update_goterm_lookup(
-    goterms_req
-):
-    tmpl = [app_lib.get_genes_from_goterm(termID) for termID in goterms_req]
-    if len(tmpl) == 0:
-        return ""
-    sel_genes = np.concatenate(tmpl)
-    return list(np.unique(sel_genes))
-
-
 """
 Updates the stored dictionary of saved subsets. 
 Contains control logic for subset selection and storage.
@@ -472,36 +483,43 @@ Contains control logic for subset selection and storage.
     [Input('store-status', 'values'), 
      Input('list-pointsets', 'value'), 
      Input('stored-most-recently-highlighted', 'data'), 
-     Input('upload-pointsets', 'contents')],
+     Input('upload-pointsets', 'contents'), 
+     Input('selectgo-status', 'values')],
     [State('upload-pointsets', 'filename'), 
      State('load-status', 'values'), 
      State('pointset-name', 'value'), 
      State('stored-pointsets', 'data'), 
-     State('toggle-hm-zoom', 'values')]
+     State('toggle-hm-zoom', 'values'), 
+     State('stored-selected-cols', 'data')]
 )
 def update_subset_storage(
     store_status, 
     selected_subsetIDs, 
     aux_highlighted, 
     file_contents, 
+    selectgo_status, 
     file_paths, 
     load_status, 
     newset_name, 
     subset_store, 
-    zoom_hm_selected
+    zoom_hm_selected, 
+    stored_selected_cols
 ):
     new_sets_dict = {} if subset_store is None else subset_store
-    if 'load' in load_status:    # Update _current_selected_data by loading subsets.
-        new_sets_dict['_current_selected_data'] = union_of_selections(selected_subsetIDs, subset_store)
-    else:   # Update _current_selected_data from the main plot / heatmap.
-        # Logic to display points as selected from an auxplot (most recently used for selection). 
-        # A small subset selected_heatmap_points should not change selected_landscape_points, but should change _current_selected_data
-        last_hlight_panel = aux_highlighted.pop('_last_panel_highlighted', None)
-        if last_hlight_panel == 'landscape':
-            new_sets_dict['_current_selected_data'] = aux_highlighted
-        elif last_hlight_panel == 'heatmap':
-            if 'on' in zoom_hm_selected:
+    if ('select' in selectgo_status):
+        new_sets_dict['_current_selected_data'] = { x: {} for x in stored_selected_cols }
+    else:
+        if 'load' in load_status:    # Update _current_selected_data by loading subsets.
+            new_sets_dict['_current_selected_data'] = union_of_selections(selected_subsetIDs, subset_store)
+        else:   # Update _current_selected_data from the main plot / heatmap.
+            # Logic to display points as selected from an auxplot (most recently used for selection). 
+            # A small subset selected_heatmap_points should not change selected_landscape_points, but should change _current_selected_data
+            last_hlight_panel = aux_highlighted.pop('_last_panel_highlighted', None)
+            if last_hlight_panel == 'landscape':
                 new_sets_dict['_current_selected_data'] = aux_highlighted
+            elif last_hlight_panel == 'heatmap':
+                if 'on' in zoom_hm_selected:
+                    new_sets_dict['_current_selected_data'] = aux_highlighted
     # Store current selected data as a new set if in that mode.
     if 'store' in store_status:
         if ((newset_name is not None) and 

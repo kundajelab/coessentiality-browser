@@ -99,7 +99,6 @@ style_legend = {
 def create_hm_layout(
     scatter_frac_domain, scatter_frac_range, show_legend=False, clustersep_coords=None
 ):
-    print(clustersep_coords)
     shape_list = []
     for x in clustersep_coords:
         shape_list.append({
@@ -317,11 +316,7 @@ def create_div_sync_selection():
                         style=style_text_box, 
                         n_clicks='0', 
                         n_clicks_timestamp='0'
-                    )], style={'padding-top': '5px'}
-            ), 
-            html.Div(
-                className='two columns', 
-                children=[
+                    ), 
                     dcc.Checklist(
                         id='toggle-hm-zoom', 
                         options=[
@@ -333,11 +328,29 @@ def create_div_sync_selection():
                             'width': '80%', 
                             'color': app_config.params['font_color']
                         }
-                    )], 
-                style={'padding-top': '0px'}
+                    )
+                ], 
+                style={'padding-top': '5px'}
             ), 
+#             html.Div(
+#                 className='one column', 
+#                 children=[
+#                     dcc.Checklist(
+#                         id='toggle-hm-zoom', 
+#                         options=[
+#                             {'label': 'Zoom', 'value': 'on'}
+#                         ],
+#                         values=[], 
+#                         style={
+#                             'textAlign': 'left', 
+#                             'width': '80%', 
+#                             'color': app_config.params['font_color']
+#                         }
+#                     )], 
+#                 style={'padding-top': '0px'}
+#             ), 
             html.Div(
-                className='two columns', 
+                className='three columns', 
                 children=[
                     dcc.Checklist(
                         id='toggle-hm-cols', 
@@ -376,61 +389,87 @@ def create_div_sync_selection():
 
 
 
-
 # ================================================
 # ==================== Layout ====================
 # ================================================
 
 
-def create_div_go_ctrl(point_names, go_termIDs, go_termnames):
+def contents_div_go_ctrl(point_names):
+    child_panels = [
+        html.Div(
+            className='row', 
+            children=[
+                html.Div(
+                    className='six columns', 
+                    children=[
+                        dcc.Dropdown(
+                            id='geneset-select', 
+                            options = [ {'value': gn, 'label': gn} for gn in point_names ], 
+                            value = [], 
+                            placeholder="Gene set for enrichment", multi=True
+                        )], 
+                    style={'padding-top': '0px'}
+                ), 
+                html.Div(
+                    className='three columns',
+                    children=[
+                        html.P(
+                            "# terms to display: ",
+                            style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
+                        )], 
+                    style={'padding-top': '7px'}
+                ),
+                html.Div(
+                    className='three columns', 
+                    children=[
+                        dcc.Input(
+                            id='select-topk-goterms', 
+                            type='text', 
+                            value='20', 
+                            style={'textAlign': 'center', 'width': '100%'}
+                        )]
+                )]
+        ), 
+        html.Div(
+            className='row', 
+            children=[
+                html.Div(
+                    className='four columns', 
+                    children=[
+                        dcc.Checklist(
+                            id='selectgo-status', 
+                            options=[
+                                {'label': 'Select assoc. genes', 'value': 'select'}
+                            ],
+                            values=[], 
+                            style={
+                                'textAlign': 'center', 
+                                'width': '80%', 
+                                'color': app_config.params['font_color']
+                            }
+                        )]
+                ), 
+                html.Div(
+                    className='eight columns', 
+                    children=[
+                        dcc.Input(
+                            id='goterm-lookup', 
+                            type='text', 
+                            value = '', 
+                            placeholder="Look up GO term...", 
+                            style={'width': '100%'}
+                        )], 
+                    style={'padding-top': '5px'}
+                )]
+        )]
+    return child_panels
+
+
+def create_div_go_ctrl(point_names):
     return html.Div(
+        id='div-go-lookup', 
         className='row', 
-        children=[
-            html.Div(
-                className='six columns', 
-                children=[
-                    dcc.Dropdown(
-                        id='geneset-select', 
-                        options = [ {'value': gn, 'label': gn} for gn in point_names ], 
-                        value = [], 
-                        placeholder="Gene set for enrichment", multi=True
-                    )], 
-                style={'padding-top': '0px'}
-            ), 
-            html.Div(
-                className='three columns',
-                children=[
-                    html.P(
-                        "# terms to display: ",
-                        style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
-                    )], 
-                style={'padding-top': '7px'}
-            ),
-            html.Div(
-                className='three columns', 
-                children=[
-                    dcc.Input(
-                        id='select-topk-goterms', 
-                        type='text', 
-                        value='20', 
-                        style={'textAlign': 'center', 'width': '100%'}
-                    )
-                ]
-            ), 
-            html.Div(
-                className='row', 
-                children=[
-                    dcc.Dropdown(
-                        id='goterm-lookup', 
-                        options = [{'value': '{}'.format(go_termIDs[i]), 
-                                    'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} 
-                                   for i in range(len(go_termIDs)) ], 
-                        value = [], 
-                        placeholder="Look up GO term...", 
-                        multi=True
-                    )], 
-                style={'padding-top': '0px'}
-            )], 
+        children=contents_div_go_ctrl(point_names), 
         style=style_outer_dialog_box
     )
 
@@ -539,7 +578,7 @@ div_serialization = html.Div(
                     href="",
                     target="_blank", 
                     style={
-                        'textAlign': 'center', 
+                        'textAlign': 'right', 
                         'width': '100%', 
                         #'padding-top': '0px', 
                         'color': app_config.params['font_color']
@@ -661,8 +700,8 @@ def create_div_landscape_ctrl():
             dcc.Checklist(
                 id='toggle-landscape-whiten', 
                 options=[
-                    {'label': 'Indicate', 'value': 'arrow'}, 
-                    {'label': 'Highlight', 'value': 'highlight'}
+                    {'label': 'Indicate selection', 'value': 'arrow'}, 
+                    {'label': 'Highlight selection', 'value': 'highlight'}
                 ],
                 values=[], 
                 style={
@@ -850,7 +889,7 @@ def create_div_landscapes(point_names, feat_names, more_colorvars):
     )
 
 
-def create_div_sidepanels(point_names, feat_names, more_colorvars, go_termIDs, go_termnames):
+def create_div_sidepanels(point_names, feat_names, more_colorvars):
     return html.Div(
         className='five columns', 
         children=[
@@ -859,7 +898,7 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars, go_termIDs, g
             create_div_hm_panel(), 
             create_div_plotcolor(feat_names, more_colorvars),
             create_div_annot(point_names), 
-            create_div_go_ctrl(point_names, go_termIDs, go_termnames), 
+            create_div_go_ctrl(point_names), 
             div_go_panel
             # div_reviz_scatter
         ],
@@ -874,8 +913,6 @@ Main layout.
 import numpy as np
 
 def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
-    go_termIDs = np.load('gotermIDs.npy')
-    go_termnames = np.load('gotermnames.npy')
     return html.Div(
         className="container", 
         children=[
@@ -892,7 +929,7 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
                 className="row", 
                 children=[
                     create_div_landscapes(point_names, feat_names, more_colorvars), 
-                    create_div_sidepanels(point_names, feat_names, more_colorvars, go_termIDs, go_termnames)
+                    create_div_sidepanels(point_names, feat_names, more_colorvars)
                 ]
             ), 
             html.Div(
@@ -926,6 +963,18 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
             dcc.Store(
                 id='stored-most-recently-highlighted', 
                 data={ '_last_panel_highlighted': 'landscape' }, 
+                modified_timestamp='0'
+            ), 
+            dcc.Store(
+                id='stored-panel-settings', 
+                data={
+                    'debug_panel': False
+                }, 
+                modified_timestamp='0'
+            ), 
+            dcc.Store(
+                id='stored-selected-cols', 
+                data={ }, 
                 modified_timestamp='0'
             )
         ],
