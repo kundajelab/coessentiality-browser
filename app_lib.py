@@ -526,7 +526,7 @@ def get_goenrichment_from_genes(gene_list):
 
 # Given a regex GO term query, returns a combined list of genes under that ID using GO's association files.
 def get_genes_from_goterm(goterm_re_str):
-    go2geneids_human = read_ncbi_gene2go("gene2go", taxids=[9606], go2geneids=True)
+    go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
     srchhelp = goterm_caller.GoSearch("data/go-basic.obo", go2items=go2geneids_human)
     gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
     toret = []

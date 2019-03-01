@@ -18,8 +18,9 @@ params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
 # params['dataset_options'] = [x.split('/')[-1].split('.')[0] for x in params['plot_data_df_path']]
 params['dataset_options'] = ["Emphasize all cluster-one clusters", "Emphasize colored Roarke clusters", "Emphasize GLS", "Mixed"]
 
-params['gotermnames_path'] = data_pfx + 'gotermnames.npy'
-params['gotermIDs_path'] = data_pfx + 'gotermIDs.npy'
+params['gene2go_path'] = data_pfx + 'gene2go'
+# params['gotermnames_path'] = data_pfx + 'gotermnames.npy'
+# params['gotermIDs_path'] = data_pfx + 'gotermIDs.npy'
 params['bg_color'] = '#000000'
 params['hm_colorvar_name'] = 'Ess.'
 params['hm_diverging'] = True
