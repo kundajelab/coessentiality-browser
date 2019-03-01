@@ -19,6 +19,7 @@ params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
 params['dataset_options'] = ["Emphasize all cluster-one clusters", "Emphasize colored Roarke clusters", "Emphasize GLS", "Mixed"]
 
 params['gene2go_path'] = data_pfx + 'gene2go'
+params['go_obo_path'] = data_pfx + 'data/go-basic.obo'
 # params['gotermnames_path'] = data_pfx + 'gotermnames.npy'
 # params['gotermIDs_path'] = data_pfx + 'gotermIDs.npy'
 params['bg_color'] = '#000000'
