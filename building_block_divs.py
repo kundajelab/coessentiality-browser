@@ -6,9 +6,9 @@ import dash_core_components as dcc, dash_html_components as html
 import app_config
 
 
-# ========================================================
-# =================== Component styles ===================
-# ========================================================
+# ================================================================
+# =================== Component styles/layouts ===================
+# ================================================================
 
 
 legend_font_macro = {
@@ -179,344 +179,10 @@ def create_scatter_layout(annotations):
     }
 
 
-def create_div_plotcolor(feat_names, more_colorvars):
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='four columns', 
-                children=[ html.P('Plot as color:') ], 
-                style={
-                    'textAlign': 'center', 
-                    'color': app_config.params['font_color'], 
-                    'padding-top': '5px'
-                }
-            ), 
-            html.Div(
-                className='eight columns', 
-                children=[
-                    dcc.Dropdown(
-                        id='landscape_color', 
-                        options = [{
-                            'value': app_config.params['default_color_var'], 
-                            'label': app_config.params['default_color_var']
-                        }] + [
-                            {'value': n, 'label': n} for n in more_colorvars
-                        ] + [
-                            {'value': gn, 'label': gn} for gn in feat_names 
-                        ], 
-                        value=app_config.params['default_color_var'], 
-                        placeholder="Select colors to plot", 
-                        clearable=False
-                    )], 
-                style={'padding-top': '0px'}
-            )], 
-        style=style_invis_dialog_box
-    )
 
-
-def create_div_annot(point_names):
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='four columns', 
-                children=[ html.P('Look up gene(s) in plot:') ], 
-                style={
-                    'textAlign': 'center', 
-                    'color': app_config.params['font_color'], 
-                    'padding-top': '5px'
-                }
-            ), 
-            html.Div(
-                className='eight columns', 
-                children=[
-                    dcc.Dropdown(
-                        id='points_annot', 
-                        options = [ {'value': gn, 'label': gn} for gn in point_names ], 
-                        placeholder="Select genes", multi=True
-                    )], 
-                style={'padding-top': '0px'}
-            )]
-    )
-
-
-def create_div_align_selection(options_list):
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='four columns', 
-                children=[ 
-                    html.Button(
-                        id='align-button', 
-                        children='Display alignment', 
-                        n_clicks=0, 
-                        n_clicks_timestamp=0,
-                        style=style_text_box
-                    )], 
-                style={'padding-top': '5px'}
-            ), 
-            html.Div(
-                className='eight columns', 
-                children=[
-                    dcc.RadioItems(
-                        id='align-method-selection', 
-                        options=[ {'label': v, 'value': v} for v in options_list ], 
-                        style=legend_font_macro, 
-                        labelStyle={
-                            'display': 'inline-block', 
-                            'margin-right': '5px'
-                        }, 
-                        value='Unaligned'
-                    )], 
-                style={'padding-top': '10px'}
-            )]
-    )
-
-
-# Default dataset first in the given list of dataset options.
-def create_div_select_dataset(dataset_options):
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='four columns', 
-                children=[
-                    html.P(
-                        "Browse layout: ", 
-                        style=style_text_box
-                    )], 
-                style={'padding-top': '10px'}
-            ), 
-            html.Div(
-                className='eight columns', 
-                children=[
-                    dcc.Dropdown(
-                        id='sourcedata-select', 
-                        options = [ {'value': dn, 'label': dn} for dn in dataset_options ], # style={'height': '30px'}, 
-                        value=dataset_options[0]
-                    )]
-            )], 
-        style=style_outer_dialog_box
-    )
-
-
-# Synchronizing landscape plot with heatmap.
-def create_div_sync_selection():
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='six columns', 
-                children=[
-                    html.Button(
-                        id='hm-highlight-button', 
-                        children='<< Highlight from heatmap', 
-                        style=style_text_box, 
-                        n_clicks='0', 
-                        n_clicks_timestamp='0'
-                    ), 
-                    dcc.Checklist(
-                        id='toggle-hm-zoom', 
-                        options=[
-                            {'label': 'Zoom', 'value': 'on'}
-                        ],
-                        values=[], 
-                        style={
-                            'textAlign': 'left', 
-                            'width': '80%', 
-                            'color': app_config.params['font_color']
-                        }
-                    )
-                ], 
-                style={'padding-top': '5px'}
-            ), 
-#             html.Div(
-#                 className='one column', 
-#                 children=[
-#                     dcc.Checklist(
-#                         id='toggle-hm-zoom', 
-#                         options=[
-#                             {'label': 'Zoom', 'value': 'on'}
-#                         ],
-#                         values=[], 
-#                         style={
-#                             'textAlign': 'left', 
-#                             'width': '80%', 
-#                             'color': app_config.params['font_color']
-#                         }
-#                     )], 
-#                 style={'padding-top': '0px'}
-#             ), 
-            html.Div(
-                className='three columns', 
-                children=[
-                    dcc.Checklist(
-                        id='toggle-hm-cols', 
-                        options=[
-                            {'label': 'Cell line select', 'value': 'on'}, 
-                            {'label': 'Cell line legend', 'value': 'legend'}
-                        ],
-                        values=[], 
-                        style={
-                            'textAlign': 'left', 
-                            'width': '80%', 
-                            'color': app_config.params['font_color']
-                        }
-                    )], 
-                style={'padding-top': '0px'}
-            ), 
-            html.Div(
-                className='two columns', 
-                children=[
-                    dcc.RadioItems(
-                        id='main-heatmap-roworder', 
-                        options=[ 
-                            {'label': 'Cocluster', 'value': 'Cocluster'}, 
-                            {'label': 'Sort by color', 'value': 'Sort by color'}], 
-                        style=legend_font_macro, 
-                        labelStyle={
-                            # 'display': 'inline-block', 
-                            'margin-right': '5px'
-                        }, 
-                        value='Sort by color'
-                    )]
-            )
-        ], 
-        style=style_outer_dialog_box
-    )
-
-
-
-# ================================================
-# ==================== Layout ====================
-# ================================================
-
-
-def contents_div_go_ctrl(point_names):
-    child_panels = [
-        html.Div(
-            className='row', 
-            children=[
-                html.Div(
-                    className='six columns', 
-                    children=[
-                        dcc.Dropdown(
-                            id='geneset-select', 
-                            options = [ {'value': gn, 'label': gn} for gn in point_names ], 
-                            value = [], 
-                            placeholder="Gene set for enrichment", multi=True
-                        )], 
-                    style={'padding-top': '0px'}
-                ), 
-                html.Div(
-                    className='three columns',
-                    children=[
-                        html.P(
-                            "# terms to display: ",
-                            style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
-                        )], 
-                    style={'padding-top': '7px'}
-                ),
-                html.Div(
-                    className='three columns', 
-                    children=[
-                        dcc.Input(
-                            id='select-topk-goterms', 
-                            type='text', 
-                            value='20', 
-                            style={'textAlign': 'center', 'width': '100%'}
-                        )]
-                )]
-        ), 
-        html.Div(
-            className='row', 
-            children=[
-                html.Div(
-                    className='four columns', 
-                    children=[
-                        dcc.Checklist(
-                            id='selectgo-status', 
-                            options=[
-                                {'label': 'Select assoc. genes', 'value': 'select'}
-                            ],
-                            values=[], 
-                            style={
-                                'textAlign': 'center', 
-                                'width': '80%', 
-                                'color': app_config.params['font_color']
-                            }
-                        )]
-                ), 
-                html.Div(
-                    className='eight columns', 
-                    children=[
-                        dcc.Input(
-                            id='goterm-lookup', 
-                            type='text', 
-                            value = '', 
-                            placeholder="Look up GO term...", 
-                            style={'width': '100%'}
-                        )], 
-                    style={'padding-top': '5px'}
-                )]
-        )]
-    return child_panels
-
-
-def create_div_go_ctrl(point_names):
-    return html.Div(
-        id='div-go-lookup', 
-        className='row', 
-        children=contents_div_go_ctrl(point_names), 
-        style=style_outer_dialog_box
-    )
-
-
-div_ctrl_landscape = html.Div(
-    className='row', 
-    children=[
-        html.Div(
-            className='four columns', 
-            children=[ 
-                html.P(
-                    'Select genes from:', 
-                    style=style_text_box
-                )], 
-            style={'padding-top': '5px'}
-        ),  
-        html.Div(
-            className='four columns', 
-            children=[
-                dcc.RadioItems(
-                    id='selection-mode-radio', 
-                    options=[
-                        {'label': 'Scatterplot', 'value': 'scatter'}, 
-                        {'label': 'Heatmap', 'value': 'heatmap'}
-                    ], 
-                    style=legend_font_macro, 
-                    labelStyle={
-                        'display': 'inline-block', 
-                        'margin-right': '5px'
-                    }, 
-                    value='scatter'
-                )], 
-            style={'padding-top': '5px'}
-        ), 
-        html.Div(
-            className='four columns', 
-            children=[ 
-                html.Button(
-                    id='plot-selection-button-old', 
-                    children='old button', 
-                    n_clicks=0, 
-                    n_clicks_timestamp=0,
-                    style=style_text_box
-                )], 
-            style={'padding-top': '5px'}
-        )]
-)
+# =================================================================
+# =================== Component divs: save/load ===================
+# =================================================================
 
 
 div_select_points = html.Div(
@@ -635,6 +301,264 @@ div_list_pointsets = html.Div(
 )
 
 
+
+# ===============================================================
+# =================== Component divs: heatmap ===================
+# ===============================================================
+
+
+# Synchronizing landscape plot with heatmap.
+def create_div_heatmap_selection():
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='six columns', 
+                children=[
+                    html.Button(
+                        id='hm-highlight-button', 
+                        children='<< Highlight from heatmap', 
+                        style=style_text_box, 
+                        n_clicks='0', 
+                        n_clicks_timestamp='0'
+                    ), 
+                    dcc.Checklist(
+                        id='toggle-hm-zoom', 
+                        options=[
+                            {'label': 'Zoom', 'value': 'on'}
+                        ],
+                        values=[], 
+                        style={
+                            'textAlign': 'left', 
+                            'width': '80%', 
+                            'color': app_config.params['font_color']
+                        }
+                    )
+                ], 
+                style={'padding-top': '5px'}
+            ), 
+            html.Div(
+                className='three columns', 
+                children=[
+                    dcc.Checklist(
+                        id='toggle-hm-cols', 
+                        options=[
+                            {'label': 'Cell line select', 'value': 'on'}, 
+                            {'label': 'Cell line legend', 'value': 'legend'}
+                        ],
+                        values=[], 
+                        style={
+                            'textAlign': 'left', 
+                            'width': '80%', 
+                            'color': app_config.params['font_color']
+                        }
+                    )], 
+                style={'padding-top': '0px'}
+            ), 
+            html.Div(
+                className='three columns', 
+                children=[
+                    dcc.RadioItems(
+                        id='main-heatmap-roworder', 
+                        options=[ 
+                            {'label': 'Cocluster', 'value': 'Cocluster'}, 
+                            {'label': 'Sort by color', 'value': 'Sort by color'}], 
+                        style=legend_font_macro, 
+                        labelStyle={
+                            # 'display': 'inline-block', 
+                            'margin-right': '5px'
+                        }, 
+                        value='Sort by color'
+                    )]
+            )
+        ], 
+        style=style_outer_dialog_box
+    )
+
+
+
+# ======================================================
+# =================== Component divs ===================
+# ======================================================
+
+
+def create_div_plotcolor(feat_names, more_colorvars):
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='four columns', 
+                children=[ html.P('Plot as color:') ], 
+                style={
+                    'textAlign': 'center', 
+                    'color': app_config.params['font_color'], 
+                    'padding-top': '5px'
+                }
+            ), 
+            html.Div(
+                className='eight columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='landscape_color', 
+                        options = [{
+                            'value': app_config.params['default_color_var'], 
+                            'label': app_config.params['default_color_var']
+                        }] + [
+                            {'value': n, 'label': n} for n in more_colorvars
+                        ] + [
+                            {'value': gn, 'label': gn} for gn in feat_names 
+                        ], 
+                        value=app_config.params['default_color_var'], 
+                        placeholder="Select colors to plot", 
+                        clearable=False
+                    )], 
+                style={'padding-top': '0px'}
+            )], 
+        style=style_invis_dialog_box
+    )
+
+
+def create_div_annot(point_names):
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='four columns', 
+                children=[ html.P('Look up gene(s) in plot:') ], 
+                style={
+                    'textAlign': 'center', 
+                    'color': app_config.params['font_color'], 
+                    'padding-top': '5px'
+                }
+            ), 
+            html.Div(
+                className='eight columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='points_annot', 
+                        options = [ {'value': gn, 'label': gn} for gn in point_names ], 
+                        placeholder="Select genes", multi=True
+                    )], 
+                style={'padding-top': '0px'}
+            )]
+    )
+
+
+# Default dataset first in the given list of dataset options.
+def create_div_select_dataset(dataset_options):
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='four columns', 
+                children=[
+                    html.P(
+                        "Browse layout: ", 
+                        style=style_text_box
+                    )], 
+                style={'padding-top': '10px'}
+            ), 
+            html.Div(
+                className='eight columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='sourcedata-select', 
+                        options = [ {'value': dn, 'label': dn} for dn in dataset_options ], # style={'height': '30px'}, 
+                        value=dataset_options[0]
+                    )]
+            )], 
+        style=style_outer_dialog_box
+    )
+
+
+def contents_div_go_ctrl(point_names):
+    child_panels = [
+        html.Div(
+            className='row', 
+            children=[
+                html.Div(
+                    className='six columns', 
+                    children=[
+                        dcc.Dropdown(
+                            id='geneset-select', 
+                            options = [ {'value': gn, 'label': gn} for gn in point_names ], 
+                            value = [], 
+                            placeholder="Gene set for enrichment", multi=True
+                        )], 
+                    style={'padding-top': '0px'}
+                ), 
+                html.Div(
+                    className='three columns',
+                    children=[
+                        html.P(
+                            "# terms to display: ",
+                            style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
+                        )], 
+                    style={'padding-top': '7px'}
+                ),
+                html.Div(
+                    className='three columns', 
+                    children=[
+                        dcc.Input(
+                            id='select-topk-goterms', 
+                            type='text', 
+                            value='20', 
+                            style={'textAlign': 'center', 'width': '100%'}
+                        )]
+                )]
+        ), 
+        html.Div(
+            className='row', 
+            children=[
+                html.Div(
+                    className='five columns', 
+                    children=[
+                        dcc.Input(
+                            id='goterm-lookup', 
+                            type='text', 
+                            value = '', 
+                            placeholder="Look up GO term...", 
+                            style={'width': '100%'}
+                        ), 
+                        dcc.Checklist(
+                            id='selectgo-status', 
+                            options=[
+                                {'label': 'Select assoc. genes', 'value': 'select'}
+                            ],
+                            values=[], 
+                            style={
+                                'textAlign': 'center', 
+                                'width': '80%', 
+                                'color': app_config.params['font_color']
+                            }
+                        )], 
+                    style={'padding-top': '5px'}
+                ), 
+                html.Div(
+                    className='seven columns', 
+                    children=[
+                        dcc.Textarea(
+                            id='display-genelist', 
+                            wrap='True', 
+                            value = '', 
+                            placeholder="Associated genes", 
+                            style={'width': '100%'}
+                        )], 
+                    style={'padding-top': '5px'}
+                )]
+        )]
+    return child_panels
+
+
+def create_div_go_ctrl(point_names):
+    return html.Div(
+        id='div-go-lookup', 
+        className='row', 
+        children=contents_div_go_ctrl(point_names), 
+        style=style_outer_dialog_box
+    )
+
+
 div_reviz_scatter = html.Div(
     className='row', 
     children=[
@@ -731,6 +655,12 @@ def create_div_hm_panel():
                 config={'displaylogo': False, 'displayModeBar': True}
             )]
     )
+
+
+
+# ================================================================
+# =================== Component divs: cosmetic ===================
+# ================================================================
 
 
 # Default dataset first in the given list of dataset options.
@@ -847,44 +777,27 @@ def create_div_cosmetic_panel():
     )
 
 
-def create_div_diff_features():
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='six columns', 
-                children=[
-                    dcc.Dropdown(
-                        id='diff-foreset-select', 
-                        placeholder="Select foreground set"
-                    )], 
-                style={'padding-top': '0px'}
-            ), 
-            html.Div(
-                className='six columns', 
-                children=[
-                    dcc.Dropdown(
-                        id='diff-backset-select', 
-                        placeholder="Select background set"
-                    )], 
-                style={'padding-top': '0px'}
-            )], 
-        style=style_outer_dialog_box
-    )
+
+# ==================================================================
+# =================== Aggregating component divs ===================
+# ==================================================================
 
 
 def create_div_landscapes(point_names, feat_names, more_colorvars):
     return html.Div(
         className="seven columns",
         children=[
-            # div_ctrl_landscape,
             dcc.Graph(
                 id='landscape-plot',
-                config={'displaylogo': False, 'displayModeBar': True},
-		style={ 'height': '100vh'}
+                config={'displaylogo': False, 'displayModeBar': True}, 
+                style={ 'height': '100vh'}
             ), 
             create_div_select_dataset(app_config.params['dataset_options']), 
-            div_landscape_select
+            div_landscape_select, 
+            html.Div(
+                id='hm-future-panels', 
+                children=[]
+            )
         ]
     )
 
@@ -894,7 +807,7 @@ def create_div_sidepanels(point_names, feat_names, more_colorvars):
         className='five columns', 
         children=[
             create_div_landscape_ctrl(), 
-            create_div_sync_selection(), 
+            create_div_heatmap_selection(), 
             create_div_hm_panel(), 
             create_div_plotcolor(feat_names, more_colorvars),
             create_div_annot(point_names), 
@@ -931,10 +844,6 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
                     create_div_landscapes(point_names, feat_names, more_colorvars), 
                     create_div_sidepanels(point_names, feat_names, more_colorvars)
                 ]
-            ), 
-            html.Div(
-                id='hm-future-panels', 
-                children=[]
             ), 
             create_div_cosmetic_panel(), 
             html.Div([ html.Pre(id='test-select-data', style={ 'color': app_config.params['font_color'], 'overflowX': 'scroll' } ) ]),     # For testing purposes only!

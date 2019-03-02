@@ -388,6 +388,14 @@ def update_panel_settings_store(debug_options):
 
 
 @app.callback(
+    Output('display-genelist', 'value'), 
+    [Input('stored-selected-cols', 'data')]
+)
+def update_gogenes_display(stored_cols):
+    return ', '.join([x for x in stored_cols])
+
+
+@app.callback(
     Output('stored-selected-cols', 'data'), 
     [Input('goterm-lookup', 'n_submit')], 
     [State('goterm-lookup', 'value')]

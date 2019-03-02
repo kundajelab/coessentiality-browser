@@ -380,7 +380,7 @@ def display_heatmap_cb(
     hm_point_names,    # (unique!) row labels of hm_raw_data
     scatter_fig,    # Scatterplot panel which this is mirroring.
     view_cocluster, 
-    feat_colordict=None, 
+    feat_colordict={}, 
     feat_group_names=None, 
     feat_select=False, 
     scatter_frac_domain=0.10, 
@@ -409,8 +409,6 @@ def display_heatmap_cb(
         ordered_rows, ordered_cols, row_clustIDs, col_clustIDs = dm.compute_coclustering(fit_data)
         fit_data = fit_data[ordered_rows, :]
         hm_point_names = hm_point_names[ordered_rows]
-#         row_clustIDs = row_clustIDs[ordered_rows]
-#         col_clustIDs = col_clustIDs[ordered_cols]
     else:
         ordered_cols = np.arange(fit_data.shape[1])
     fit_data = fit_data[:, ordered_cols]
@@ -526,6 +524,8 @@ def get_goenrichment_from_genes(gene_list):
 
 # Given a regex GO term query, returns a combined list of genes under that ID using GO's association files.
 def get_genes_from_goterm(goterm_re_str):
+    if len(goterm_re_str) == 0:
+        return []
     go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
     srchhelp = goterm_caller.GoSearch(app_config.params['go_obo_path'], go2items=go2geneids_human)
     gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
