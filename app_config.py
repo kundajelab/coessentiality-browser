@@ -20,8 +20,9 @@ params['dataset_options'] = ["Emphasize all cluster-one clusters", "Emphasize co
 
 params['gene2go_path'] = data_pfx + 'gene2go'
 params['go_obo_path'] = data_pfx + 'data/go-basic.obo'
-# params['gotermnames_path'] = data_pfx + 'gotermnames.npy'
-# params['gotermIDs_path'] = data_pfx + 'gotermIDs.npy'
+params['gotermnames_path'] = data_pfx + 'gotermnames.npy'
+params['gotermIDs_path'] = data_pfx + 'gotermIDs.npy'
+
 params['bg_color'] = '#000000'
 params['hm_colorvar_name'] = 'Ess.'
 params['hm_diverging'] = True
@@ -97,5 +98,7 @@ params['legend_font_color'] = 'white'
 params['legend_font_size'] = 16
 params['hm_font_size'] = 6
 
+params['upload_img_path'] = data_pfx + 'assets/upload.png'
+params['download_img_path'] = data_pfx + 'download.png'
 
 # Some things are best left to depend on the size of the data - opacity changes with number of points plotted!

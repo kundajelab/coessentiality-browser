@@ -382,7 +382,6 @@ def display_heatmap_cb(
     view_cocluster, 
     feat_colordict={}, 
     feat_group_names=None, 
-    feat_select=False, 
     scatter_frac_domain=0.10, 
     scatter_frac_range=0.08, 
     show_legend=False
@@ -418,14 +417,11 @@ def display_heatmap_cb(
     row_scat_traces, fit_data, hm_point_names = hm_row_scatter(
         fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
     )
-    if feat_select:
-        col_scat_traces, fit_data = hm_col_plot(
-            fit_data, feat_colordict, 
-            reordered_groups=absc_group_labels, reordered_featnames=absc_labels, 
-            col_clustIDs=col_clustIDs
-        )
-    else:
-        col_scat_traces = []
+    col_scat_traces, fit_data = hm_col_plot(
+        fit_data, feat_colordict, 
+        reordered_groups=absc_group_labels, reordered_featnames=absc_labels, 
+        col_clustIDs=col_clustIDs
+    )
     pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
         'z': fit_data, 
@@ -522,18 +518,19 @@ def get_goenrichment_from_genes(gene_list):
     return goterm_caller.gprofiler(gene_list)
 
 
-# Given a regex GO term query, returns a combined list of genes under that ID using GO's association files.
-def get_genes_from_goterm(goterm_re_str):
-    if len(goterm_re_str) == 0:
-        return []
-    go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
-    srchhelp = goterm_caller.GoSearch(app_config.params['go_obo_path'], go2items=go2geneids_human)
-    gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
+# Given a GO term query, returns a combined list of genes under that ID.
+def get_genes_from_goterm(goterm_re_str, mode='gaf'):
+    if mode == 'regex':      # Given a regex, return using GO's association files; else given GO term ID(s).
+        if len(goterm_re_str) == 0:
+            return []
+        go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
+        srchhelp = goterm_caller.GoSearch(app_config.params['go_obo_path'], go2items=go2geneids_human)
+        gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
     toret = []
     for gid in srchhelp.get_items(gos):
         geneID = GENEID2NT.get(gid, None)
         if geneID is not None:
-            toret.append(geneID)
+            toret.append(geneID.Symbol)
     return toret
 
 

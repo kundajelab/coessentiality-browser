@@ -4,6 +4,7 @@
 
 import dash_core_components as dcc, dash_html_components as html
 import app_config
+import base64
 
 
 # ================================================================
@@ -73,15 +74,6 @@ style_text_box = {
     'textAlign': 'center', 
     'width': '100%', 
     'color': app_config.params['font_color']
-}
-
-style_upload = {
-    'width': '100%', 
-    'border': 'thin lightgrey solid',
-    'textAlign': 'center', 
-    'color': app_config.params['font_color'], 
-    'padding-top': '5px', 
-    'padding-bottom': '5px'
 }
 
 style_legend = {
@@ -231,43 +223,6 @@ div_select_points = html.Div(
 )
 
 
-div_serialization = html.Div(
-    className='row', 
-    children=[
-        html.Div(
-            className='four columns', 
-            children=[
-                html.A(
-                    'Save gene set selection',
-                    id='download-set-link',
-                    download="selected_set.csv", 
-                    href="",
-                    target="_blank", 
-                    style={
-                        'textAlign': 'right', 
-                        'width': '100%', 
-                        #'padding-top': '0px', 
-                        'color': app_config.params['font_color']
-                    }
-                )], 
-        ), 
-        html.Div(
-            className='eight columns', 
-            children=[
-                dcc.Upload(
-                    id='upload-pointsets',
-                    children=html.Div([
-                        'Load gene set from file(s)...'
-                    ]),
-                    style=style_upload, 
-                    multiple=True
-                )], 
-            style={'padding-top': '0px'}
-        )], 
-    style=style_invis_dialog_box
-)
-
-
 div_list_pointsets = html.Div(
     className='row', 
     children=[
@@ -312,64 +267,17 @@ def create_div_heatmap_selection():
     return html.Div(
         className='row', 
         children=[
-            html.Div(
-                className='six columns', 
-                children=[
-                    html.Button(
-                        id='hm-highlight-button', 
-                        children='<< Highlight from heatmap', 
-                        style=style_text_box, 
-                        n_clicks='0', 
-                        n_clicks_timestamp='0'
-                    ), 
-                    dcc.Checklist(
-                        id='toggle-hm-zoom', 
-                        options=[
-                            {'label': 'Zoom', 'value': 'on'}
-                        ],
-                        values=[], 
-                        style={
-                            'textAlign': 'left', 
-                            'width': '80%', 
-                            'color': app_config.params['font_color']
-                        }
-                    )
-                ], 
-                style={'padding-top': '5px'}
-            ), 
-            html.Div(
-                className='three columns', 
-                children=[
-                    dcc.Checklist(
-                        id='toggle-hm-cols', 
-                        options=[
-                            {'label': 'Cell line select', 'value': 'on'}, 
-                            {'label': 'Cell line legend', 'value': 'legend'}
-                        ],
-                        values=[], 
-                        style={
-                            'textAlign': 'left', 
-                            'width': '80%', 
-                            'color': app_config.params['font_color']
-                        }
-                    )], 
-                style={'padding-top': '0px'}
-            ), 
-            html.Div(
-                className='three columns', 
-                children=[
-                    dcc.RadioItems(
-                        id='main-heatmap-roworder', 
-                        options=[ 
-                            {'label': 'Cocluster', 'value': 'Cocluster'}, 
-                            {'label': 'Sort by color', 'value': 'Sort by color'}], 
-                        style=legend_font_macro, 
-                        labelStyle={
-                            # 'display': 'inline-block', 
-                            'margin-right': '5px'
-                        }, 
-                        value='Sort by color'
-                    )]
+            dcc.Checklist(
+                id='toggle-hm-cols', 
+                options=[
+                    {'label': 'Cell line legend', 'value': 'legend'}
+                ],
+                values=[], 
+                style={
+                    'textAlign': 'left', 
+                    'width': '80%', 
+                    'color': app_config.params['font_color']
+                }
             )
         ], 
         style=style_outer_dialog_box
@@ -380,68 +288,6 @@ def create_div_heatmap_selection():
 # ======================================================
 # =================== Component divs ===================
 # ======================================================
-
-
-def create_div_plotcolor(feat_names, more_colorvars):
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='four columns', 
-                children=[ html.P('Plot as color:') ], 
-                style={
-                    'textAlign': 'center', 
-                    'color': app_config.params['font_color'], 
-                    'padding-top': '5px'
-                }
-            ), 
-            html.Div(
-                className='eight columns', 
-                children=[
-                    dcc.Dropdown(
-                        id='landscape_color', 
-                        options = [{
-                            'value': app_config.params['default_color_var'], 
-                            'label': app_config.params['default_color_var']
-                        }] + [
-                            {'value': n, 'label': n} for n in more_colorvars
-                        ] + [
-                            {'value': gn, 'label': gn} for gn in feat_names 
-                        ], 
-                        value=app_config.params['default_color_var'], 
-                        placeholder="Select colors to plot", 
-                        clearable=False
-                    )], 
-                style={'padding-top': '0px'}
-            )], 
-        style=style_invis_dialog_box
-    )
-
-
-def create_div_annot(point_names):
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='four columns', 
-                children=[ html.P('Look up gene(s) in plot:') ], 
-                style={
-                    'textAlign': 'center', 
-                    'color': app_config.params['font_color'], 
-                    'padding-top': '5px'
-                }
-            ), 
-            html.Div(
-                className='eight columns', 
-                children=[
-                    dcc.Dropdown(
-                        id='points_annot', 
-                        options = [ {'value': gn, 'label': gn} for gn in point_names ], 
-                        placeholder="Select genes", multi=True
-                    )], 
-                style={'padding-top': '0px'}
-            )]
-    )
 
 
 # Default dataset first in the given list of dataset options.
@@ -467,94 +313,6 @@ def create_div_select_dataset(dataset_options):
                         value=dataset_options[0]
                     )]
             )], 
-        style=style_outer_dialog_box
-    )
-
-
-def contents_div_go_ctrl(point_names):
-    child_panels = [
-        html.Div(
-            className='row', 
-            children=[
-                html.Div(
-                    className='six columns', 
-                    children=[
-                        dcc.Dropdown(
-                            id='geneset-select', 
-                            options = [ {'value': gn, 'label': gn} for gn in point_names ], 
-                            value = [], 
-                            placeholder="Gene set for enrichment", multi=True
-                        )], 
-                    style={'padding-top': '0px'}
-                ), 
-                html.Div(
-                    className='three columns',
-                    children=[
-                        html.P(
-                            "# terms to display: ",
-                            style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
-                        )], 
-                    style={'padding-top': '7px'}
-                ),
-                html.Div(
-                    className='three columns', 
-                    children=[
-                        dcc.Input(
-                            id='select-topk-goterms', 
-                            type='text', 
-                            value='20', 
-                            style={'textAlign': 'center', 'width': '100%'}
-                        )]
-                )]
-        ), 
-        html.Div(
-            className='row', 
-            children=[
-                html.Div(
-                    className='five columns', 
-                    children=[
-                        dcc.Input(
-                            id='goterm-lookup', 
-                            type='text', 
-                            value = '', 
-                            placeholder="Look up GO term...", 
-                            style={'width': '100%'}
-                        ), 
-                        dcc.Checklist(
-                            id='selectgo-status', 
-                            options=[
-                                {'label': 'Select assoc. genes', 'value': 'select'}
-                            ],
-                            values=[], 
-                            style={
-                                'textAlign': 'center', 
-                                'width': '80%', 
-                                'color': app_config.params['font_color']
-                            }
-                        )], 
-                    style={'padding-top': '5px'}
-                ), 
-                html.Div(
-                    className='seven columns', 
-                    children=[
-                        dcc.Textarea(
-                            id='display-genelist', 
-                            wrap='True', 
-                            value = '', 
-                            placeholder="Associated genes", 
-                            style={'width': '100%'}
-                        )], 
-                    style={'padding-top': '5px'}
-                )]
-        )]
-    return child_panels
-
-
-def create_div_go_ctrl(point_names):
-    return html.Div(
-        id='div-go-lookup', 
-        className='row', 
-        children=contents_div_go_ctrl(point_names), 
         style=style_outer_dialog_box
     )
 
@@ -601,8 +359,7 @@ div_landscape_select = html.Div(
     className='row', 
     children=[
         div_select_points, 
-        div_list_pointsets, 
-        div_serialization], 
+        div_list_pointsets], 
     style=style_outer_dialog_box
 )
 
@@ -613,32 +370,31 @@ div_go_panel = html.Div(
         dcc.Graph(
             id='goenrich-panel', 
             config={'displaylogo': False, 'displayModeBar': True}
+        ), 
+        html.Div(
+            className='row', 
+            children=[
+                html.Div(
+                    className='six columns',
+                    children=[
+                        html.P(
+                            "# terms to display: ",
+                            style={ 'textAlign': 'right', 'width': '100%', 'color': app_config.params['font_color'] }
+                        )], 
+                    style={'padding-top': '7px'}
+                ),
+                html.Div(
+                    className='six columns', 
+                    children=[
+                        dcc.Input(
+                            id='select-topk-goterms', 
+                            type='text', 
+                            value='20', 
+                            style={'textAlign': 'center', 'width': '100%'}
+                        )]
+                )]
         )]
 )
-
-
-def create_div_landscape_ctrl():
-    return html.Div(
-        className='row', 
-            children=[
-            dcc.Checklist(
-                id='toggle-landscape-whiten', 
-                options=[
-                    {'label': 'Indicate selection', 'value': 'arrow'}, 
-                    {'label': 'Highlight selection', 'value': 'highlight'}
-                ],
-                values=[], 
-                style={
-                    'textAlign': 'left', 
-                    'width': '80%', 
-                    'color': app_config.params['font_color']
-                }, 
-                labelStyle={
-                    'display': 'inline-block'
-                }
-            )], 
-        style={'padding-top': '0px'}
-    )
 
 
 def create_div_hm_panel():
@@ -783,10 +539,152 @@ def create_div_cosmetic_panel():
 # ==================================================================
 
 
-def create_div_landscapes(point_names, feat_names, more_colorvars):
+def create_div_mainctrl(
+    point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset
+):
+#     download_image = app_config.params['download_img_path']#,
+#     encoded_image = base64.b64encode(open(download_image, 'rb').read())
+    
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='two columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='points_annot', 
+                        options = [ {'value': gn, 'label': gn} for gn in point_names ], 
+                        placeholder="Look up gene(s)", multi=True
+                    )]
+            ), 
+            html.Div(
+                id='div-go-lookup', 
+                className='three columns', 
+                children=[
+                    dcc.Dropdown(	
+                        id='goterm-lookup', 	
+                        # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 	
+                        value = [], 	
+                        placeholder="Look up GO term...", 
+                        style={ 'height': '45px', 'display': 'inline-block', 'width': '100%' }, 
+                        multi=True	
+                    )], 
+                style={'fontSize': 11}
+            ), 
+            html.Div(
+                className='two columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='landscape_color', 
+                        options = [{
+                            'value': app_config.params['default_color_var'], 
+                            'label': app_config.params['default_color_var']
+                        }] + [
+                            {'value': n, 'label': n} for n in more_colorvars
+                        ] + [
+                            {'value': gn, 'label': gn} for gn in feat_names 
+                        ], 
+                        value=app_config.params['default_color_var'], 
+                        placeholder="Select colors to plot", 
+                        clearable=False
+                    )]
+            ), 
+            html.Div(
+                className='two columns', 
+                children=[
+                    dcc.Dropdown(
+                        id='tissue-type-lookup', 
+                        options = [{'value': n, 'label': n} for n in cancer_types], 
+                        placeholder="Plot tissue type"
+                    )]
+            ), 
+            html.Div(
+                className='three columns', 
+                children=[
+                    html.Div(
+                        className='row', 
+                        children='Gene set download/upload:', 
+                        style={
+                            'textAlign': 'center', 
+                            'color': app_config.params['font_color'], 
+                            'padding-top': '0px'
+                        }
+                    ), 
+                    html.Div(
+                        className='row', 
+                        children=[
+                            html.Div(
+                                className='six columns', 
+                                children=[
+                                    html.A(
+                                        #'Save', 
+                                        html.Button(
+                                            id='download-button', 
+                                            children='Save', 
+                                            style=style_text_box, 
+                                            n_clicks='0', 
+                                            n_clicks_timestamp='0'
+                                        ), 
+                                        id='download-set-link',
+                                        download="selected_set.csv", 
+                                        href="",
+                                        target="_blank", 
+                                        style={
+                                            'width': '100%', 
+                                            # 'border': 'thin lightgrey solid',
+                                            'textAlign': 'center', 
+                                            'color': app_config.params['font_color'], 
+                                            'padding-top': '5px', 
+                                            'padding-bottom': '5px'
+                                        }
+                                    )]
+                            ), 
+                            html.Div(
+                                className='six columns', 
+                                children=[
+                                    dcc.Upload(
+                                        id='upload-pointsets',
+                                        children=html.Div([
+                                            html.Button(
+                                                id='upload-button', 
+                                                children='Load', 
+                                                style=style_text_box, 
+                                                n_clicks='0', 
+                                                n_clicks_timestamp='0'
+                                            )
+#                                             html.Img(
+#                                                 src=upload_asset, #'data:image/png;base64,{}'.format(encoded_image), 
+#                                                 style={
+#                                                     'height' : '40%',
+#                                                     'width' : '40%',
+#                                                     'float' : 'right',
+#                                                     'position' : 'relative',
+#                                                     'padding-top' : 0,
+#                                                     'padding-right' : 0
+#                                                 }
+#                                             )
+                                        ]),
+                                        style={
+                                            'width': '100%', 
+                                            # 'border': 'thin lightgrey solid',
+                                            'textAlign': 'center', 
+                                            'color': app_config.params['font_color'], 
+                                            'padding-top': '5px', 
+                                            'padding-bottom': '5px'
+                                        }, 
+                                        multiple=True
+                                    )]
+                            )]
+                    )], style={ 'border': 'thin lightgrey solid' }
+            )]
+    )
+
+
+def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset):
     return html.Div(
         className="seven columns",
         children=[
+            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset), 
             dcc.Graph(
                 id='landscape-plot',
                 config={'displaylogo': False, 'displayModeBar': True}, 
@@ -802,16 +700,12 @@ def create_div_landscapes(point_names, feat_names, more_colorvars):
     )
 
 
-def create_div_sidepanels(point_names, feat_names, more_colorvars):
+def create_div_sidepanels():
     return html.Div(
         className='five columns', 
         children=[
-            create_div_landscape_ctrl(), 
             create_div_heatmap_selection(), 
             create_div_hm_panel(), 
-            create_div_plotcolor(feat_names, more_colorvars),
-            create_div_annot(point_names), 
-            create_div_go_ctrl(point_names), 
             div_go_panel
             # div_reviz_scatter
         ],
@@ -825,7 +719,9 @@ Main layout.
 """
 import numpy as np
 
-def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
+def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, download_asset, more_colorvars=[]):
+    go_termIDs = np.load(app_config.params['gotermIDs_path'])
+    go_termnames = np.load(app_config.params['gotermnames_path'])
     return html.Div(
         className="container", 
         children=[
@@ -841,8 +737,8 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
             html.Div(
                 className="row", 
                 children=[
-                    create_div_landscapes(point_names, feat_names, more_colorvars), 
-                    create_div_sidepanels(point_names, feat_names, more_colorvars)
+                    create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset), 
+                    create_div_sidepanels()
                 ]
             ), 
             create_div_cosmetic_panel(), 
@@ -870,8 +766,8 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
                 modified_timestamp='0'
             ), 
             dcc.Store(
-                id='stored-most-recently-highlighted', 
-                data={ '_last_panel_highlighted': 'landscape' }, 
+                id='stored-heatmap-selected', 
+                data={ }, 
                 modified_timestamp='0'
             ), 
             dcc.Store(
@@ -882,7 +778,7 @@ def create_div_mainapp(point_names, feat_names, more_colorvars=[]):
                 modified_timestamp='0'
             ), 
             dcc.Store(
-                id='stored-selected-cols', 
+                id='stored-goterm-lookup-results', 
                 data={ }, 
                 modified_timestamp='0'
             )
