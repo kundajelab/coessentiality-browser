@@ -23,7 +23,7 @@ For more on jobs that take a while: set up workers https://github.com/WileyIntel
 
 # Load gene embedded coordinates.
 plot_data_df = pd.read_csv(app_config.params['plot_data_df_path'][0], sep="\t", index_col=False)
-plot_data_df['custom_colors'] = 'Unannotated'
+plot_data_df['Colors'] = 'Unannotated'
 
 # graph_adj = sp.sparse.load_npz(app_config.params['adj_mat_path'])
 data_ess = pd.read_csv(app_config.params['raw_ess_data_path'], index_col=0, header=0, sep='\t')
@@ -37,7 +37,7 @@ ctypes = [x for x in np.unique(cancer_types)]
 colorlist = app_config.cmap_celltypes
 cell_line_colordict = dict([x for x in zip(ctypes, colorlist[0:len(ctypes)])])
 
-additional_colorvars = ['roarke_clusters']
+additional_colorvars = []# ['roarke_clusters']
 
 raw_data = data_ess.values
 
@@ -144,6 +144,8 @@ def highlight_landscape_func(
             'ax': 0, 
             'ay': -50 
         })
+    if color_var is None:
+        color_var = app_config.params['default_color_var']
     toret = app_lib.build_main_scatter(
         data_df, 
         color_var, 
@@ -208,7 +210,8 @@ def run_update_landscape(
     absc_arr = data_df[app_config.params['display_coordinates']['x']]
     ordi_arr = data_df[app_config.params['display_coordinates']['y']]
     # Check if a continuous feature is chosen to be plotted.
-    if ((color_scheme != app_config.params['default_color_var']) and 
+    if ((color_scheme is not None) and 
+        (color_scheme != app_config.params['default_color_var']) and 
         (color_scheme not in additional_colorvars) and 
         (len(color_scheme) > 0)
        ):
@@ -587,9 +590,9 @@ def update_landscape(
     dataset_names = app_config.params['dataset_options']
     ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
     data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
-    data_df['custom_colors'] = 'Unannotated'
+    data_df['Colors'] = 'Unannotated'
     style_selected = building_block_divs.style_selected
-    if len(selected_tissue_color) > 0:
+    if (selected_tissue_color is not None) and len(selected_tissue_color) > 0:
         color_scheme = selected_tissue_color
         aggregate_tissue = True
     else:

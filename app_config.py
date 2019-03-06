@@ -27,7 +27,7 @@ params['bg_color'] = '#000000'
 
 params['hm_colorvar_name'] = 'Ess.'
 params['hm_diverging'] = True
-params['default_color_var'] = 'custom_colors'
+params['default_color_var'] = 'Colors'
 
 
 

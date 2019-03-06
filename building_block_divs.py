@@ -187,6 +187,7 @@ def create_div_heatmap_selection():
                 className='six columns', 
                 children='# selected: ', 
                 style={
+                    'display': 'none', 
                     'textAlign': 'center', 
                     'color': app_config.params['font_color'], 
                     'padding-top': '10px'
@@ -340,7 +341,8 @@ div_go_panel = html.Div(
                             value='20', 
                             style={'textAlign': 'center', 'width': '100%'}
                         )]
-                )]
+                )], 
+            style={'padding-top': '10px'}
         )]
 )
 
@@ -502,7 +504,7 @@ def create_div_mainctrl(
                     dcc.Dropdown(
                         id='points_annot', 
                         options = [ {'value': gn, 'label': gn} for gn in point_names ], 
-                        placeholder="Look up gene(s)", multi=True
+                        placeholder="Gene...", multi=True
                     )]
             ), 
             html.Div(
@@ -511,9 +513,9 @@ def create_div_mainctrl(
                 children=[
                     dcc.Dropdown(	
                         id='goterm-lookup', 	
-                        options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 	
+                        # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 	
                         value = [], 	
-                        placeholder="Look up GO term...", 
+                        placeholder="GO term...", 
                         style={ 'height': '45px', 'display': 'inline-block', 'width': '100%' }, 
                         multi=True	
                     )], 
@@ -524,17 +526,11 @@ def create_div_mainctrl(
                 children=[
                     dcc.Dropdown(
                         id='landscape-color', 
-                        options = [{
-                            'value': app_config.params['default_color_var'], 
-                            'label': app_config.params['default_color_var']
-                        }] + [
-                            {'value': n, 'label': n} for n in more_colorvars
-                        ] + [
-                            {'value': gn, 'label': gn} for gn in feat_names 
-                        ], 
-                        value=app_config.params['default_color_var'], 
-                        placeholder="Select colors to plot", 
-                        clearable=False
+                        options = #[{ 'value': app_config.params['default_color_var'], 'label': app_config.params['default_color_var'] }] + 
+                        [{'value': n, 'label': n} for n in more_colorvars] + [{'value': gn, 'label': gn} for gn in feat_names], 
+                        # value=app_config.params['default_color_var'], 
+                        placeholder="Colors...", 
+                        clearable=True
                     )]
             ), 
             html.Div(
@@ -543,8 +539,7 @@ def create_div_mainctrl(
                     dcc.Dropdown(
                         id='tissue-type-lookup', 
                         options = [{'value': n, 'label': n} for n in cancer_types], 
-                        value = [], 
-                        placeholder="Plot tissue type"
+                        placeholder="Tissue type..."
                     )]
             ), 
             html.Div(
