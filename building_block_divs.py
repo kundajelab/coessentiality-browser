@@ -54,7 +54,7 @@ style_outer_dialog_box = {
 
 style_invis_dialog_box = {
     # 'user-select': 'none', '-moz-user-select': 'none', '-webkit-user-select': 'none', '-ms-user-select': 'none', 
-    'padding': 5, 
+    'padding': 0, 
     'margin': 5
 }
 
@@ -172,91 +172,6 @@ def create_scatter_layout(annotations):
 
 
 
-# =================================================================
-# =================== Component divs: save/load ===================
-# =================================================================
-
-
-div_select_points = html.Div(
-    className='row', 
-    children=[
-        html.Div(
-            id='num-selected-counter', 
-            className='three columns', 
-            children='# selected: ', 
-            style={
-                'textAlign': 'center', 
-                'color': app_config.params['font_color'], 
-                'padding-top': '10px'
-            }
-        ), 
-        html.Div(
-            className='five columns', 
-            children=[
-                dcc.Input(
-                    id='pointset-name', 
-                    type='text', 
-                    placeholder="Store gene set with name...", 
-                    value='', 
-                    style={'width': '100%'}
-                )], 
-            style={'padding-top': '5px'}
-        ), 
-        html.Div(
-            className='four columns', 
-            children=[
-                dcc.Checklist(
-                    id='store-status', 
-                    options=[
-                        {'label': 'Store subset', 'value': 'store'}
-                    ],
-                    values=[], 
-                    style={
-                        'textAlign': 'center', 
-                        'width': '80%', 
-                        'color': app_config.params['font_color']
-                    }
-                )], 
-            style={'padding-top': '10px'}
-        )
-    ]
-)
-
-
-div_list_pointsets = html.Div(
-    className='row', 
-    children=[
-        html.Div(
-            className='eight columns', 
-            children=[
-                dcc.Dropdown(
-                    id='list-pointsets', 
-                    placeholder="Select stored gene sets to load", 
-                    multi=True
-                )], 
-            style={'padding-top': '5px'}
-        ), 
-        html.Div(
-            className='four columns', 
-            children=[
-                dcc.Checklist(
-                    id='load-status', 
-                    options=[
-                        {'label': 'Load subset', 'value': 'load'}
-                    ],
-                    values=[], 
-                    style={
-                        'textAlign': 'center', 
-                        'width': '80%', 
-                        'color': app_config.params['font_color']
-                    }
-                )], 
-            style={'padding-top': '10px'}
-        )]
-)
-
-
-
 # ===============================================================
 # =================== Component divs: heatmap ===================
 # ===============================================================
@@ -267,20 +182,32 @@ def create_div_heatmap_selection():
     return html.Div(
         className='row', 
         children=[
-            dcc.Checklist(
-                id='toggle-hm-cols', 
-                options=[
-                    {'label': 'Cell line legend', 'value': 'legend'}
-                ],
-                values=[], 
+            html.Div(
+                id='num-selected-counter', 
+                className='six columns', 
+                children='# selected: ', 
                 style={
-                    'textAlign': 'left', 
-                    'width': '80%', 
-                    'color': app_config.params['font_color']
+                    'textAlign': 'center', 
+                    'color': app_config.params['font_color'], 
+                    'padding-top': '10px'
                 }
-            )
-        ], 
-        style=style_outer_dialog_box
+            ), 
+            html.Div(
+                className='six columns', 
+                children = [
+                    dcc.Checklist(
+                        id='toggle-hm-cols', 
+                        options=[
+                            {'label': 'Tissue legend', 'value': 'legend'}
+                        ],
+                        values=[], 
+                        style={
+                            'textAlign': 'right', 
+                            'width': '100%', 
+                            'color': app_config.params['font_color']
+                        }
+                    )]
+            )]
     )
 
 
@@ -358,9 +285,30 @@ div_reviz_scatter = html.Div(
 div_landscape_select = html.Div(
     className='row', 
     children=[
-        div_select_points, 
-        div_list_pointsets], 
-    style=style_outer_dialog_box
+        html.Div(
+            className='row', 
+            children=[
+                html.Div(
+                    className='six columns', 
+                    children=[
+                        dcc.Input(
+                            id='pointset-name', 
+                            type='text', 
+                            placeholder="Store gene set with name...", 
+                            value='', 
+                            style={'width': '100%'}
+                        )]
+                ), 
+                html.Div(
+                    className='six columns', 
+                    children=[
+                        dcc.Dropdown(
+                            id='list-pointsets', 
+                            placeholder="Select stored gene sets to load", 
+                            multi=True
+                        )]
+                )], style={'display': 'none'}
+        )]
 )
 
 
@@ -375,7 +323,7 @@ div_go_panel = html.Div(
             className='row', 
             children=[
                 html.Div(
-                    className='six columns',
+                    className='nine columns',
                     children=[
                         html.P(
                             "# terms to display: ",
@@ -384,7 +332,7 @@ div_go_panel = html.Div(
                     style={'padding-top': '7px'}
                 ),
                 html.Div(
-                    className='six columns', 
+                    className='three columns', 
                     children=[
                         dcc.Input(
                             id='select-topk-goterms', 
@@ -563,7 +511,7 @@ def create_div_mainctrl(
                 children=[
                     dcc.Dropdown(	
                         id='goterm-lookup', 	
-                        # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 	
+                        options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 	
                         value = [], 	
                         placeholder="Look up GO term...", 
                         style={ 'height': '45px', 'display': 'inline-block', 'width': '100%' }, 
@@ -575,7 +523,7 @@ def create_div_mainctrl(
                 className='two columns', 
                 children=[
                     dcc.Dropdown(
-                        id='landscape_color', 
+                        id='landscape-color', 
                         options = [{
                             'value': app_config.params['default_color_var'], 
                             'label': app_config.params['default_color_var']
@@ -595,6 +543,7 @@ def create_div_mainctrl(
                     dcc.Dropdown(
                         id='tissue-type-lookup', 
                         options = [{'value': n, 'label': n} for n in cancer_types], 
+                        value = [], 
                         placeholder="Plot tissue type"
                     )]
             ), 
@@ -617,7 +566,6 @@ def create_div_mainctrl(
                                 className='six columns', 
                                 children=[
                                     html.A(
-                                        #'Save', 
                                         html.Button(
                                             id='download-button', 
                                             children='Save', 
@@ -631,13 +579,11 @@ def create_div_mainctrl(
                                         target="_blank", 
                                         style={
                                             'width': '100%', 
-                                            # 'border': 'thin lightgrey solid',
                                             'textAlign': 'center', 
-                                            'color': app_config.params['font_color'], 
-                                            'padding-top': '5px', 
-                                            'padding-bottom': '5px'
+                                            'color': app_config.params['font_color']
                                         }
-                                    )]
+                                    )], 
+                                style={'padding-top': '0px'}
                             ), 
                             html.Div(
                                 className='six columns', 
@@ -666,11 +612,8 @@ def create_div_mainctrl(
                                         ]),
                                         style={
                                             'width': '100%', 
-                                            # 'border': 'thin lightgrey solid',
                                             'textAlign': 'center', 
-                                            'color': app_config.params['font_color'], 
-                                            'padding-top': '5px', 
-                                            'padding-bottom': '5px'
+                                            'color': app_config.params['font_color']
                                         }, 
                                         multiple=True
                                     )]
@@ -708,8 +651,7 @@ def create_div_sidepanels():
             create_div_hm_panel(), 
             div_go_panel
             # div_reviz_scatter
-        ],
-        style=style_invis_dialog_box
+        ], style=style_invis_dialog_box
     )
 
 
@@ -767,6 +709,11 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
             ), 
             dcc.Store(
                 id='stored-heatmap-selected', 
+                data={ }, 
+                modified_timestamp='0'
+            ), 
+            dcc.Store(
+                id='stored-recently-highlighted', 
                 data={ }, 
                 modified_timestamp='0'
             ), 

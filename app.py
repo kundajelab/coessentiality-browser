@@ -100,6 +100,12 @@ def make_selected(stored_dict):
     return toret
 
 
+def choose_most_recent_store(times_list, stores_list):
+    # times_list.append(0)
+    most_recent_time_index = np.argmax(times_list)
+    return stores_list[most_recent_time_index]
+
+
 """
 Update the main graph panel with selected points annotated, using the given dataset.
 """
@@ -193,7 +199,8 @@ def run_update_landscape(
     bg_marker_size, 
     marker_size, 
     style_selected, 
-    highlighted_points=[]
+    highlighted_points=[], 
+    aggregate_tissue=False
 ):
     pointIDs_to_select = highlighted_points if (len(highlighted_points) > 0) else list(subset_store['_current_selected_data'].keys())
     if annotated_points is None:
@@ -205,14 +212,18 @@ def run_update_landscape(
         (color_scheme not in additional_colorvars) and 
         (len(color_scheme) > 0)
        ):
-        if not isinstance(color_scheme, (list, tuple)):
-            color_scheme = [color_scheme]
-        feat_ndces = np.isin(feat_names, color_scheme)
-        # If there are multiple continuous features given, plot their mean; otherwise the mean's a no-op anyway so it's safe to use.
-        if sp.sparse.issparse(raw_data_to_use):
-            new_colors = np.squeeze(np.array(raw_data_to_use[:, feat_ndces].mean(axis=1)))
+        if aggregate_tissue:
+            cell_line_ndces = np.where(cancer_types == color_scheme)[0]
+            new_colors = np.array(raw_data_to_use[:, cell_line_ndces].mean(axis=1))
         else:
-            new_colors = np.mean(raw_data_to_use[:, feat_ndces], axis=1)
+            if not isinstance(color_scheme, (list, tuple)):
+                color_scheme = [color_scheme]
+            feat_ndces = np.isin(feat_names, color_scheme)
+            # If there are multiple continuous features given, plot their mean; otherwise the mean's a no-op anyway so it's safe to use.
+            if sp.sparse.issparse(raw_data_to_use):
+                new_colors = np.squeeze(np.array(raw_data_to_use[:, feat_ndces].mean(axis=1)))
+            else:
+                new_colors = np.mean(raw_data_to_use[:, feat_ndces], axis=1)
         return highlight_landscape_func(
             annotated_points, 
             data_df, 
@@ -262,6 +273,21 @@ def parse_upload_contents(contents, filename):
 # ==============================================================================
 
 
+# Render selectable point subsets.
+@app.callback(
+    Output('list-pointsets', 'options'), 
+    [Input('stored-pointsets', 'data')]
+)
+def update_subset_options(stored_setlist):
+    toret = []
+    blacklist = ['_current_subselected_data', '_current_selected_data']
+    if stored_setlist is not None:
+        for s in stored_setlist.keys():
+            if s not in blacklist:
+                toret.append({'label': s, 'value': s})
+    return toret
+
+
 @app.callback(
     Output('test-select-data', 'children'),
     [Input('stored-panel-settings', 'data'), 
@@ -274,20 +300,20 @@ def display_test(
     panel_data, 
     sel_data, 
     data_store, 
-    hlight_store, 
+    hm_store, 
     goterms_sel
 ):
     see_sel = "0" if sel_data is None else str(len(sel_data))
-    see_hlight = "0" if hlight_store is None else str(len(hlight_store))
+    see_hm = "0" if hm_store is None else str(len(hm_store))
     see_gn = str(len(goterms_sel))
     toret = ""
     for setname in data_store:
-        toret = toret + "{}\t{}\n".format(data_store[setname], setname)
+        toret = toret + "{}\t{}\n".format(str(len(data_store[setname])), setname)
     if panel_data['debug_panel']:
-        return "***STORED SELECTED DATA***\n{}\n***Landscape SELECTED DATA***\n{}\n***Heatmap SELECTED DATA***\n{}\n***Most recently used panel:\t{}".format(
+        return "***STORED SELECTED DATA***\n{}\n***Landscape SELECTED DATA***\n{}\n***Heatmap SELECTED DATA***\n{}\n***GO term lookup:\t{}".format(
             toret, 
             see_sel, 
-            see_hlight, 
+            see_hm, 
             see_gn
         )
     else:
@@ -304,21 +330,6 @@ def save_selection(subset_store):
     return "data:text/csv;charset=utf-8," + save_contents
 #     save_contents = json.dumps(subset_store['_current_selected_data'], indent=4)
 #     return "data:text/json;charset=utf-8," + save_contents
-
-
-# Render selectable point subsets.
-@app.callback(
-    Output('list-pointsets', 'options'), 
-    [Input('stored-pointsets', 'data')]
-)
-def update_subset_options(stored_setlist):
-    toret = []
-    blacklist = ['_current_subselected_data', '_current_selected_data']
-    if stored_setlist is not None:
-        for s in stored_setlist.keys():
-            if s not in blacklist:
-                toret.append({'label': s, 'value': s})
-    return toret
 
 
 @app.callback(
@@ -371,6 +382,23 @@ def update_panel_settings_store(debug_options):
         'debug_panel': ('debug-panel' in debug_options)
     }
 
+
+# Updates the stored dictionary of boolean panel config variables.
+@app.callback(
+    Output('stored-recently-highlighted', 'data'), 
+    [Input('stored-landscape-selected', 'modified_timestamp'), 
+     Input('stored-heatmap-selected', 'modified_timestamp')], 
+    [State('stored-landscape-selected', 'data'), 
+     State('stored-heatmap-selected', 'data')]
+)
+def update_panel_settings_store(
+    time_sel_landscape, time_sel_heatmap, sel_landscape, sel_heatmap
+):
+    return choose_most_recent_store(
+        [int(time_sel_landscape), int(time_sel_heatmap)], 
+        [sel_landscape, sel_heatmap]
+    )
+
 """
 @app.callback(
     Output('stored-goterm-lookup-results', 'data'), 
@@ -391,11 +419,12 @@ def update_goterm_search(lookup_submit, lookup_val):
 )	
 def update_goterm_lookup(	
     goterms_req	
-):	
-    tmpl = [app_lib.get_genes_from_goterm(termID) for termID in goterms_req]	
+):
+    tmpl = [app_lib.get_genes_from_goterm(termID) for termID in goterms_req]
     if len(tmpl) == 0:	
-        return ""	
-    sel_genes = np.concatenate(tmpl)	
+        return ""
+    sel_genes = np.concatenate(tmpl)
+    print(len(sel_genes))
     return list(np.unique(sel_genes))
 
 
@@ -447,26 +476,15 @@ def update_numselected_counter(
 # Link currently selected data to output of gene set selector, so it can be picked too.
 @app.callback(
     Output('goenrich-panel', 'figure'),
-    [Input('stored-landscape-selected', 'data'), 
-     Input('stored-landscape-selected', 'modified_timestamp'), 
-     Input('stored-heatmap-selected', 'data'), 
-     Input('stored-heatmap-selected', 'modified_timestamp'), 
+    [Input('stored-recently-highlighted', 'data'), 
      Input('select-topk-goterms', 'n_submit'),
      Input('select-topk-goterms', 'n_blur')],
     [State('select-topk-goterms', 'value')]
 )
 def display_goenrich_panel(
-    sel_landscape, time_sel_landscape, sel_heatmap, time_sel_heatmap, dummy1, dummy2, topk
+    sel_hlight, dummy1, dummy2, topk
 ):
-    most_recent_time = max([
-        int(time_sel_landscape), int(time_sel_heatmap), 0
-    ])
-    data_selection = {}
-    if most_recent_time == int(time_sel_landscape):
-        data_selection = sel_landscape
-    elif most_recent_time == int(time_sel_heatmap):
-        data_selection = sel_heatmap
-    selected_genes = [x for x in data_selection.keys()]
+    selected_genes = [x for x in sel_hlight.keys()]
     return app_lib.display_goenrich_panel_func(selected_genes, topk=int(topk))
 
 
@@ -476,43 +494,39 @@ Contains control logic for subset selection and storage.
 """
 @app.callback(
     Output('stored-pointsets', 'data'), 
-    [Input('store-status', 'values'), 
-     Input('list-pointsets', 'value'), 
-     Input('upload-pointsets', 'contents')],
+    [Input('list-pointsets', 'value'), 
+     Input('upload-pointsets', 'contents'), 
+     Input('stored-recently-highlighted', 'data'), 
+     Input('stored-goterm-lookup-results', 'data')],
     [State('upload-pointsets', 'filename'), 
-     State('load-status', 'values'), 
      State('pointset-name', 'value'), 
-     State('stored-pointsets', 'data'), 
-     State('stored-goterm-lookup-results', 'data'), 
-     State('stored-landscape-selected', 'data')]
+     State('stored-pointsets', 'data')]
 )
 def update_subset_storage(
-    store_status, 
     selected_subsetIDs, 
     file_contents, 
-    file_paths, 
-    load_status, 
-    newset_name, 
-    subset_store, 
+    selected_hlight_data, 
     stored_goterm_lookup, 
-    selected_landscape_data
+    file_paths, 
+    newset_name, 
+    subset_store
 ):
     new_sets_dict = {} if subset_store is None else subset_store
     if len(stored_goterm_lookup) > 0:
         new_sets_dict['_current_selected_data'] = { x: {} for x in stored_goterm_lookup }
     else:
-        if 'load' in load_status:    # Update _current_selected_data by loading subsets.
+        print('bloop')
+        if selected_subsetIDs is not None and len(selected_subsetIDs) > 0:    # Update _current_selected_data by loading subsets.
             new_sets_dict['_current_selected_data'] = union_of_selections(selected_subsetIDs, subset_store)
         else:   # Update _current_selected_data from the main plot / heatmap.
             # Logic to display points as selected from an auxplot (most recently used for selection). 
             # A small subset selected_heatmap_points should not change selected_landscape_points, but should change _current_selected_data
-            new_sets_dict['_current_selected_data'] = make_store_points(selected_landscape_data)
+            new_sets_dict['_current_selected_data'] = selected_hlight_data
     # Store current selected data as a new set if in that mode.
-    if 'store' in store_status:
-        if ((newset_name is not None) and 
-            (newset_name not in new_sets_dict) and 
-            (newset_name != '')):
-            new_sets_dict[newset_name] = new_sets_dict['_current_selected_data']
+    if ((newset_name is not None) and 
+        (newset_name not in new_sets_dict) and 
+        (newset_name != '')):
+        new_sets_dict[newset_name] = new_sets_dict['_current_selected_data']
     # Load a bunch of cell sets with names equal to their filenames.
     if file_contents is not None and len(file_contents) > 0:
         for contents, fname in zip(file_contents, file_paths):   # fname here is a relative (NOT an absolute) file path
@@ -552,7 +566,8 @@ Update the main graph panel.
 """
 @app.callback(
     Output('landscape-plot', 'figure'), 
-    [Input('landscape_color', 'value'), 
+    [Input('landscape-color', 'value'), 
+     Input('tissue-type-lookup', 'value'), 
      Input('points_annot', 'value'), 
      Input('stored-pointsets', 'data'), 
      Input('sourcedata-select', 'value'), 
@@ -560,20 +575,26 @@ Update the main graph panel.
      Input('slider-marker-size-factor', 'value')]
 )
 def update_landscape(
-    color_scheme,          # Feature(s) selected to plot as color.
+    cell_line_color,          # Feature(s) selected to plot as color.
+    selected_tissue_color,       # Selected tissue type (group of cell lines)
     annotated_points,      # Selected points annotated
     subset_store,          # Store of selected point subsets.
     sourcedata_select, 
     bg_marker_size, 
     marker_size
 ):
-    print('Color scheme: {}'.format(color_scheme))
+    # print('Color scheme: {}'.format(color_scheme))
     dataset_names = app_config.params['dataset_options']
     ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
     data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
     data_df['custom_colors'] = 'Unannotated'
     style_selected = building_block_divs.style_selected
-    
+    if len(selected_tissue_color) > 0:
+        color_scheme = selected_tissue_color
+        aggregate_tissue = True
+    else:
+        color_scheme = cell_line_color
+        aggregate_tissue = False
     return run_update_landscape(
         color_scheme, 
         annotated_points, 
@@ -583,7 +604,8 @@ def update_landscape(
         raw_data, 
         bg_marker_size, 
         marker_size, 
-        style_selected
+        style_selected, 
+        aggregate_tissue=aggregate_tissue
     )
 
 

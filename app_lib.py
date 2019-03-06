@@ -142,9 +142,11 @@ def traces_scatter(
         point_names = list(data_df['gene_names'])
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
         colorbar_title = app_config.params['hm_colorvar_name']
-        if app_config.params['qnorm_plot']:
-            continuous_color_var = quantile_norm(continuous_color_var)
-            colorbar_title = 'Percentile'
+#         max_magnitude = np.percentile(np.abs(fit_data), 99) if fit_data.shape[0] > 0 else 2
+#         hm_trace['zmin'] = -max_magnitude
+#         hm_trace['zmax'] = max_magnitude
+#             continuous_color_var = quantile_norm(continuous_color_var)
+#             colorbar_title = 'Percentile'
         pt_text = ["{}<br>Quantile: {}".format(point_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
         traces_list.append({ 
             'name': 'Data', 
@@ -387,9 +389,7 @@ def display_heatmap_cb(
     show_legend=False
 ):
     fit_data = hm_raw_data
-    if not app_config.params['hm_diverging']:
-        fit_data = rna_log1pnorm(fit_data)
-    # Identify (interesting) genes to plot. Currently: high-variance genes
+    # Identify (interesting) cell lines to plot. Currently: high-variance ones
     feat_ndces = interesting_feat_ndces(fit_data)
     absc_labels = feat_names[feat_ndces]
     absc_group_labels = feat_group_names[feat_ndces]
@@ -520,12 +520,14 @@ def get_goenrichment_from_genes(gene_list):
 
 # Given a GO term query, returns a combined list of genes under that ID.
 def get_genes_from_goterm(goterm_re_str, mode='gaf'):
+    if len(goterm_re_str) == 0:
+        return []
+    go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
+    srchhelp = goterm_caller.GoSearch(app_config.params['go_obo_path'], go2items=go2geneids_human)
     if mode == 'regex':      # Given a regex, return using GO's association files; else given GO term ID(s).
-        if len(goterm_re_str) == 0:
-            return []
-        go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
-        srchhelp = goterm_caller.GoSearch(app_config.params['go_obo_path'], go2items=go2geneids_human)
         gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
+    else:
+        gos = [goterm_re_str]
     toret = []
     for gid in srchhelp.get_items(gos):
         geneID = GENEID2NT.get(gid, None)

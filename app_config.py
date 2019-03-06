@@ -24,6 +24,7 @@ params['gotermnames_path'] = data_pfx + 'gotermnames.npy'
 params['gotermIDs_path'] = data_pfx + 'gotermIDs.npy'
 
 params['bg_color'] = '#000000'
+
 params['hm_colorvar_name'] = 'Ess.'
 params['hm_diverging'] = True
 params['default_color_var'] = 'custom_colors'
@@ -31,7 +32,7 @@ params['default_color_var'] = 'custom_colors'
 
 
 params['display_coordinates'] = { 'x': 'hUMAP_x',  'y': 'hUMAP_y' }
-params['qnorm_plot'] = True
+params['qnorm_plot'] = False
 params['hm_qnorm_plot'] = False
 params['continuous_color'] = False
 
@@ -66,7 +67,7 @@ cmap_custom_ylbu_diverging = [[0.0, '#0008ff'], [0.1111, '#0048ff'], [0.2222, '#
 if 'colorscale_discrete' not in params:
     params['colorscale_discrete'] = cmap_custom_discrete
 if 'colorscale_continuous' not in params:
-    params['colorscale_continuous'] = cmap_custom_blackbody    # 'Viridis'
+    params['colorscale_continuous'] = cmap_custom_ylbu_diverging    # 'Viridis'
 
 if params['continuous_color']:
     params['colorscale'] = params['colorscale_continuous']
