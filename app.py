@@ -335,6 +335,21 @@ def save_selection(subset_store):
 #     return "data:text/json;charset=utf-8," + save_contents
 
 
+import urllib
+# Downloads the currently selected dataframe before extracting and exporting the desired columns.
+@app.callback(
+    Output('download-layout-link', 'href'), 
+    [Input('sourcedata-select', 'value')]
+)
+def update_download_layout_link(sourcedata_select):
+    dataset_names = app_config.params['dataset_options']
+    ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
+    data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)
+    coords_to_load = list(app_config.params['display_coordinates'].values()) + ['gene_names']
+    csvString = data_df[coords_to_load].to_csv(sep="\t", index=False,encoding='utf-8')
+    return "data:text/csv;charset=utf-8," + csvString
+
+
 @app.callback(
     Output('display-bg-marker-size-factor', 'children'), 
     [Input('slider-bg-marker-size-factor', 'value')]

@@ -183,24 +183,50 @@ def create_div_select_dataset(dataset_options):
         className='row', 
         children=[
             html.Div(
-                className='four columns', 
-                children=[
-                    html.P(
-                        "Browse layout: ", 
-                        style=style_text_box
-                    )], 
-                style={'padding-top': '10px'}
-            ), 
-            html.Div(
                 className='eight columns', 
                 children=[
-                    dcc.Dropdown(
-                        id='sourcedata-select', 
-                        options = [ {'value': dn, 'label': dn} for dn in dataset_options ], # style={'height': '30px'}, 
-                        value=dataset_options[0]
+                    html.Div(
+                        className='four columns', 
+                        children=[
+                            html.P(
+                                "Browse layout: ", 
+                                style=style_text_box
+                            )], 
+                        style={'padding-top': '10px'}
+                    ), 
+                    html.Div(
+                        className='eight columns', 
+                        children=[
+                            dcc.Dropdown(
+                                id='sourcedata-select', 
+                                options = [ {'value': dn, 'label': dn} for dn in dataset_options ], # style={'height': '30px'}, 
+                                value=dataset_options[0]
+                            )]
+                    )], 
+                style=style_outer_dialog_box
+            ), 
+            html.Div(
+                className='three columns', 
+                children=[
+                    html.A(
+                        html.Button(
+                            id='download-layout-button', 
+                            children='Get CSV', 
+                            style=style_text_box, 
+                            n_clicks='0', 
+                            n_clicks_timestamp='0'
+                        ), 
+                        id='download-layout-link',
+                        download="selected_layout.csv", 
+                        href="",
+                        target="_blank", 
+                        style={
+                            'width': '100%', 
+                            'textAlign': 'center', 
+                            'color': app_config.params['font_color']
+                        }
                     )]
-            )], 
-        style=style_outer_dialog_box
+            )]
     )
 
 
@@ -482,7 +508,7 @@ def create_div_mainctrl(
                         style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
                         multi=True	
                     )], 
-                style={'fontSize': 11, 'margin': 5}
+                style={'fontSize': 10, 'margin': 5}
             ), 
             html.Div(
                 className='two columns', 
