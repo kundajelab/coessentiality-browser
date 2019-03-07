@@ -172,47 +172,6 @@ def create_scatter_layout(annotations):
 
 
 
-# ===============================================================
-# =================== Component divs: heatmap ===================
-# ===============================================================
-
-
-# Synchronizing landscape plot with heatmap.
-def create_div_heatmap_selection():
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                id='num-selected-counter', 
-                className='six columns', 
-                children='# selected: ', 
-                style={
-                    'display': 'none', 
-                    'textAlign': 'center', 
-                    'color': app_config.params['font_color'], 
-                    'padding-top': '10px'
-                }
-            ), 
-            html.Div(
-                className='six columns', 
-                children = [
-                    dcc.Checklist(
-                        id='toggle-hm-cols', 
-                        options=[
-                            {'label': 'Tissue legend', 'value': 'legend'}
-                        ],
-                        values=[], 
-                        style={
-                            'textAlign': 'right', 
-                            'width': '100%', 
-                            'color': app_config.params['font_color']
-                        }
-                    )]
-            )]
-    )
-
-
-
 # ======================================================
 # =================== Component divs ===================
 # ======================================================
@@ -398,7 +357,8 @@ def create_div_cosmetic_panel():
                             'color': app_config.params['font_color'], 
                             'padding-top': '10px'
                         }
-                    )]
+                    )], 
+                style={'display': 'none'}
             ), 
             html.Div(
                 className='three columns', 
@@ -494,7 +454,8 @@ def create_div_mainctrl(
 ):
 #     download_image = app_config.params['download_img_path']#,
 #     encoded_image = base64.b64encode(open(download_image, 'rb').read())
-    
+
+
     return html.Div(
         className='row', 
         children=[
@@ -504,8 +465,10 @@ def create_div_mainctrl(
                     dcc.Dropdown(
                         id='points_annot', 
                         options = [ {'value': gn, 'label': gn} for gn in point_names ], 
-                        placeholder="Gene...", multi=True
-                    )]
+                        placeholder="Gene...", multi=True, 
+                        style={'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
+                    )], 
+                style={'margin': 5}
             ), 
             html.Div(
                 id='div-go-lookup', 
@@ -516,22 +479,24 @@ def create_div_mainctrl(
                         # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 	
                         value = [], 	
                         placeholder="GO term...", 
-                        style={ 'height': '45px', 'display': 'inline-block', 'width': '100%' }, 
+                        style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
                         multi=True	
                     )], 
-                style={'fontSize': 11}
+                style={'fontSize': 11, 'margin': 5}
             ), 
             html.Div(
                 className='two columns', 
                 children=[
                     dcc.Dropdown(
                         id='landscape-color', 
-                        options = #[{ 'value': app_config.params['default_color_var'], 'label': app_config.params['default_color_var'] }] + 
-                        [{'value': n, 'label': n} for n in more_colorvars] + [{'value': gn, 'label': gn} for gn in feat_names], 
+                        options = [{'value': n, 'label': n} for n in more_colorvars] + [{'value': gn, 'label': ' '.join(gn.split('_'))} for gn in feat_names], 
                         # value=app_config.params['default_color_var'], 
-                        placeholder="Colors...", 
-                        clearable=True
-                    )]
+                        placeholder="Cell line...", 
+                        clearable=True, 
+                        style={'white-space':'nowrap', 'text-overflow': 'ellipsis', 
+                               'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }
+                    )], 
+                style={'fontSize': 10, 'margin': 5}
             ), 
             html.Div(
                 className='two columns', 
@@ -539,11 +504,13 @@ def create_div_mainctrl(
                     dcc.Dropdown(
                         id='tissue-type-lookup', 
                         options = [{'value': n, 'label': n} for n in cancer_types], 
-                        placeholder="Tissue type..."
-                    )]
+                        placeholder="Tissue type...", 
+                        style={'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
+                    )], 
+                style={'fontSize': 11, 'margin': 5}
             ), 
             html.Div(
-                className='three columns', 
+                className='two columns', 
                 children=[
                     html.Div(
                         className='row', 
@@ -613,7 +580,41 @@ def create_div_mainctrl(
                                         multiple=True
                                     )]
                             )]
-                    )], style={ 'border': 'thin lightgrey solid' }
+                    )], style={ 'border': 'thin lightgrey solid',  'margin': 5 }
+            ), 
+            html.Div(
+                className='one column', 
+                children=[
+                    html.Div(
+                        id='num-selected-counter', 
+                        # className='six columns', 
+                        children='# selected: ', 
+                        style={
+                            # 'display': 'none', 
+                            'textAlign': 'center', 
+                            'color': app_config.params['font_color'], 
+                            'padding-top': '0px', 
+                            'fontSize': 12
+                        }
+                    ), 
+                    html.Div(
+                        # className='six columns', 
+                        children = [
+                            dcc.Checklist(
+                                id='toggle-hm-cols', 
+                                options=[
+                                    {'label': 'Tissue legend', 'value': 'legend'}
+                                ],
+                                values=[], 
+                                style={
+                                    'textAlign': 'center', 
+                                    'width': '100%', 
+                                    'color': app_config.params['font_color'], 
+                                    'fontSize': 12
+                                }
+                            )]
+                    )], 
+                style={'margin': 5}
             )]
     )
 
@@ -622,7 +623,6 @@ def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types,
     return html.Div(
         className="seven columns",
         children=[
-            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset), 
             dcc.Graph(
                 id='landscape-plot',
                 config={'displaylogo': False, 'displayModeBar': True}, 
@@ -642,7 +642,6 @@ def create_div_sidepanels():
     return html.Div(
         className='five columns', 
         children=[
-            create_div_heatmap_selection(), 
             create_div_hm_panel(), 
             div_go_panel
             # div_reviz_scatter
@@ -670,7 +669,8 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
                         children=app_config.params['title'], 
                         style=style_text_box
                     )]
-            ),
+            ), 
+            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset), 
             html.Div(
                 className="row", 
                 children=[

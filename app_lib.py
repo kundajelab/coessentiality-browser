@@ -158,7 +158,7 @@ def traces_scatter(
             'mode': 'markers', 
             'marker': {
                 'size': bg_marker_size, 
-                'opacity': app_config.params['bg_marker_opacity_factor'], 
+                'opacity': app_config.params['marker_opacity_factor'], 
                 'symbol': 'circle', 
                 'showscale': True, 
                 'colorbar': {
@@ -200,7 +200,7 @@ def traces_scatter(
                 'opacity': trace_opacity, 
                 'marker': {
                     'size': marker_size if str(idx) in ['Unknown', 'Unannotated'] else bg_marker_size, 
-                    'opacity': app_config.params['marker_opacity_factor'] if str(idx) in ['Unknown', 'Unannotated'] else app_config.params['bg_marker_opacity_factor'], 
+                    'opacity': app_config.params['marker_opacity_factor'], 
                     'symbol': 'circle', 
                     'color': trace_color
                 }, 

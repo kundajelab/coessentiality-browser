@@ -87,7 +87,7 @@ params['incl_edges'] = False
 params['three_dims'] = False
 
 params['bg_marker_size_factor'] = 3.6
-params['marker_size_factor'] = 4.0
+params['marker_size_factor'] = 3.5
 params['bg_marker_opacity_factor'] = 0.5
 params['marker_opacity_factor'] = 1.0
 params['font_color'] = 'white'
