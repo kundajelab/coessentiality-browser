@@ -227,7 +227,7 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
                        style_selected = building_block_divs.style_selected
                       ):
     if highlight:
-        style_selected['marker']['color'] = 'white'
+        style_selected['marker']['color'] = '#ff4f00'
         # style_selected['marker']['size'] = 10     # TODO: Change this back on unhighlighting.
     else:
         style_selected['marker'].pop('color', None)    # Remove color if exists
