@@ -225,7 +225,8 @@ def create_div_select_dataset(dataset_options):
                             'textAlign': 'center', 
                             'color': app_config.params['font_color']
                         }
-                    )]
+                    )], 
+                style={ 'padding-top': '10px' }
             )]
     )
 
