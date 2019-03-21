@@ -337,6 +337,16 @@ def create_div_hm_panel():
     return html.Div(
         className="row",
         children = [
+            dcc.RadioItems(
+                id='select-hm-dataset', 
+                options=[ {'label': v, 'value': v} for v in ['CRISPR', 'Mutation', 'RNAi', 'Expression'] ], 
+                style=legend_font_macro, 
+                labelStyle={
+                    'display': 'inline-block', 
+                    'margin-right': '5px'
+                }, 
+                value='CRISPR'
+            ), 
             html.Div(
                 id='hm-feat-control', 
                 children=[]
@@ -495,7 +505,7 @@ def create_div_mainctrl(
                         placeholder="Gene...", multi=True, 
                         style={'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                     )], 
-                style={'margin': 5}
+                style={'fontSize': 12, 'margin': 5}
             ), 
             html.Div(
                 id='div-go-lookup', 
@@ -503,13 +513,13 @@ def create_div_mainctrl(
                 children=[
                     dcc.Dropdown(	
                         id='goterm-lookup', 	
-                        options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 	
+                        options = [], # [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 	
                         value = [], 	
                         placeholder="GO term...", 
                         style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
                         multi=True	
                     )], 
-                style={'fontSize': 10, 'margin': 5}
+                style={'fontSize': 11, 'margin': 5}
             ), 
             html.Div(
                 className='two columns', 
@@ -523,7 +533,7 @@ def create_div_mainctrl(
                         style={'white-space':'nowrap', 'text-overflow': 'ellipsis', 
                                'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }
                     )], 
-                style={'fontSize': 10, 'margin': 5}
+                style={'fontSize': 12, 'margin': 5}
             ), 
             html.Div(
                 className='two columns', 
@@ -534,7 +544,7 @@ def create_div_mainctrl(
                         placeholder="Tissue type...", 
                         style={'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                     )], 
-                style={'fontSize': 11, 'margin': 5}
+                style={'fontSize': 12, 'margin': 5}
             ), 
             html.Div(
                 className='two columns', 
@@ -590,12 +600,8 @@ def create_div_mainctrl(
 #                                             html.Img(
 #                                                 src=upload_asset, #'data:image/png;base64,{}'.format(encoded_image), 
 #                                                 style={
-#                                                     'height' : '40%',
-#                                                     'width' : '40%',
-#                                                     'float' : 'right',
-#                                                     'position' : 'relative',
-#                                                     'padding-top' : 0,
-#                                                     'padding-right' : 0
+#                                                     'height' : '40%', 'width' : '40%', 'float' : 'right',
+#                                                     'position' : 'relative', 'padding-top' : 0, 'padding-right' : 0
 #                                                 }
 #                                             )
                                         ]),

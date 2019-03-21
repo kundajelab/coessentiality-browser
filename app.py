@@ -33,6 +33,8 @@ point_names = np.array(plot_data_df['gene_names'])
 feat_names = data_ess.columns
 cancer_types = data_ess.columns.str.split('_').str[1:].str.join(' ').str.capitalize().str.replace('Haematopoietic and lymphoid tissue', 'Hematopoietic/lymphoid')
 
+
+
 ctypes = [x for x in np.unique(cancer_types)]
 colorlist = app_config.cmap_celltypes
 cell_line_colordict = dict([x for x in zip(ctypes, colorlist[0:len(ctypes)])])
@@ -560,20 +562,30 @@ Update the main heatmap.
 @app.callback(
     Output('main-heatmap', 'figure'),
     [Input('stored-landscape-selected', 'data'), 
-     Input('toggle-hm-cols', 'values')], 
+     Input('toggle-hm-cols', 'values'), 
+     Input('select-hm-dataset', 'value')], 
     [State('landscape-plot', 'figure')]
 )
 def update_main_heatmap(
     subset_store, 
     hm_col_panel, 
+    hm_dataset, 
     landscape_scatter_fig, 
     num_points_to_sample=10000
 ):
+    if hm_dataset == 'CRISPR':
+        data_to_use = raw_data
+    elif hm_dataset == 'Mutation':
+        data_to_use = raw_data
+    elif hm_dataset == 'RNAi':
+        data_to_use = raw_data
+    elif hm_dataset == 'Expression':
+        data_to_use = raw_data
     return run_update_main_heatmap(
         subset_store, 
         landscape_scatter_fig, 
         point_names, 
-        raw_data, 
+        data_to_use, 
         num_points_to_sample=num_points_to_sample, 
         show_legend=('legend' in hm_col_panel)
     )
