@@ -15,55 +15,6 @@ from sklearn.decomposition import TruncatedSVD
 # ================== Utility functions ==================
 # =======================================================
 
-# Loads anndata from 3 files: {data, rowdata, coldata}
-def read_as_anndata(path_pfx, transp=True):
-    m = scipy.io.mmread(path_pfx + '_data.mtx')
-    if transp:
-        m = m.transpose()
-    c_annot = pd.read_csv(path_pfx + '_mdata_points.csv', index_col=None, header=0)
-    f_annot = pd.read_csv(path_pfx + '_mdata_feats.csv', index_col=None, header=0)
-    return anndata.AnnData(X=m, obs=c_annot, var=f_annot)
-
-
-# Writes anndata in the form of 3 dataframes: {data, rowdata, coldata}
-def write_anndata(path_pfx, adata, transp=True):
-    if transp:
-        adata = adata.transpose()
-    adata.obs.to_csv(path_pfx + '_mdata_points.csv', index=False)
-    adata.var.to_csv(path_pfx + '_mdata_feats.csv', index=False)
-    scipy.io.mmwrite(path_pfx + '_data.mtx', adata.X)
-
-
-def rna_log1pnorm(datamat, scale_mrna_per_point=None):
-    mrna_per_point = np.sum(datamat, axis=1)
-    if scale_mrna_per_point is None:
-        scale_mrna_per_point = 10000
-        # np.percentile(mrna_per_point, q=90)
-    scale_factors = scale_mrna_per_point/mrna_per_point
-    points_normed = np.multiply(datamat.T, scale_factors).T
-    return np.log(1 + points_normed)
-
-
-# Analysis mini-workflow for RNA-seq data
-def fastfilt_rna(fdata, min_points_per_gene=25, max_expr_qtile_per_gene=99.5, scale_mrna_per_point=10000.0):
-    mrna_per_point = np.sum(fdata.values, axis=1)
-    mrna_per_gene = np.sum(fdata.values, axis=0)
-    
-    min_mrna_per_point = np.percentile(mrna_per_point, q=2)
-    max_mrna_per_gene = np.percentile(mrna_per_gene, q=max_expr_qtile_per_gene)
-    npoints, ngenes = fdata.values.shape
-    point_mask = np.ones(npoints, dtype=bool)
-    gene_mask = np.ones(ngenes, dtype=bool)
-    point_mask = point_mask & (np.sum(fdata.values, axis=1) >= min_mrna_per_point)
-    gene_mask = gene_mask & (np.sum(fdata.values > 0, axis=0) >= min_points_per_gene) 
-    gene_mask = gene_mask & (np.sum(fdata.values, axis=0) <= max_mrna_per_gene)
-    print("Fraction of points kept:\t" + str(np.mean(point_mask)))
-    print("Fraction of genes kept:\t" + str(np.mean(gene_mask)))
-    new_data = fdata[point_mask][fdata.columns[gene_mask]]
-    new_data.iloc[:,:] = rna_log1pnorm(new_data.values)
-    return new_data
-
-
 def quantile_norm(dtd):
     qtiles = np.zeros(len(dtd))
     nnz_ndces = np.nonzero(dtd)[0]
@@ -334,11 +285,10 @@ def hm_col_plot(
     col_scat_traces = []
     if geneview_gene is not None:
         pt_text = []
+        gvdata = np.zeros_like(reordered_featnames)    # np.zeros((1, len(reordered_featnames)))
         if geneview_mode == 'Mutation':
             mutdata = geneview_data[geneview_data[:, 0] == geneview_gene, :]
-            print(mutdata.shape)
             mutdata_celllines = mutdata[:, 6]
-            gvdata = np.zeros_like(reordered_featnames)    # np.zeros((1, len(reordered_featnames)))
             where_mutations = np.isin(reordered_featnames, mutdata_celllines)
             for i in range(len(reordered_featnames)):
                 newtext = "Cell line: {}".format(reordered_featnames[i])
@@ -350,12 +300,43 @@ def hm_col_plot(
                     ) for i in range(query_results.shape[0])]
                     newtext = newtext + "<br>{}".format("<br>".join(qwe))
                 pt_text.append(newtext)
-            pt_text = pt_text
             gvdata = np.minimum(gvdata, 1)
+            to_extend = [{
+                'y': gvdata, 'x': reordered_featnames, 'yaxis': 'y3', 
+                'hoverinfo': 'text', 'hovertext': pt_text, 'hoverdistance': 40, 
+                'colorscale': app_config.cmap_custom_blackbody, 
+                'marker': { 'color': 'white' }, 'type': 'bar'
+            }]
         elif geneview_mode == 'Expression':
-            gvdata = fit_data
-            pt_text = [ "Cell line: {}".format(str(colnames[c])) for c in range(len(gene_data))]
-        col_scat_traces.extend(hm_aux_geneview(gvdata, pt_text, reordered_featnames))
+            exprdata_celllines = geneview_data[0, :]
+            exprdata_genes = geneview_data[:, 0]
+            where_exprdata = np.isin(reordered_featnames, exprdata_celllines)
+            for i in range(len(reordered_featnames)):
+                newtext = "Cell line: {}".format(reordered_featnames[i])
+                if where_exprdata[i]:
+                    gvdata[i] = geneview_data[(exprdata_genes == geneview_gene), (exprdata_celllines == reordered_featnames[i])][0]
+                    newtext = newtext + "<br>Expression: {}".format(gvdata[i])
+                pt_text.append(newtext)
+            to_extend = [{
+                'y': np.ones(len(gvdata)), 
+                'x': reordered_featnames, #'y': np.reshape(gvdata, (1, len(gvdata))), 
+                'yaxis': 'y3', 
+                'hoverinfo': 'text', 'hovertext': pt_text, 'hoverdistance': 40, 
+                'colorbar': {
+                    'len': 0.3, 
+                    'thickness': 20, 
+                    'xanchor': 'left', 
+                    'yanchor': 'top', 
+                    'title': 'Expression',
+                    'titleside': 'top',
+                    'ticks': 'outside', 
+                    'titlefont': building_block_divs.colorbar_font_macro, 
+                    'tickfont': building_block_divs.colorbar_font_macro
+                }, 
+                'marker': { 'colorscale': app_config.cmap_custom_blackbody, 'color': list(np.log(np.array(gvdata).astype(float) + 1)) }, 
+                'type': 'bar'
+            }]
+        col_scat_traces.extend(to_extend)
     # Make scatterplot of cell lines.
     for feat_group in feat_colordict:
         trace_marker = { 'color': feat_colordict[feat_group] }
@@ -378,33 +359,6 @@ def hm_col_plot(
         }
         col_scat_traces.append(new_trace)
     return col_scat_traces, fit_data
-
-
-def hm_aux_geneview(gene_data, pt_text, absc):
-    # Return heatmap data traces for geneviewer.
-    return [{
-        'y': gene_data, 
-        'x': absc, 
-        'yaxis': 'y3', 
-        'hoverinfo': 'text', 
-        'hovertext': pt_text, 
-        'hoverdistance': 40, 
-        # 'colorscale': app_config.cmap_custom_blackbody, 
-#         'insidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
-#         'outsidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
-        'marker': { 'color': 'white' }, 
-        # 'textposition': 'auto', 
-#         'colorbar': {
-#             'len': 0.3, 'thickness': 20, 
-#             'xanchor': 'left', 'yanchor': 'top', 
-#             # 'title': 'Ess. score',
-#             # 'titleside': 'top',
-#             # 'ticks': 'outside', 
-#             # 'titlefont': building_block_divs.colorbar_font_macro, 
-#             'tickfont': building_block_divs.colorbar_font_macro
-#         }, 
-        'type': 'bar'
-    }]
 
 
 def hm_hovertext(data, rownames, colnames):
@@ -431,6 +385,8 @@ def display_heatmap_cb(
     show_legend=False
 ):
     fit_data = hm_raw_data
+    if fit_data is None or len(fit_data.shape) < 2:
+        return
     # Identify (interesting) cell lines to plot. Currently: high-variance ones
     feat_ndces = interesting_feat_ndces(fit_data)
     absc_labels = feat_names[feat_ndces]
@@ -472,8 +428,7 @@ def display_heatmap_cb(
         'customdata': hm_point_names, 
         'hoverinfo': 'text',
         'text': pt_text, 
-        'colorscale': app_config.params['hm_colorscale'],
-        'zmin': 0, 
+        'colorscale': app_config.params['hm_colorscale'], 
         'colorbar': {
             'len': 0.3, 
             'thickness': 20, 

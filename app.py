@@ -468,7 +468,7 @@ def update_geneview_options(geneview_dataset):
     if geneview_dataset == 'Mutation':
         gene_names = np.intersect1d(mutation_data[:,0], point_names)
     elif geneview_dataset == 'Expression':
-        gene_names = np.intersect1d(expression_data[:,0], point_names)
+        gene_names = np.intersect1d(expr_data[:,0], point_names)
     return [ {'value': gn, 'label': gn} for gn in gene_names ]
 
 
