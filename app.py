@@ -33,7 +33,11 @@ point_names = np.array(plot_data_df['gene_names'])
 feat_names = data_ess.columns
 cancer_types = data_ess.columns.str.split('_').str[1:].str.join(' ').str.capitalize().str.replace('Haematopoietic and lymphoid tissue', 'Hematopoietic/lymphoid')
 
+mutation_data = np.load(app_config.params['mutation_arr_path'])
+# shRNA_df = pd.read_csv(app_config.params['shRNA_data_path'], sep=",", index_col=0)
 
+expr_data = np.load(app_config.params['expression_arr_path'])
+expr_cell_lines = np.load(app_config.params['expression_cell_lines_path'])
 
 ctypes = [x for x in np.unique(cancer_types)]
 colorlist = app_config.cmap_celltypes
@@ -164,9 +168,13 @@ def highlight_landscape_func(
 
 def run_update_main_heatmap(
     subset_store, 
+    col_names, 
     landscape_scatter_fig, 
     point_names_to_use, 
     raw_data_to_use, 
+    geneview_gene=None, 
+    geneview_mode='Mutation', 
+    geneview_data=None, 
     num_points_to_sample=10000, 
     show_legend=False
 ):
@@ -174,6 +182,7 @@ def run_update_main_heatmap(
     # Subsample down to a max #points, for smoothly interactive heatmap display.
     if len(pointIDs_to_display) > num_points_to_sample:
         pointIDs_to_display = np.random.choice(pointIDs_to_display, num_points_to_sample, replace=False)
+    # If any points (genes) are selected but not in the heatmap, they won't be displayed.
     point_ndces_to_display = np.isin(point_names_to_use, pointIDs_to_display)
     subset_raw_data = raw_data_to_use[point_ndces_to_display, :]
     if sp.sparse.issparse(raw_data_to_use):
@@ -182,10 +191,13 @@ def run_update_main_heatmap(
     cocluster_mode = False
     hm_fig = app_lib.display_heatmap_cb(
         subset_raw_data, 
-        feat_names, 
+        col_names, 
         subset_point_names, 
         landscape_scatter_fig, 
         cocluster_mode, 
+        geneview_mode=geneview_mode, 
+        geneview_gene=geneview_gene, 
+        geneview_data=geneview_data, 
         feat_group_names=cancer_types, 
         feat_colordict=cell_line_colordict, 
         show_legend=show_legend
@@ -444,8 +456,20 @@ def update_goterm_lookup(
     if len(tmpl) == 0:	
         return ""
     sel_genes = np.concatenate(tmpl)
-    print(len(sel_genes))
     return list(np.unique(sel_genes))
+
+
+@app.callback(
+    Output('select-geneview', 'options'), 	
+    [Input('select-hm-dataset', 'value')]	
+)	
+def update_geneview_options(geneview_dataset):
+    gene_names = point_names
+    if geneview_dataset == 'Mutation':
+        gene_names = np.intersect1d(mutation_data[:,0], point_names)
+    elif geneview_dataset == 'Expression':
+        gene_names = np.intersect1d(expression_data[:,0], point_names)
+    return [ {'value': gn, 'label': gn} for gn in gene_names ]
 
 
 import dash_core_components as dcc
@@ -535,7 +559,6 @@ def update_subset_storage(
     if len(stored_goterm_lookup) > 0:
         new_sets_dict['_current_selected_data'] = { x: {} for x in stored_goterm_lookup }
     else:
-        print('bloop')
         if selected_subsetIDs is not None and len(selected_subsetIDs) > 0:    # Update _current_selected_data by loading subsets.
             new_sets_dict['_current_selected_data'] = union_of_selections(selected_subsetIDs, subset_store)
         else:   # Update _current_selected_data from the main plot / heatmap.
@@ -563,33 +586,57 @@ Update the main heatmap.
     Output('main-heatmap', 'figure'),
     [Input('stored-landscape-selected', 'data'), 
      Input('toggle-hm-cols', 'values'), 
-     Input('select-hm-dataset', 'value')], 
+     Input('select-hm-dataset', 'value'), 
+     Input('select-geneview', 'value')], 
     [State('landscape-plot', 'figure')]
 )
 def update_main_heatmap(
     subset_store, 
     hm_col_panel, 
-    hm_dataset, 
+    geneview_mode, 
+    geneview_gene, 
     landscape_scatter_fig, 
     num_points_to_sample=10000
 ):
-    if hm_dataset == 'CRISPR':
-        data_to_use = raw_data
-    elif hm_dataset == 'Mutation':
-        data_to_use = raw_data
-    elif hm_dataset == 'RNAi':
-        data_to_use = raw_data
-    elif hm_dataset == 'Expression':
-        data_to_use = raw_data
+    if geneview_mode == 'Mutation':
+        geneview_data = mutation_data
+    elif geneview_mode == 'Expression':
+        geneview_data = expr_data
     return run_update_main_heatmap(
         subset_store, 
+        feat_names, 
         landscape_scatter_fig, 
         point_names, 
-        data_to_use, 
+        raw_data, 
+        geneview_mode=geneview_mode, 
+        geneview_gene=geneview_gene, 
+        geneview_data=geneview_data, 
         num_points_to_sample=num_points_to_sample, 
         show_legend=('legend' in hm_col_panel)
     )
 
+
+"""
+# Update the main heatmap.
+
+@app.callback(
+    Output('aux-heatmap', 'figure'),
+    [Input('main-heatmap', 'figure'), 
+     Input('select-hm-dataset', 'value')]
+)
+def update_aux_heatmap(main_hm_fig, hm_dataset):
+    # Reorder rows/cols so they are in the same order as main heatmap.
+    if hm_dataset == 'Mutation':
+        data_to_use = raw_data
+        ptnames = point_names
+        colnames = feat_names
+    elif hm_dataset == 'Expression':
+        data_to_use = expr_data
+        ptnames = point_names
+        colnames = expr_cell_lines
+    toret_data = main_hm_fig['data']
+    return { 'data': toret_data, 'layout': main_hm_fig['layout']}
+"""
 
 """
 Update the main graph panel.

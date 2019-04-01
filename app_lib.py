@@ -142,11 +142,6 @@ def traces_scatter(
         point_names = list(data_df['gene_names'])
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
         colorbar_title = app_config.params['hm_colorvar_name']
-#         max_magnitude = np.percentile(np.abs(fit_data), 99) if fit_data.shape[0] > 0 else 2
-#         hm_trace['zmin'] = -max_magnitude
-#         hm_trace['zmax'] = max_magnitude
-#             continuous_color_var = quantile_norm(continuous_color_var)
-#             colorbar_title = 'Percentile'
         pt_text = ["{}<br>Quantile: {}".format(point_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
         traces_list.append({ 
             'name': 'Data', 
@@ -180,7 +175,6 @@ def traces_scatter(
         })
     else:    # Categorical color scheme, one trace per color
         cnt = 0
-        print('Colorscale length: {}'.format(len(colorscale)))
         for idx, val in data_df.groupby(color_var):
             point_ids_this_trace = list(val['gene_names'])
             spoint_ndces_this_trace = np.where(np.isin(point_ids_this_trace, selected_point_ids))[0]
@@ -227,7 +221,7 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
                        style_selected = building_block_divs.style_selected
                       ):
     if highlight:
-        style_selected['marker']['color'] = '#ff4f00'
+        style_selected['marker']['color'] = '#FF69B4'    # '#ff4f00' # Golden gate bridge red
         # style_selected['marker']['size'] = 10     # TODO: Change this back on unhighlighting.
     else:
         style_selected['marker'].pop('color', None)    # Remove color if exists
@@ -319,7 +313,8 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_cl
 
 def hm_col_plot(
     fit_data, feat_colordict, 
-    reordered_groups=None, reordered_featnames=None, col_clustIDs=None
+    reordered_groups=None, reordered_featnames=None, col_clustIDs=None, 
+    geneview_mode='Mutation', geneview_gene=None, geneview_data=None
 ):
     if reordered_featnames is None:
         reordered_featnames = feat_colordict.keys()
@@ -330,21 +325,40 @@ def hm_col_plot(
     for cid in np.unique(col_clustIDs):
         ndcesc = np.where(col_clustIDs == cid)[0]
         clust_colors = reordered_groups[ndcesc]
-        # print(np.sort(clust_colors))
         new_order_perclust = np.argsort(clust_colors)
         transform_col_order[ndcesc] = transform_col_order[ndcesc][new_order_perclust]
-    
-    col_scat_traces = []
     fit_data = fit_data[:, transform_col_order]
     reordered_groups = reordered_groups[transform_col_order]
     reordered_featnames = reordered_featnames[transform_col_order]
+    # Plot the gene viewer, integrating Depmap mutation/expression databases.
+    col_scat_traces = []
+    if geneview_gene is not None:
+        pt_text = []
+        if geneview_mode == 'Mutation':
+            mutdata = geneview_data[geneview_data[:, 0] == geneview_gene, :]
+            print(mutdata.shape)
+            mutdata_celllines = mutdata[:, 6]
+            gvdata = np.zeros_like(reordered_featnames)    # np.zeros((1, len(reordered_featnames)))
+            where_mutations = np.isin(reordered_featnames, mutdata_celllines)
+            for i in range(len(reordered_featnames)):
+                newtext = "Cell line: {}".format(reordered_featnames[i])
+                if where_mutations[i]:
+                    query_results = mutdata[(mutdata_celllines == reordered_featnames[i]), :]
+                    gvdata[i] = query_results.shape[0]
+                    qwe = ["chr{}:{}    {}".format(
+                        query_results[i, 1], query_results[i, 2], query_results[i, 4]#, query_results[i, 7], query_results[i, 8], query_results[i, 9]
+                    ) for i in range(query_results.shape[0])]
+                    newtext = newtext + "<br>{}".format("<br>".join(qwe))
+                pt_text.append(newtext)
+            pt_text = pt_text
+            gvdata = np.minimum(gvdata, 1)
+        elif geneview_mode == 'Expression':
+            gvdata = fit_data
+            pt_text = [ "Cell line: {}".format(str(colnames[c])) for c in range(len(gene_data))]
+        col_scat_traces.extend(hm_aux_geneview(gvdata, pt_text, reordered_featnames))
+    # Make scatterplot of cell lines.
     for feat_group in feat_colordict:
-        trace_marker = {
-#             'size': 1, #app_config.params['marker_size_factor'], 
-#             'opacity': app_config.params['marker_opacity_factor'], 
-#             'symbol': 'circle', 
-            'color': feat_colordict[feat_group]
-        }
+        trace_marker = { 'color': feat_colordict[feat_group] }
         feat_ndces_this_trace = np.where(reordered_groups == feat_group)[0]
         feat_names_this_trace = reordered_featnames[feat_ndces_this_trace]
         x_coords_this_trace = feat_names_this_trace# np.arange(len(reordered_featnames))[feat_ndces_this_trace]
@@ -366,6 +380,33 @@ def hm_col_plot(
     return col_scat_traces, fit_data
 
 
+def hm_aux_geneview(gene_data, pt_text, absc):
+    # Return heatmap data traces for geneviewer.
+    return [{
+        'y': gene_data, 
+        'x': absc, 
+        'yaxis': 'y3', 
+        'hoverinfo': 'text', 
+        'hovertext': pt_text, 
+        'hoverdistance': 40, 
+        # 'colorscale': app_config.cmap_custom_blackbody, 
+#         'insidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
+#         'outsidetextfont': { 'family': 'sans-serif', 'color': 'white' }, 
+        'marker': { 'color': 'white' }, 
+        # 'textposition': 'auto', 
+#         'colorbar': {
+#             'len': 0.3, 'thickness': 20, 
+#             'xanchor': 'left', 'yanchor': 'top', 
+#             # 'title': 'Ess. score',
+#             # 'titleside': 'top',
+#             # 'ticks': 'outside', 
+#             # 'titlefont': building_block_divs.colorbar_font_macro, 
+#             'tickfont': building_block_divs.colorbar_font_macro
+#         }, 
+        'type': 'bar'
+    }]
+
+
 def hm_hovertext(data, rownames, colnames):
     pt_text = []
     # First the rows, then the cols
@@ -384,6 +425,7 @@ def display_heatmap_cb(
     view_cocluster, 
     feat_colordict={}, 
     feat_group_names=None, 
+    geneview_mode='Mutation', geneview_gene=None, geneview_data=None, 
     scatter_frac_domain=0.10, 
     scatter_frac_range=0.08, 
     show_legend=False
@@ -420,13 +462,14 @@ def display_heatmap_cb(
     col_scat_traces, fit_data = hm_col_plot(
         fit_data, feat_colordict, 
         reordered_groups=absc_group_labels, reordered_featnames=absc_labels, 
+        geneview_mode=geneview_mode, geneview_gene=geneview_gene, geneview_data=geneview_data, 
         col_clustIDs=col_clustIDs
     )
     pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
         'z': fit_data, 
         'x': absc_labels, 
-        # 'y': hm_point_names, 
+        'customdata': hm_point_names, 
         'hoverinfo': 'text',
         'text': pt_text, 
         'colorscale': app_config.params['hm_colorscale'],
@@ -459,8 +502,9 @@ def display_heatmap_cb(
     return {
         'data': [ hm_trace ] + row_scat_traces + col_scat_traces, 
         'layout': building_block_divs.create_hm_layout(
-            scatter_frac_domain, scatter_frac_range, show_legend=show_legend, clustersep_coords=clustersep_line_coords
-        ) 
+            scatter_frac_domain=scatter_frac_domain, scatter_frac_range=scatter_frac_range, 
+            show_legend=show_legend, clustersep_coords=clustersep_line_coords
+        )
     }
 
 

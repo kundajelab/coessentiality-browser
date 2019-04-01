@@ -16,8 +16,11 @@ else:
 params['plot_data_df_path'] = ["{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in ["_GLS01_CO99", "_GLS01_RC99", "_GLS1_CO0", "_GLS02_CO49_RC49"]]
 params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
 params['mutation_data_path'] = "{}data/CCLE_DepMap_18q3_maf_20180718.txt".format(data_pfx)
+params['mutation_arr_path'] = "{}data/CCLE_DepMap_18q3_mutations.npy".format(data_pfx)
 params['shRNA_data_path'] = "{}data/D2_combined_gene_dep_scores.csv".format(data_pfx)
 params['expression_data_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM_20180718.gct".format(data_pfx)
+params['expression_arr_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM.npy".format(data_pfx)
+params['expression_cell_lines_path'] = "{}data/CCLE_DepMap_18q3_cell_lines.npy".format(data_pfx)
 
 # params['dataset_options'] = [x.split('/')[-1].split('.')[0] for x in params['plot_data_df_path']]
 params['dataset_options'] = ["Emphasize all cluster-one clusters", "Emphasize colored Roarke clusters", "Emphasize GLS", "Mixed"]
