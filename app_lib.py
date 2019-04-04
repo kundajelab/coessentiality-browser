@@ -94,13 +94,14 @@ def traces_scatter(
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
         colorbar_title = app_config.params['hm_colorvar_name']
         pt_text = ["{}<br>Quantile: {}".format(point_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
+        max_magnitude = np.percentile(np.abs(continuous_color_var), 99)
         traces_list.append({ 
             'name': 'Data', 
             'x': data_df[display_ndces['x']], 
             'y': data_df[display_ndces['y']], 
             'selectedpoints': spoints, 
             'hoverinfo': 'text', 
-            'text': point_names, 
+            'text': pt_text, 
             'mode': 'markers', 
             'marker': {
                 'size': bg_marker_size, 
@@ -119,7 +120,9 @@ def traces_scatter(
                     'tickfont': building_block_divs.colorbar_font_macro
                 }, 
                 'color': continuous_color_var, 
-                'colorscale': colorscale
+                'colorscale': colorscale, 
+                'cmin': -max_magnitude, 
+                'cmax': max_magnitude
             }, 
             'selected': style_selected, 
             'type': 'scattergl'
@@ -134,13 +137,14 @@ def traces_scatter(
                 cnt += 1
                 cumu_color_dict[idx] = trace_color
             trace_opacity = 1.0
+            pt_text = ["{}".format(point_ids_this_trace[i]) for i in range(len(point_ids_this_trace))]
             trace_info = {
                 'name': str(idx), 
                 'x': val[display_ndces['x']], 
                 'y': val[display_ndces['y']], 
                 'selectedpoints': spoint_ndces_this_trace, 
-                'hoverinfo': 'text+name', 
-                'text': point_ids_this_trace, 
+                'hoverinfo': 'text', 
+                'text': pt_text, 
                 'mode': 'markers', 
                 'opacity': trace_opacity, 
                 'marker': {
@@ -295,8 +299,9 @@ def hm_col_plot(
                 if where_mutations[i]:
                     query_results = mutdata[(mutdata_celllines == reordered_featnames[i]), :]
                     gvdata[i] = query_results.shape[0]
-                    qwe = ["chr{}:{}    {}".format(
-                        query_results[i, 1], query_results[i, 2], query_results[i, 4]#, query_results[i, 7], query_results[i, 8], query_results[i, 9]
+                    qwe = ["chr{}:{}    {}    Protein: {}    Codon: {}".format(
+                        query_results[i, 1], query_results[i, 2], query_results[i, 4], 
+                        query_results[i, 11], query_results[i, 10]#, query_results[i, 7], query_results[i, 8], query_results[i, 9]
                     ) for i in range(query_results.shape[0])]
                     newtext = newtext + "<br>{}".format("<br>".join(qwe))
                 pt_text.append(newtext)
