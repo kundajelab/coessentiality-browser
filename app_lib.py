@@ -72,7 +72,7 @@ Color_var is either a field of the plotting df, or a numpy array.
 """
 
 
-# TODO: Add legend groups as applicable, to bunch colors within a group
+full_gene_names = np.array(pd.read_csv(app_config.params['genenames_path'], sep="\t", header=None, index_col=False)).flatten()
 
 # Here selected_point_ids is a list of unique string IDs of points. 
 def traces_scatter(
@@ -82,7 +82,8 @@ def traces_scatter(
     selected_point_ids, 
     bg_marker_size=app_config.params['bg_marker_size_factor'], 
     marker_size=app_config.params['marker_size_factor'], 
-    style_selected=building_block_divs.style_selected
+    style_selected=building_block_divs.style_selected, 
+    point_names=None
 ):
     traces_list = []
     display_ndces = app_config.params['display_coordinates']
@@ -90,10 +91,11 @@ def traces_scatter(
     # Check to see if color_var is continuous or discrete and plot points accordingly
     if isinstance(color_var, (list, tuple, np.ndarray)):     # Color_var is an array, not a col index.
         continuous_color_var = color_var
-        point_names = list(data_df['gene_names'])
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
         colorbar_title = app_config.params['hm_colorvar_name']
-        pt_text = ["{}<br>Quantile: {}".format(point_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
+        pt_text = ["{}<br>{}<br>Quantile: {}".format(
+            point_names[i], full_gene_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
+        # pt_text = ["{}<br>Quantile: {}".format(point_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
         max_magnitude = np.percentile(np.abs(continuous_color_var), 99)
         traces_list.append({ 
             'name': 'Data', 
@@ -101,7 +103,8 @@ def traces_scatter(
             'y': data_df[display_ndces['y']], 
             'selectedpoints': spoints, 
             'hoverinfo': 'text', 
-            'text': pt_text, 
+            'hovertext': pt_text, 
+            'text': point_names, 
             'mode': 'markers', 
             'marker': {
                 'size': bg_marker_size, 
@@ -120,7 +123,7 @@ def traces_scatter(
                     'tickfont': building_block_divs.colorbar_font_macro
                 }, 
                 'color': continuous_color_var, 
-                'colorscale': colorscale, 
+                'colorscale': app_config.cmap_custom_orpu_diverging, 
                 'cmin': -max_magnitude, 
                 'cmax': max_magnitude
             }, 
@@ -137,14 +140,17 @@ def traces_scatter(
                 cnt += 1
                 cumu_color_dict[idx] = trace_color
             trace_opacity = 1.0
-            pt_text = ["{}".format(point_ids_this_trace[i]) for i in range(len(point_ids_this_trace))]
+            full_ids_this_trace = full_gene_names[np.isin(point_names, point_ids_this_trace)]
+            pt_text = ["{}<br>{}".format(point_ids_this_trace[i], full_ids_this_trace[i]) for i in range(len(point_ids_this_trace))]
+            # pt_text = ["{}".format(point_ids_this_trace[i]) for i in range(len(point_ids_this_trace))]
             trace_info = {
                 'name': str(idx), 
                 'x': val[display_ndces['x']], 
                 'y': val[display_ndces['y']], 
                 'selectedpoints': spoint_ndces_this_trace, 
                 'hoverinfo': 'text', 
-                'text': pt_text, 
+                'hovertext': pt_text, 
+                'text': point_ids_this_trace, 
                 'mode': 'markers', 
                 'opacity': trace_opacity, 
                 'marker': {
@@ -173,10 +179,11 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
                        bg_marker_size=app_config.params['bg_marker_size_factor'], 
                        marker_size=app_config.params['marker_size_factor'], 
                        annots=[], selected_point_ids=[], 
-                       style_selected = building_block_divs.style_selected
+                       style_selected = building_block_divs.style_selected, 
+                       point_names=None
                       ):
     if highlight:
-        style_selected['marker']['color'] = '#FF69B4'    # '#ff4f00' # Golden gate bridge red
+        style_selected['marker']['color'] = '#FFFFFF'    # '#ff4f00' # Golden gate bridge red
         # style_selected['marker']['size'] = 10     # TODO: Change this back on unhighlighting.
     else:
         style_selected['marker'].pop('color', None)    # Remove color if exists
@@ -187,7 +194,8 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
         selected_point_ids, 
         bg_marker_size=bg_marker_size, 
         marker_size=marker_size, 
-        style_selected=style_selected
+        style_selected=style_selected, 
+        point_names=point_names
     )
     return { 
         'data': trace_list, 
@@ -216,6 +224,7 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_cl
         hm_row_ndces = []
         for trace in scatter_fig['data']:
             trace_markers = trace['marker']
+            trace_markers['showscale'] = False
             if 'line' in trace_markers:
                 trace_markers['line']['width'] = 0.0
             if is_continuous_color is None:
@@ -250,7 +259,7 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_cl
                 'x': np.zeros(num_in_trace), 
                 'y': y_coords_this_trace, 
                 'xaxis': 'x2', 
-                'hoverinfo': 'text+name', 
+                'hoverinfo': 'text', 
                 'text': hm_point_names_this_trace, 
                 'mode': hmscat_mode, 
                 'textposition': 'center left', 

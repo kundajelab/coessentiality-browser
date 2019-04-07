@@ -90,7 +90,8 @@ def make_store_points(selectedData_points):
     if (selectedData_points is not None) and ('points' in selectedData_points):
         toret = {}
         for p in selectedData_points['points']:
-            toret[p['text']] = {}
+            pt_txt = p['text'].split('<br>')[0]
+            toret[pt_txt] = {}
         return toret
     else:
         return {}
@@ -161,7 +162,8 @@ def highlight_landscape_func(
         selected_point_ids=selectedpoint_ids, 
         bg_marker_size=bg_marker_size, 
         marker_size=marker_size, 
-        style_selected=style_selected
+        style_selected=style_selected, 
+        point_names=point_names
     )
     return toret
 
@@ -185,6 +187,7 @@ def run_update_main_heatmap(
     # If any points (genes) are selected but not in the heatmap, they won't be displayed.
     point_ndces_to_display = np.isin(point_names_to_use, pointIDs_to_display)
     subset_raw_data = raw_data_to_use[point_ndces_to_display, :]
+    
     if sp.sparse.issparse(raw_data_to_use):
         subset_raw_data = subset_raw_data.toarray()
     subset_point_names = point_names_to_use[point_ndces_to_display]
@@ -660,7 +663,6 @@ def update_landscape(
     bg_marker_size, 
     marker_size
 ):
-    # print('Color scheme: {}'.format(color_scheme))
     dataset_names = app_config.params['dataset_options']
     ndx_selected = dataset_names.index(sourcedata_select) if sourcedata_select in dataset_names else 0
     data_df = pd.read_csv(app_config.params['plot_data_df_path'][ndx_selected], sep="\t", index_col=False)

@@ -100,21 +100,49 @@ def create_hm_layout(
             'line': { 'color': 'white', 'width': 2 }
         })
     hm_layout = {
+        'annotations': [{
+                'x': 0.5,
+                'y': 1.05,
+                'showarrow': False, 
+                'font': { 
+                    'family': 'sans-serif', 
+                    'size': 15, 
+                    'color': app_config.params['legend_font_color'] 
+                }, 
+                'text': 'Cell lines',
+                'xref': 'paper',
+                'yref': 'paper'
+            }, 
+            {
+                'x': 0.0,
+                'y': 0.5,
+                'showarrow': False, 
+                'font': { 
+                    'family': 'sans-serif', 
+                    'size': 15, 
+                    'color': app_config.params['legend_font_color'] 
+                }, 
+                'text': 'Genes', 
+                'textangle': -90, 
+                'xref': 'paper',
+                'yref': 'paper'
+            }
+        ], 
         'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 30 }, 
         'clickmode': 'event+select',  # https://github.com/plotly/plotly.js/pull/2944/
         'hovermode': 'closest', 
         'uirevision': 'Default dataset', 
         'xaxis': {
-            'automargin': True, 'showticklabels': True, 'side': 'top', 
+            'showticklabels': False, #'side': 'top', 
             'tickcolor': app_config.params['legend_bgcolor'], 
-            # 'tickangle': 60, 
             'tickfont': {
                 'family': 'sans-serif', 
                 'size': app_config.params['hm_font_size'], 
                 'color': app_config.params['legend_font_color'] 
             }, 
-            'dtick': 1, 
-            'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
+            # 'title': {'text': 'Cell lines', 'font': legend_font_macro, 'side': 'top' }, 
+            'side': 'top', 
+            'showgrid': False, 'showline': False, 'zeroline': False, #'visible': False, 
             'domain': [scatter_frac_domain, 1]
         }, 
         'xaxis2': {
@@ -123,8 +151,10 @@ def create_hm_layout(
             'range': [-1, 0.2]
         }, 
         'yaxis': {
-            'automargin': True, 'showticklabels': False, #'side': 'right', 
-            'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
+            'showticklabels': False, #'side': 'right', 
+            'tickcolor': app_config.params['legend_bgcolor'], 
+            # 'title': {'text': 'Genes', 'font': legend_font_macro }, 
+            'showgrid': False, 'showline': False, 'zeroline': False, #'visible': False, 
             'domain': [0, 1-scatter_frac_range-geneview_range] 
         }, 
         'yaxis2': {
@@ -133,7 +163,7 @@ def create_hm_layout(
             'range': [-0.2, 0.5]
         }, 
         'yaxis3': {
-            'automargin': True, 'showticklabels': False, #'side': 'right', 
+            'showticklabels': False, #'side': 'right', 
             'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
             'domain': [1-geneview_range, 1]
         }, 
@@ -537,16 +567,14 @@ def create_div_mainctrl(
 ):
 #     download_image = app_config.params['download_img_path']#,
 #     encoded_image = base64.b64encode(open(download_image, 'rb').read())
-
-
     return html.Div(
         className='row', 
         children=[
             html.Div(
-                className='six columns', 
+                className='row', 
                 children=[
                     html.Div(
-                        className='two columns', 
+                        className='four columns', 
                         children=[
                             dcc.Dropdown(
                                 id='points_annot', 
@@ -556,25 +584,6 @@ def create_div_mainctrl(
                             )], 
                         style={'fontSize': 12, 'margin': 5}
                     ), 
-                    html.Div(
-                        id='div-go-lookup', 
-                        className='ten columns', 
-                        children=[
-                            dcc.Dropdown(	
-                                id='goterm-lookup', 	
-                                options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
-                                value = [], 	
-                                placeholder="GO term...", 
-                                style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
-                                multi=True	
-                            )], 
-                        style={'fontSize': 11, 'margin': 5}
-                    )], 
-                style={}
-            ), 
-            html.Div(
-                className='six columns', 
-                children=[
                     html.Div(
                         className='four columns', 
                         children=[
@@ -599,6 +608,25 @@ def create_div_mainctrl(
                                 style={'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )], 
                         style={'fontSize': 12, 'margin': 5}
+                    )], 
+                style={}
+            ), 
+            html.Div(
+                className='row', 
+                children=[
+                    html.Div(
+                        id='div-go-lookup', 
+                        className='eight columns', 
+                        children=[
+                            dcc.Dropdown(	
+                                id='goterm-lookup', 	
+                                options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+                                value = [], 	
+                                placeholder="GO term...", 
+                                style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
+                                multi=True	
+                            )], 
+                        style={'fontSize': 11, 'margin': 5}
                     ), 
                     html.Div(
                         className='four columns', 
@@ -672,6 +700,7 @@ def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types,
     return html.Div(
         className="seven columns",
         children=[
+            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset), 
             dcc.Graph(
                 id='landscape-plot',
                 config={'displaylogo': False, 'displayModeBar': True}, 
@@ -719,7 +748,6 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
                         style=style_text_box
                     )]
             ), 
-            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset), 
             html.Div(
                 className="row", 
                 children=[

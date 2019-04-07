@@ -17,6 +17,8 @@ params['plot_data_df_path'] = ["{}data/vizdf{}.csv".format(data_pfx, sffix) for 
 params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
 params['mutation_data_path'] = "{}data/CCLE_DepMap_18q3_maf_20180718.txt".format(data_pfx)
 params['mutation_arr_path'] = "{}data/CCLE_DepMap_18q3_mutations.npy".format(data_pfx)
+params['gene_fullnames_path'] = "{}data/hgnc_gene_symbol_to_name.tsv".format(data_pfx)
+params['genenames_path'] = "{}data/gene_long_names.tsv".format(data_pfx)
 params['shRNA_data_path'] = "{}data/D2_combined_gene_dep_scores.csv".format(data_pfx)
 params['expression_data_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM_20180718.gct".format(data_pfx)
 params['expression_arr_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM.npy".format(data_pfx)
@@ -66,9 +68,10 @@ cmap_custom_discrete = ["#bdbdbd",
 # Custom red/blue diverging for black background, from https://gka.github.io/palettes
 cmap_custom_rdbu_diverging = [[0.0, '#0000ff'], [0.1111, '#442dfa'], [0.2222, '#6b59e0'], [0.3333, '#6766a3'], [0.4444, '#323841'], [0.5555, '#483434'], 
                               [0.6666, '#b3635b'], [0.7777, '#ee5d49'], [0.8888, '#ff3621'], [1.0, '#ff0000']]
-# Custom yellow/blue diverging for black background:
-cmap_custom_ylbu_diverging = [[0.0, '#0008ff'], [0.1111, '#0048ff'], [0.2222, '#4042ff'], [0.3333, '#35557c'], [0.4444, '#0f1010'], [0.5555, '#0f1010'], 
-                              [0.6666, '#787c21'], [0.7777, '#a9ac00'], [0.8888, '#d3d200'], [1.0, '#fffa00']]
+# Custom yellow/blue diverging for black background. From the following code:
+# x = sns.diverging_palette(227, 86, s=98, l=77, n=20, center='dark').as_hex(); [s for s in zip(np.arange(len(x))/(len(x)-1), x)]
+cmap_custom_ylbu_diverging = [(0.0, '#3acdfe'), (0.05263157894736842, '#37bbe6'), (0.10526315789473684, '#35a9cf'), (0.15789473684210525, '#3295b6'), (0.21052631578947367, '#2f829e'), (0.2631578947368421, '#2d6f85'), (0.3157894736842105, '#2a5d6e'), (0.3684210526315789, '#274954'), (0.42105263157894735, '#25373d'), (0.47368421052631576, '#222324'), (0.5263157894736842, '#232322'), (0.5789473684210527, '#363621'), (0.631578947368421, '#474720'), (0.6842105263157895, '#5a5a1e'), (0.7368421052631579, '#6b6b1d'), (0.7894736842105263, '#7e7e1c'), (0.8421052631578947, '#8f901b'), (0.8947368421052632, '#a2a21a'), (0.9473684210526315, '#b3b318'), (1.0, '#c4c417')]
+cmap_custom_orpu_diverging = [(0.0, '#c2b5fe'), (0.05263157894736842, '#b1a5e6'), (0.10526315789473684, '#a096cf'), (0.15789473684210525, '#8e85b6'), (0.21052631578947367, '#7c759e'), (0.2631578947368421, '#6a6485'), (0.3157894736842105, '#59556e'), (0.3684210526315789, '#464354'), (0.42105263157894735, '#35343d'), (0.47368421052631576, '#232324'), (0.5263157894736842, '#242323'), (0.5789473684210527, '#3d332a'), (0.631578947368421, '#544132'), (0.6842105263157895, '#6e523a'), (0.7368421052631579, '#856041'), (0.7894736842105263, '#9e7049'), (0.8421052631578947, '#b67f50'), (0.8947368421052632, '#cf8f58'), (0.9473684210526315, '#e79d5f'), (1.0, '#feac66')]
 
 
 if 'colorscale_discrete' not in params:
