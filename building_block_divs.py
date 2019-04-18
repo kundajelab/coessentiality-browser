@@ -101,31 +101,17 @@ def create_hm_layout(
         })
     hm_layout = {
         'annotations': [{
-                'x': 0.5,
-                'y': 1.05,
-                'showarrow': False, 
-                'font': { 
-                    'family': 'sans-serif', 
-                    'size': 15, 
-                    'color': app_config.params['legend_font_color'] 
-                }, 
+                'x': 0.5, 'y': 1.05, 'showarrow': False, 
+                'font': { 'family': 'sans-serif', 'size': 15, 'color': app_config.params['legend_font_color'] }, 
                 'text': 'Cell lines',
-                'xref': 'paper',
-                'yref': 'paper'
+                'xref': 'paper', 'yref': 'paper'
             }, 
             {
-                'x': 0.0,
-                'y': 0.5,
-                'showarrow': False, 
-                'font': { 
-                    'family': 'sans-serif', 
-                    'size': 15, 
-                    'color': app_config.params['legend_font_color'] 
-                }, 
+                'x': 0.0, 'y': 0.5, 'showarrow': False, 
+                'font': { 'family': 'sans-serif', 'size': 15, 'color': app_config.params['legend_font_color'] }, 
                 'text': 'Genes', 
                 'textangle': -90, 
-                'xref': 'paper',
-                'yref': 'paper'
+                'xref': 'paper', 'yref': 'paper'
             }
         ], 
         'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 30 }, 
@@ -133,15 +119,10 @@ def create_hm_layout(
         'hovermode': 'closest', 
         'uirevision': 'Default dataset', 
         'xaxis': {
-            'showticklabels': False, #'side': 'top', 
+            'showticklabels': False, 'side': 'top', 
             'tickcolor': app_config.params['legend_bgcolor'], 
-            'tickfont': {
-                'family': 'sans-serif', 
-                'size': app_config.params['hm_font_size'], 
-                'color': app_config.params['legend_font_color'] 
-            }, 
+            'tickfont': { 'family': 'sans-serif', 'size': app_config.params['hm_font_size'], 'color': app_config.params['legend_font_color'] }, 
             # 'title': {'text': 'Cell lines', 'font': legend_font_macro, 'side': 'top' }, 
-            'side': 'top', 
             'showgrid': False, 'showline': False, 'zeroline': False, #'visible': False, 
             'domain': [scatter_frac_domain, 1]
         }, 

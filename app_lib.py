@@ -412,8 +412,7 @@ def display_heatmap_cb(
         nnz_ndces = np.nonzero(fit_data)
         qtiles[nnz_ndces] = sp.stats.rankdata(fit_data[nnz_ndces]) / len(fit_data[nnz_ndces])
         fit_data = qtiles
-    # Spectral coclustering to cluster the heatmap. We always order rows (points) by spectral projection, 
-    # But cols (features) can have different orderings for different viewing options.
+    # Spectral coclustering to cluster the heatmap. We always order rows (points) by spectral projection, but cols (features) can have different orderings for different viewing options.
     row_clustIDs = np.zeros(fit_data.shape[0])
     col_clustIDs = np.zeros(fit_data.shape[1])
     if (fit_data.shape[0] > 1):
@@ -424,7 +423,8 @@ def display_heatmap_cb(
         ordered_cols = np.arange(fit_data.shape[1])
     fit_data = fit_data[:, ordered_cols]
     absc_labels = absc_labels[ordered_cols]
-    absc_group_labels = absc_group_labels[ordered_cols]
+    if absc_group_labels is not None:
+        absc_group_labels = absc_group_labels[ordered_cols]
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
     row_scat_traces, fit_data, hm_point_names = hm_row_scatter(
         fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
