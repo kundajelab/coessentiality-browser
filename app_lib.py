@@ -218,10 +218,7 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_cl
         hmscat_mode = 'markers+text'
     if (scatter_fig is not None) and ('data' in scatter_fig):
         pts_so_far = 0
-        # Re-sort rows or not? should be >=1 trace, so can check if first is continuous
-        resort_rows = (not view_cocluster)
         is_continuous_color = None
-        hm_row_ndces = []
         for trace in scatter_fig['data']:
             trace_markers = trace['marker']
             trace_markers['showscale'] = False
@@ -230,29 +227,13 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_cl
             if is_continuous_color is None:
                 is_continuous_color = isinstance(trace_markers['color'], (list, tuple, np.ndarray))
             # Of the point names, choose the ones in this trace and get their indices...
-            hm_point_names_this_trace = np.intersect1d(hm_point_names, trace['text'])           # point IDs in this trace
+            hm_point_where_this_trace = np.isin(hm_point_names, trace['text'])
+            hm_point_names_this_trace = hm_point_names[hm_point_where_this_trace]
             num_in_trace = len(hm_point_names_this_trace)
-            hm_point_ndces_this_trace = np.where(np.isin(hm_point_names, hm_point_names_this_trace))[0]        # this trace's row indices in heatmap
+            hm_point_ndces_this_trace = np.where(hm_point_where_this_trace)[0]        # this trace's row indices in heatmap
             y_coords_this_trace = np.arange(len(hm_point_names))[hm_point_ndces_this_trace]
             
             # At this point, rows are sorted in order of co-clustering. 
-            # Now sort points by color within each trace. 
-            # This does nothing if the colors are discrete (many traces), and is just for continuous plotting.
-            if resort_rows:   # Row order determined by sorting, and continuous variable being plotted
-                y_coords_this_trace = np.arange(pts_so_far, pts_so_far+num_in_trace)
-                if is_continuous_color:
-                    # Extract subset of rows in heatmap
-                    resorted_ndces_this_trace = np.argsort(
-                        np.array(trace_markers['color'])[hm_point_ndces_this_trace])
-                    trace_markers['color'] = np.array(trace_markers['color'])[resorted_ndces_this_trace]
-                    # TODO y_coords_this_trace = y_coords_this_trace[resorted_ndces_this_trace]
-                else:
-                    pts_so_far += num_in_trace
-                    resorted_ndces_this_trace = np.arange(len(hm_point_names_this_trace))
-                hm_point_names_this_trace = hm_point_names_this_trace[resorted_ndces_this_trace]
-                hm_point_ndces_this_trace = hm_point_ndces_this_trace[resorted_ndces_this_trace]
-            
-            hm_row_ndces.extend(hm_point_ndces_this_trace)
             all_hm_point_names.extend(hm_point_names_this_trace)
             new_trace = {
                 'name': trace['name'], 
@@ -268,10 +249,7 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_cl
                 'selected': building_block_divs.style_selected, 
                 'type': 'scatter'
             }
-            row_scat_traces.append(new_trace) 
-        # reorganize matrix if things were re-sorted.
-        if resort_rows:
-            fit_data = np.array([]) if len(hm_row_ndces) == 0 else fit_data[np.array(hm_row_ndces), :]
+            row_scat_traces.append(new_trace)
     return row_scat_traces, fit_data, all_hm_point_names
 
 
@@ -417,6 +395,7 @@ def display_heatmap_cb(
     col_clustIDs = np.zeros(fit_data.shape[1])
     if (fit_data.shape[0] > 1):
         ordered_rows, ordered_cols, row_clustIDs, col_clustIDs = dm.compute_coclustering(fit_data)
+        print(ordered_rows, ordered_cols)
         fit_data = fit_data[ordered_rows, :]
         hm_point_names = hm_point_names[ordered_rows]
     else:
@@ -425,6 +404,7 @@ def display_heatmap_cb(
     absc_labels = absc_labels[ordered_cols]
     if absc_group_labels is not None:
         absc_group_labels = absc_group_labels[ordered_cols]
+    print('3', hm_point_names)
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
     row_scat_traces, fit_data, hm_point_names = hm_row_scatter(
         fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs

@@ -186,11 +186,10 @@ def run_update_main_heatmap(
         pointIDs_to_display = np.random.choice(pointIDs_to_display, num_points_to_sample, replace=False)
     # If any points (genes) are selected but not in the heatmap, they won't be displayed.
     point_ndces_to_display = np.isin(point_names_to_use, pointIDs_to_display)
+    subset_point_names = point_names_to_use[point_ndces_to_display]
     subset_raw_data = raw_data_to_use[point_ndces_to_display, :]
-    
     if sp.sparse.issparse(raw_data_to_use):
         subset_raw_data = subset_raw_data.toarray()
-    subset_point_names = point_names_to_use[point_ndces_to_display]
     cocluster_mode = False
     hm_fig = app_lib.display_heatmap_cb(
         subset_raw_data, 
