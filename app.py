@@ -30,6 +30,7 @@ data_ess = pd.read_csv(app_config.params['raw_ess_data_path'], index_col=0, head
 data_ess = data_ess[data_ess.columns[:-4]]   # Only first 481 cols put through GLS, so isolate these
 
 point_names = np.array(plot_data_df['gene_names'])
+full_gene_ensIDs = np.array(pd.read_csv(app_config.params['gene_ensID_path'], sep="\t", header=None, index_col=False)).flatten()
 feat_names = data_ess.columns
 cancer_types = data_ess.columns.str.split('_').str[1:].str.join(' ').str.capitalize().str.replace('Haematopoietic and lymphoid tissue', 'Hematopoietic/lymphoid')
 
@@ -58,6 +59,7 @@ app.layout = building_block_divs.create_div_mainapp(
     ctypes, 
     app.get_asset_url('upload.png'), 
     app.get_asset_url('download.png'), 
+    full_gene_ensIDs, 
     more_colorvars=additional_colorvars
 )
 
@@ -470,26 +472,6 @@ def update_geneview_options(geneview_dataset):
     return [ {'value': gn, 'label': gn} for gn in gene_names ]
 
 
-import dash_core_components as dcc
-import plotly.figure_factory as ff
-@app.callback(
-    Output('hm-feat-control', 'children'), 
-    [Input('toggle-hm-feat-panels', 'values')]
-)
-def update_hm_control_panel(panel_list):
-    graphs = []
-    cell_cluster_list = np.array([])  # List of cluster IDs for resp. cells
-    cell_color_list = np.array([])
-    if 'bars' in panel_list:
-        graphs.append(
-            app_lib.generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list))
-    if 'dendrogram' in panel_list:
-        X = np.random.rand(15, 15)
-        dendro = ff.create_dendrogram(X)
-        graphs.append(dcc.Graph(figure=dendro))
-    return graphs
-
-
 @app.callback(
     Output('hm-future-panels', 'children'), 
     [Input('toggle-future-panels', 'values')]
@@ -585,7 +567,8 @@ Update the main heatmap.
     [Input('stored-landscape-selected', 'data'), 
      Input('toggle-hm-cols', 'values'), 
      Input('select-hm-dataset', 'value'), 
-     Input('select-geneview', 'value')], 
+     Input('select-geneview', 'value'), 
+     Input('landscape-color', 'value')], 
     [State('landscape-plot', 'figure')]
 )
 def update_main_heatmap(
@@ -593,6 +576,7 @@ def update_main_heatmap(
     hm_col_panel, 
     geneview_mode, 
     geneview_gene, 
+    landscape_color, 
     landscape_scatter_fig, 
     num_points_to_sample=10000
 ):

@@ -19,6 +19,7 @@ params['mutation_data_path'] = "{}data/CCLE_DepMap_18q3_maf_20180718.txt".format
 params['mutation_arr_path'] = "{}data/CCLE_DepMap_18q3_mutations.npy".format(data_pfx)
 params['gene_fullnames_path'] = "{}data/hgnc_gene_symbol_to_name.tsv".format(data_pfx)
 params['genenames_path'] = "{}data/gene_long_names.tsv".format(data_pfx)
+params['gene_ensID_path'] = "{}data/gene_ensIDs.tsv".format(data_pfx)
 params['shRNA_data_path'] = "{}data/D2_combined_gene_dep_scores.csv".format(data_pfx)
 params['expression_data_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM_20180718.gct".format(data_pfx)
 params['expression_arr_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM.npy".format(data_pfx)

@@ -472,30 +472,6 @@ def create_div_cosmetic_panel():
                     )]
             ), 
             html.Div(
-                className='four columns', 
-                children=[
-                    dcc.Checklist(
-                        id='toggle-hm-feat-panels', 
-                        options=[
-                            {'label': 'Cell line selection', 'value': 'bars'}, 
-                            {'label': 'Per-cluster', 'value': 'percluster'}, 
-                            {'label': 'Dendrogram', 'value': 'dendrogram'}, 
-                            {'label': 'Heatmap', 'value': 'heatmap'}
-                        ],
-                        values=[], 
-                        style={
-                            'textAlign': 'left', 
-                            'width': '80%', 
-                            'color': app_config.params['font_color']
-                        }, 
-                        labelStyle={
-                            'display': 'inline-block', 
-                            'margin-right': '5px'
-                        }
-                    )], 
-                style={'padding-top': '0px'}
-            ), 
-            html.Div(
                 className='row', 
                 children=[
                     dcc.Checklist(
@@ -544,7 +520,7 @@ def create_div_cosmetic_panel():
 
 
 def create_div_mainctrl(
-    point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset
+    point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset, full_gene_ensIDs
 ):
 #     download_image = app_config.params['download_img_path']#,
 #     encoded_image = base64.b64encode(open(download_image, 'rb').read())
@@ -559,7 +535,7 @@ def create_div_mainctrl(
                         children=[
                             dcc.Dropdown(
                                 id='points_annot', 
-                                options = [ {'value': gn, 'label': gn} for gn in point_names ], 
+                                options = [ {'value': point_names[i], 'label': "{} ({})".format(point_names[i], full_gene_ensIDs[i])} for i in range(len(point_names)) ], 
                                 placeholder="Gene...", multi=True, 
                                 style={'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )], 
@@ -601,11 +577,11 @@ def create_div_mainctrl(
                         children=[
                             dcc.Dropdown(	
                                 id='goterm-lookup', 	
-                                options = [], #[{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+                                options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
                                 value = [], 	
                                 placeholder="GO term...", 
                                 style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
-                                multi=True	
+                                multi=True
                             )], 
                         style={'fontSize': 11, 'margin': 5}
                     ), 
@@ -677,11 +653,11 @@ def create_div_mainctrl(
     )
 
 
-def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset):
+def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset, full_gene_ensIDs):
     return html.Div(
         className="seven columns",
         children=[
-            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset), 
+            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset, full_gene_ensIDs), 
             dcc.Graph(
                 id='landscape-plot',
                 config={'displaylogo': False, 'displayModeBar': True}, 
@@ -714,7 +690,7 @@ Main layout.
 """
 import numpy as np
 
-def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, download_asset, more_colorvars=[]):
+def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, download_asset, full_gene_ensIDs, more_colorvars=[]):
     go_termIDs = np.load(app_config.params['gotermIDs_path'])
     go_termnames = np.load(app_config.params['gotermnames_path'])
     return html.Div(
@@ -732,7 +708,7 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
             html.Div(
                 className="row", 
                 children=[
-                    create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset), 
+                    create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset, full_gene_ensIDs), 
                     create_div_sidepanels(point_names)
                 ]
             ), 

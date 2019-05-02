@@ -54,6 +54,7 @@ Color_var is either a field of the plotting df, or a numpy array.
 
 full_gene_names = np.array(pd.read_csv(app_config.params['genenames_path'], sep="\t", header=None, index_col=False)).flatten()
 
+
 # Here selected_point_ids is a list of unique string IDs of points. 
 def traces_scatter(
     data_df, 
@@ -73,9 +74,8 @@ def traces_scatter(
         continuous_color_var = color_var
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
         colorbar_title = app_config.params['hm_colorvar_name']
-        pt_text = ["{}<br>{}<br>Quantile: {}".format(
+        pt_text = ["{}<br>{}<br>Essentiality score: {}".format(
             point_names[i], full_gene_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
-        # pt_text = ["{}<br>Quantile: {}".format(point_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
         max_magnitude = np.percentile(np.abs(continuous_color_var), 99)
         traces_list.append({ 
             'name': 'Data', 
@@ -352,7 +352,7 @@ def display_heatmap_cb(
     feat_colordict={}, 
     feat_group_names=None, 
     geneview_mode='Mutation', geneview_gene=None, geneview_data=None, 
-    scatter_frac_domain=0.10, 
+    scatter_frac_domain=0.13, 
     scatter_frac_range=0.08, 
     show_legend=False
 ):
