@@ -41,26 +41,6 @@ def reviz_embed_data(fit_data, alg='UMAP'):
     return embedding
 
 
-def pls_align(graph_adj, batch_IDs, n_components=2, umap=False):
-    if n_components > 2:
-        umap = True
-    toret = np.zeros((len(batch_IDs), n_components))
-    batch1_ndces = np.where(batch_IDs == np.unique(batch_IDs)[0])[0]
-    batch2_ndces = np.where(batch_IDs == np.unique(batch_IDs)[1])[0]
-    gg1 = graph_adj[batch1_ndces][:, batch1_ndces]
-    gg2 = graph_adj[batch2_ndces][:, batch2_ndces]
-    dmp_all_heat_1 = dm.diffmap_proj(gg1, n_comps=50, n_dims=20, min_energy_frac=0.9, embed_type='diffmap', return_eigvals=False)
-    dmp_all_heat_2 = dm.diffmap_proj(gg2, n_comps=50, n_dims=20, min_energy_frac=0.9, embed_type='diffmap', return_eigvals=False)
-    # dmp_all_naive, eigvals = dm.diffmap_proj(gg1, t=0, n_comps=reduced_dims, embed_type='naive', return_eigvals=True)
-    cm = np.dot(dmp_all_heat_1, dmp_all_heat_2.T)
-    tsvd = TruncatedSVD(n_components=n_components, random_state=42)
-    toret[batch1_ndces, :] = tsvd.fit_transform(cm)
-    toret[batch2_ndces, :] = tsvd.fit_transform(cm.T)
-    if umap:
-        pass
-    return toret
-
-
 
 # =========================================================
 # =================== Main scatter plot ===================
@@ -395,7 +375,6 @@ def display_heatmap_cb(
     col_clustIDs = np.zeros(fit_data.shape[1])
     if (fit_data.shape[0] > 1):
         ordered_rows, ordered_cols, row_clustIDs, col_clustIDs = dm.compute_coclustering(fit_data)
-        print(ordered_rows, ordered_cols)
         fit_data = fit_data[ordered_rows, :]
         hm_point_names = hm_point_names[ordered_rows]
     else:
@@ -404,7 +383,6 @@ def display_heatmap_cb(
     absc_labels = absc_labels[ordered_cols]
     if absc_group_labels is not None:
         absc_group_labels = absc_group_labels[ordered_cols]
-    print('3', hm_point_names)
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
     row_scat_traces, fit_data, hm_point_names = hm_row_scatter(
         fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs

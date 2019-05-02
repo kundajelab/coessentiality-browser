@@ -99,11 +99,7 @@ def make_store_points(selectedData_points):
     
 def make_selected(stored_dict):
     toret = { 'range': None }
-    toret['points'] = [
-        {
-            'text': k
-        } for k in stored_dict
-    ]
+    toret['points'] = [ { 'text': k } for k in stored_dict ]
     return toret
 
 
