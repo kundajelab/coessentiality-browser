@@ -70,7 +70,7 @@ app.layout = building_block_divs.create_div_mainapp(
 # =====================================================
 
 
-# =========================== The callback logic ===========================
+# All the callback logic 
 
 """
 Utility function to take union of a list of selected subsets that have been stored.
@@ -285,10 +285,7 @@ def parse_upload_contents(contents, filename):
 
 
 
-# ==============================================================================
-# =========================== Callbacks with headers ===========================
-# ==============================================================================
-
+# ================= Callbacks with headers ===================
 
 # Render selectable point subsets.
 @app.callback(
@@ -556,6 +553,7 @@ def update_subset_storage(
             fname_root = fname.split('/')[-1].split('.')[0]
             # Now make and save a new subset.
             new_sets_dict[fname_root] = { x: {} for x in parse_upload_contents(contents, fname) }
+        new_sets_dict['_current_selected_data'] = new_sets_dict[fname_root]
     return new_sets_dict
 
 
@@ -597,28 +595,6 @@ def update_main_heatmap(
         show_legend=('legend' in hm_col_panel)
     )
 
-
-"""
-# Update the main heatmap.
-
-@app.callback(
-    Output('aux-heatmap', 'figure'),
-    [Input('main-heatmap', 'figure'), 
-     Input('select-hm-dataset', 'value')]
-)
-def update_aux_heatmap(main_hm_fig, hm_dataset):
-    # Reorder rows/cols so they are in the same order as main heatmap.
-    if hm_dataset == 'Mutation':
-        data_to_use = raw_data
-        ptnames = point_names
-        colnames = feat_names
-    elif hm_dataset == 'Expression':
-        data_to_use = expr_data
-        ptnames = point_names
-        colnames = expr_cell_lines
-    toret_data = main_hm_fig['data']
-    return { 'data': toret_data, 'layout': main_hm_fig['layout']}
-"""
 
 """
 Update the main graph panel.

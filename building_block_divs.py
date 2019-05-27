@@ -577,6 +577,7 @@ def create_div_mainctrl(
                         children=[
                             dcc.Dropdown(	
                                 id='goterm-lookup', 	
+                                # TODO comment the following out/in
                                 options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
                                 value = [], 	
                                 placeholder="GO term...", 

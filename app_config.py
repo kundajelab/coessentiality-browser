@@ -13,7 +13,12 @@ if not _DEPLOY_LOCALLY:
 else:
     data_pfx = '/Users/akshay/github/coessentiality-browser/'
 
-params['plot_data_df_path'] = ["{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in ["_GLS01_CO99", "_GLS01_RC99", "_GLS1_CO0", "_GLS02_CO49_RC49"]]
+param_mixes = [
+    "{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in ["_GLS01_CO99", "_GLS01_RC99", "_GLS1_CO0", "_GLS02_CO49_RC49"]
+]
+
+clusterone_params = ['0.2', '0.5', '0.8', '0.9', '0.95', '0.99', '0.8_batch_corrected', '0.9_batch_corrected', '0.95_batch_corrected', '0.99_batch_corrected']
+params['plot_data_df_path'] = param_mixes + [data_pfx + "data/vizdf_GLS01_CO99_d_{}.csv".format(x) for x in clusterone_params]
 params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
 params['mutation_data_path'] = "{}data/CCLE_DepMap_18q3_maf_20180718.txt".format(data_pfx)
 params['mutation_arr_path'] = "{}data/CCLE_DepMap_18q3_mutations.npy".format(data_pfx)
@@ -25,8 +30,13 @@ params['expression_data_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM_20180718.g
 params['expression_arr_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM.npy".format(data_pfx)
 params['expression_cell_lines_path'] = "{}data/CCLE_DepMap_18q3_cell_lines.npy".format(data_pfx)
 
+params['string_ppi_names_path'] = "{}data/9606.protein.info.v11.0.txt.gz".format(data_pfx)
+params['string_ppi_network_path'] = "{}data/9606.protein.links.v11.0.txt.gz".format(data_pfx)
+params['string_ppi_matrix_path'] = "{}data/string_ppi_mat.npz".format(data_pfx)
+
 # params['dataset_options'] = [x.split('/')[-1].split('.')[0] for x in params['plot_data_df_path']]
-params['dataset_options'] = ["Emphasize all cluster-one clusters", "Emphasize colored Roarke clusters", "Emphasize GLS", "Mixed"]
+podata = ["ClusterONE clusters (d = {})".format(x) for x in clusterone_params]
+params['dataset_options'] = ["ClusterONE clusters", "Colored Roarke clusters", "GLS", "Mixed"] + podata
 
 params['gene2go_path'] = data_pfx + 'gene2go'
 params['go_obo_path'] = data_pfx + 'data/go-basic.obo'

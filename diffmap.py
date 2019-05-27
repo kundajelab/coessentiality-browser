@@ -217,6 +217,8 @@ def build_knn(mat, k=10, symmetrize_type='inclusive'):
         return sparse_adj.minimum(sparse_adj.transpose())
     elif (symmetrize_type == 'inclusive'):
         return sparse_adj.maximum(sparse_adj.transpose())
+    elif (symmetrize_type == 'fuzzy'):
+        return sparse_adj.maximum(sparse_adj.transpose())
     else:
         print("Mode not yet implemented.")
         return sparse_adj
