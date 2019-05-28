@@ -537,7 +537,7 @@ def create_div_mainctrl(
                                 id='points_annot', 
                                 options = [ {'value': point_names[i], 'label': "{} ({})".format(point_names[i], full_gene_ensIDs[i])} for i in range(len(point_names)) ], 
                                 placeholder="Gene...", multi=True, 
-                                style={'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
+                                style={'height': '55px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )], 
                         style={'fontSize': 12, 'margin': 5}
                     ), 
@@ -547,11 +547,11 @@ def create_div_mainctrl(
                             dcc.Dropdown(
                                 id='landscape-color', 
                                 options = [{'value': n, 'label': n} for n in more_colorvars] + [{'value': gn, 'label': ' '.join(gn.split('_'))} for gn in feat_names], 
-                                # value=app_config.params['default_color_var'], 
+                                value=app_config.params['default_color_var'], 
                                 placeholder="Cell line...", 
                                 clearable=True, 
                                 style={'white-space':'nowrap', 'text-overflow': 'ellipsis', 
-                                       'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }
+                                       'height': '55px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }
                             )], 
                         style={'fontSize': 12, 'margin': 5}
                     ), 
@@ -562,7 +562,7 @@ def create_div_mainctrl(
                                 id='tissue-type-lookup', 
                                 options = [{'value': n, 'label': n} for n in cancer_types], 
                                 placeholder="Tissue type...", 
-                                style={'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
+                                style={'height': '55px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )], 
                         style={'fontSize': 12, 'margin': 5}
                     )], 

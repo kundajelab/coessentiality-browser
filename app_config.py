@@ -33,6 +33,9 @@ params['expression_cell_lines_path'] = "{}data/CCLE_DepMap_18q3_cell_lines.npy".
 params['string_ppi_names_path'] = "{}data/9606.protein.info.v11.0.txt.gz".format(data_pfx)
 params['string_ppi_network_path'] = "{}data/9606.protein.links.v11.0.txt.gz".format(data_pfx)
 params['string_ppi_matrix_path'] = "{}data/string_ppi_mat.npz".format(data_pfx)
+params['string_matrix_ascoess_path'] = "{}data/string_mat.npz".format(data_pfx)
+
+params['cheng_matrix_path'] = "{}data/cheng_mat.npz".format(data_pfx)
 
 # params['dataset_options'] = [x.split('/')[-1].split('.')[0] for x in params['plot_data_df_path']]
 podata = ["ClusterONE clusters (d = {})".format(x) for x in clusterone_params]

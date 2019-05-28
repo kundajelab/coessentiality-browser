@@ -201,18 +201,18 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_cl
         is_continuous_color = None
         for trace in scatter_fig['data']:
             trace_markers = trace['marker']
-            trace_markers['showscale'] = False
+            trace_markers['showscale'] = False    # Masks colorbar
             if 'line' in trace_markers:
                 trace_markers['line']['width'] = 0.0
             if is_continuous_color is None:
                 is_continuous_color = isinstance(trace_markers['color'], (list, tuple, np.ndarray))
+                print(is_continuous_color)
             # Of the point names, choose the ones in this trace and get their indices...
             hm_point_where_this_trace = np.isin(hm_point_names, trace['text'])
             hm_point_names_this_trace = hm_point_names[hm_point_where_this_trace]
             num_in_trace = len(hm_point_names_this_trace)
             hm_point_ndces_this_trace = np.where(hm_point_where_this_trace)[0]        # this trace's row indices in heatmap
             y_coords_this_trace = np.arange(len(hm_point_names))[hm_point_ndces_this_trace]
-            
             # At this point, rows are sorted in order of co-clustering. 
             all_hm_point_names.extend(hm_point_names_this_trace)
             new_trace = {
