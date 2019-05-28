@@ -606,6 +606,7 @@ Update the main graph panel.
      Input('points_annot', 'value'), 
      Input('stored-pointsets', 'data'), 
      Input('sourcedata-select', 'value'), 
+     Input('select-ppi', 'value'), 
      Input('slider-bg-marker-size-factor', 'value'), 
      Input('slider-marker-size-factor', 'value')]
 )
@@ -615,6 +616,7 @@ def update_landscape(
     annotated_points,      # Selected points annotated
     subset_store,          # Store of selected point subsets.
     sourcedata_select, 
+    ppi_selected, 
     bg_marker_size, 
     marker_size
 ):
@@ -629,7 +631,7 @@ def update_landscape(
     else:
         color_scheme = cell_line_color
         aggregate_tissue = False
-    return run_update_landscape(
+    lscape = run_update_landscape(
         color_scheme, 
         annotated_points, 
         subset_store, 
@@ -641,6 +643,39 @@ def update_landscape(
         style_selected, 
         aggregate_tissue=aggregate_tissue
     )
+    # Add landscape edges as necessary.
+    itime = time.time()
+    if ppi_selected != 'None':
+        if ppi_selected == 'STRING (v11)':
+            adj_mat = sp.sparse.load_npz(app_config.params['string_matrix_ascoess_path'])
+        if ppi_selected == 'Cheng et al.':
+            adj_mat = sp.sparse.load_npz(app_config.params['cheng_matrix_path'])
+        # Map point id to (x, y) pair
+        pointIDs_to_coords = {}
+        for trace in lscape['data']:
+            for i in range(len(trace['x'])):
+                pointIDs_to_coords[trace['text'][i]] = (trace['x'][i], trace['y'][i])
+        print(time.time() - itime)
+        edges_x = []
+        edges_y = []
+        row_names = point_names[adj_mat.row]
+        col_names = point_names[adj_mat.col]
+        for j in range(len(row_names)):
+            coords1 = pointIDs_to_coords[row_names[j]]
+            coords2 = pointIDs_to_coords[col_names[j]]
+            edges_x.append((coords1[0], coords2[0], None))
+            edges_y.append((coords1[1], coords2[1], None))
+        lscape['data'].append({ 
+            'name': 'Data', 
+            'x': edges_x, 
+            'y': edges_y, 
+            'line': { 'width': 0.5, 'color': 'white'},
+            'hoverinfo': 'none', 
+            'mode': 'lines', 
+            'type': 'scattergl'
+        })
+    return lscape
+        
 
 
 

@@ -242,6 +242,37 @@ def create_div_select_dataset(dataset_options):
     )
 
 
+def create_div_ppi():
+    return html.Div(
+        className='row', 
+        children=[
+            html.Div(
+                className='three columns', 
+                children=[
+                    html.P(
+                        "View PPI: ", 
+                        style=style_text_box
+                    )], 
+                style={'padding-top': '10px'}  #style_outer_dialog_box
+            ), 
+            html.Div(
+                className='eight columns', 
+                children=[
+                    dcc.RadioItems(
+                        id='select-ppi', 
+                        options=[ {'label': v, 'value': v} for v in ['None', 'STRING (v11)', 'Cheng et al.'] ], 
+                        style=legend_font_macro, 
+                        labelStyle={
+                            'display': 'inline-block', 
+                            'margin-right': '5px'
+                        }, 
+                        value='None'
+                    )], 
+                style={ 'padding-top': '10px' }
+            )]
+    )
+
+
 div_reviz_scatter = html.Div(
     className='row', 
     children=[
@@ -578,7 +609,7 @@ def create_div_mainctrl(
                             dcc.Dropdown(	
                                 id='goterm-lookup', 	
                                 # TODO comment the following out/in
-                                options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+                                # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
                                 value = [], 	
                                 placeholder="GO term...", 
                                 style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
@@ -665,6 +696,7 @@ def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types,
                 style={ 'height': '100vh'}
             ), 
             create_div_select_dataset(app_config.params['dataset_options']), 
+            create_div_ppi(), 
             div_landscape_select, 
             html.Div(
                 id='hm-future-panels', 
