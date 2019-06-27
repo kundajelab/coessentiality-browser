@@ -189,7 +189,7 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
 # ========================================================
 
 
-def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=None):
+def hm_row_scatter(scatter_fig, hm_point_names, view_cocluster, row_clustIDs=None):
     row_scat_traces = []
     all_hm_point_names = []
     hmscat_mode = 'markers'
@@ -230,7 +230,7 @@ def hm_row_scatter(fit_data, scatter_fig, hm_point_names, view_cocluster, row_cl
                 'type': 'scatter'
             }
             row_scat_traces.append(new_trace)
-    return row_scat_traces, fit_data, all_hm_point_names
+    return row_scat_traces, all_hm_point_names
 
 
 def hm_col_plot(
@@ -342,7 +342,42 @@ def hm_hovertext(data, rownames, colnames):
             pt_text[r][c] += "<br>Cell line: {}<br>Essentiality score: {}".format(str(colnames[c]), str(round(data[r][c], 3)))
     return pt_text
 
+"""
+def order_heatmap_rows_cols(
+    fit_data, 
+    feat_names,     # col labels of hm_raw_data
+    hm_point_names, 
+    feat_group_names=None
+):
+    if fit_data is None or len(fit_data.shape) < 2:
+        return
+    # Identify (interesting) cell lines to plot. Currently: high-variance ones
+    feat_ndces = interesting_feat_ndces(fit_data)
+    absc_labels = feat_names[feat_ndces]
+    fit_data = fit_data[:, feat_ndces]
+    # Quantile normalize the data if necessary to better detect patterns.
+    if app_config.params['hm_qnorm_plot']:
+        qtiles = np.zeros_like(fit_data)
+        nnz_ndces = np.nonzero(fit_data)
+        qtiles[nnz_ndces] = sp.stats.rankdata(fit_data[nnz_ndces]) / len(fit_data[nnz_ndces])
+        fit_data = qtiles
+    # Spectral coclustering to cluster the heatmap. We always order rows (points) by spectral projection, but cols (features) can have different orderings for different viewing options.
+    row_clustIDs = np.zeros(fit_data.shape[0])
+    col_clustIDs = np.zeros(fit_data.shape[1])
+    if (fit_data.shape[0] > 1):
+        ordered_rows, ordered_cols, row_clustIDs, col_clustIDs = dm.compute_coclustering(fit_data)
+        fit_data = fit_data[ordered_rows, :]
+        hm_point_names = hm_point_names[ordered_rows]
+    else:
+        ordered_cols = np.arange(fit_data.shape[1])
+    fit_data = fit_data[:, ordered_cols]
+    absc_labels = absc_labels[ordered_cols]
+    absc_group_labels = None if feat_group_names is None else feat_group_names[feat_ndces]
+    if absc_group_labels is not None:
+        absc_group_labels = absc_group_labels[ordered_cols]
+    return (fit_data, absc_labels, absc_group_labels, row_clustIDs, col_clustIDs)
 
+"""
 def display_heatmap_cb(
     hm_raw_data,    # 2D numpy array of selected data
     feat_names,     # col labels of hm_raw_data
@@ -384,8 +419,8 @@ def display_heatmap_cb(
     if absc_group_labels is not None:
         absc_group_labels = absc_group_labels[ordered_cols]
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
-    row_scat_traces, fit_data, hm_point_names = hm_row_scatter(
-        fit_data, scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
+    row_scat_traces, hm_point_names = hm_row_scatter(
+        scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
     )
     col_scat_traces, fit_data = hm_col_plot(
         fit_data, feat_colordict, 
@@ -433,6 +468,75 @@ def display_heatmap_cb(
             show_legend=show_legend, clustersep_coords=clustersep_line_coords
         )
     }
+#"""
+
+
+"""
+def display_heatmap_cb(
+    hm_raw_data,    # 2D numpy array of selected data
+    feat_names, 
+    hm_point_names,    # (unique!) row labels of hm_raw_data
+    scatter_fig,    # Scatterplot panel which this is mirroring.
+    view_cocluster, 
+    feat_colordict={}, 
+    geneview_mode='Mutation', geneview_gene=None, geneview_data=None, 
+    feat_group_names=None, 
+    scatter_frac_domain=0.13, 
+    scatter_frac_range=0.08, 
+    show_legend=False
+):
+    fit_data, absc_labels, absc_group_labels, row_clustIDs, col_clustIDs = order_heatmap_rows_cols(
+        hm_raw_data, feat_names, hm_point_names, feat_group_names=feat_group_names)
+    # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
+    row_scat_traces, hm_point_names = hm_row_scatter(
+        scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
+    )
+    col_scat_traces, fit_data = hm_col_plot(
+        fit_data, feat_colordict, 
+        reordered_groups=absc_group_labels, reordered_featnames=absc_labels, 
+        geneview_mode=geneview_mode, geneview_gene=geneview_gene, geneview_data=geneview_data, 
+        col_clustIDs=col_clustIDs
+    )
+    pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
+    hm_trace = {
+        'z': fit_data, 
+        'x': absc_labels, 
+        'customdata': hm_point_names, 
+        'hoverinfo': 'text',
+        'text': pt_text, 
+        'colorscale': app_config.params['hm_colorscale'], 
+        'colorbar': {
+            'len': 0.3, 
+            'thickness': 20, 
+            'xanchor': 'left', 
+            'yanchor': 'top', 
+            'title': 'Ess. score',
+            'titleside': 'top',
+            'ticks': 'outside', 
+            'titlefont': building_block_divs.colorbar_font_macro, 
+            'tickfont': building_block_divs.colorbar_font_macro
+        }, 
+        'type': 'heatmap'
+    }
+    if app_config.params['hm_diverging']:
+        max_magnitude = np.percentile(np.abs(fit_data), 99) if fit_data.shape[0] > 0 else 2
+        hm_trace['zmin'] = -max_magnitude
+        hm_trace['zmax'] = max_magnitude
+    # assemble coordinates of lines adumbrating clusters.
+    clustersep_line_coords = []
+    for cid in np.unique(col_clustIDs):
+        ndcesc = np.where(col_clustIDs == cid)[0]
+        clustersep_line_coords.append(np.min(ndcesc) - 0.5)
+    if len(fit_data.shape) > 1:
+        clustersep_line_coords.append(fit_data.shape[1] - 0.5)
+    return {
+        'data': [ hm_trace ] + row_scat_traces + col_scat_traces, 
+        'layout': building_block_divs.create_hm_layout(
+            scatter_frac_domain=scatter_frac_domain, scatter_frac_range=scatter_frac_range, 
+            show_legend=show_legend, clustersep_coords=clustersep_line_coords
+        )
+    }
+"""
 
 
 """

@@ -394,7 +394,7 @@ def create_div_hm_panel(point_names):
                         }
                     ), 
                     html.Div(
-                        className='four columns', 
+                        className='three columns', 
                         children = [
                             dcc.RadioItems(
                                 id='select-hm-dataset', 
@@ -416,6 +416,17 @@ def create_div_hm_panel(point_names):
                                 style={'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )]
                     ), 
+#                     html.Div(
+#                         id='enriched-genes-per-cluster', 
+#                         className='four columns', 
+#                         children='Enriched in a cluster: ', 
+#                         style={
+#                             # 'display': 'none', 
+#                             'textAlign': 'center', 
+#                             'color': app_config.params['font_color'], 
+#                             'padding-top': '0px'
+#                         }
+#                     ), 
                     html.Div(
                         className='three columns', 
                         children = [
@@ -426,6 +437,7 @@ def create_div_hm_panel(point_names):
                                 ],
                                 values=[], 
                                 style={
+                                    'display': 'none', 
                                     'textAlign': 'center', 
                                     'width': '100%', 
                                     'color': app_config.params['font_color']

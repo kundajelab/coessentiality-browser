@@ -166,45 +166,6 @@ def highlight_landscape_func(
     return toret
 
 
-def run_update_main_heatmap(
-    subset_store, 
-    col_names, 
-    landscape_scatter_fig, 
-    point_names_to_use, 
-    raw_data_to_use, 
-    geneview_gene=None, 
-    geneview_mode='Mutation', 
-    geneview_data=None, 
-    num_points_to_sample=10000, 
-    show_legend=False
-):
-    pointIDs_to_display = list(subset_store.keys())
-    # Subsample down to a max #points, for smoothly interactive heatmap display.
-    if len(pointIDs_to_display) > num_points_to_sample:
-        pointIDs_to_display = np.random.choice(pointIDs_to_display, num_points_to_sample, replace=False)
-    # If any points (genes) are selected but not in the heatmap, they won't be displayed.
-    point_ndces_to_display = np.isin(point_names_to_use, pointIDs_to_display)
-    subset_point_names = point_names_to_use[point_ndces_to_display]
-    subset_raw_data = raw_data_to_use[point_ndces_to_display, :]
-    if sp.sparse.issparse(raw_data_to_use):
-        subset_raw_data = subset_raw_data.toarray()
-    cocluster_mode = False
-    hm_fig = app_lib.display_heatmap_cb(
-        subset_raw_data, 
-        col_names, 
-        subset_point_names, 
-        landscape_scatter_fig, 
-        cocluster_mode, 
-        geneview_mode=geneview_mode, 
-        geneview_gene=geneview_gene, 
-        geneview_data=geneview_data, 
-        feat_group_names=cancer_types, 
-        feat_colordict=cell_line_colordict, 
-        show_legend=show_legend
-    )
-    return hm_fig
-
-
 def run_update_landscape(
     color_scheme,          # Feature(s) selected to plot as color.
     annotated_points,      # Selected points annotated
@@ -582,18 +543,35 @@ def update_main_heatmap(
         geneview_data = mutation_data
     elif geneview_mode == 'Expression':
         geneview_data = expr_data
-    return run_update_main_heatmap(
-        subset_store, 
-        feat_names, 
+    col_names = feat_names
+    point_names_to_use = point_names
+    raw_data_to_use = raw_data
+    
+    pointIDs_to_display = list(subset_store.keys())
+    # Subsample down to a max #points, for smoothly interactive heatmap display.
+    if len(pointIDs_to_display) > num_points_to_sample:
+        pointIDs_to_display = np.random.choice(pointIDs_to_display, num_points_to_sample, replace=False)
+    # If any points (genes) are selected but not in the heatmap, they won't be displayed.
+    point_ndces_to_display = np.isin(point_names_to_use, pointIDs_to_display)
+    subset_point_names = point_names_to_use[point_ndces_to_display]
+    subset_raw_data = raw_data_to_use[point_ndces_to_display, :]
+    if sp.sparse.issparse(raw_data_to_use):
+        subset_raw_data = subset_raw_data.toarray()
+    cocluster_mode = False
+    hm_fig = app_lib.display_heatmap_cb(
+        subset_raw_data, 
+        col_names, 
+        subset_point_names, 
         landscape_scatter_fig, 
-        point_names, 
-        raw_data, 
+        cocluster_mode, 
         geneview_mode=geneview_mode, 
         geneview_gene=geneview_gene, 
-        geneview_data=geneview_data, 
-        num_points_to_sample=num_points_to_sample, 
-        show_legend=('legend' in hm_col_panel)
+        geneview_data=geneview_data,  
+        feat_group_names=cancer_types,
+        feat_colordict=cell_line_colordict, 
+        show_legend=False
     )
+    return hm_fig
 
 
 """
@@ -643,13 +621,13 @@ def update_landscape(
         style_selected, 
         aggregate_tissue=aggregate_tissue
     )
-    # Add landscape edges as necessary.
+    # Add landscape edges as necessary.  # NO, too slow!
     itime = time.time()
     if ppi_selected != 'None':
         if ppi_selected == 'STRING (v11)':
-            adj_mat = sp.sparse.load_npz(app_config.params['string_matrix_ascoess_path'])
+            adj_mat = sp.sparse.load_npz(app_config.params['string_matrix_ascoess_path']).tocoo()
         if ppi_selected == 'Cheng et al.':
-            adj_mat = sp.sparse.load_npz(app_config.params['cheng_matrix_path'])
+            adj_mat = sp.sparse.load_npz(app_config.params['cheng_matrix_path']).tocoo()
         # Map point id to (x, y) pair
         pointIDs_to_coords = {}
         for trace in lscape['data']:
@@ -665,6 +643,7 @@ def update_landscape(
             coords2 = pointIDs_to_coords[col_names[j]]
             edges_x.append((coords1[0], coords2[0], None))
             edges_y.append((coords1[1], coords2[1], None))
+        print(len(edges_x))
         lscape['data'].append({ 
             'name': 'Data', 
             'x': edges_x, 
@@ -672,7 +651,7 @@ def update_landscape(
             'line': { 'width': 0.5, 'color': 'white'},
             'hoverinfo': 'none', 
             'mode': 'lines', 
-            'type': 'scattergl'
+            'type': 'scatter'
         })
     return lscape
         

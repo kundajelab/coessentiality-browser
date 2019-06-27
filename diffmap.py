@@ -43,46 +43,18 @@ def compute_coclustering(
     )
 
 
-"""
-An instance of this object stores the information about a particular alignment of the data. 
-Typically this is a coordinate system obtained by analyzing variation of the combined graph. 
-Input: two graph adjacency matrices.
-"""
-class sc_aligner(object):
-    
-    def __init__(self, graph_list, mode='pls'):
-        #self.common_dims = common_dims
-        self.graph_list = graph_list
-        self.corresp_pairs = []
-        if mode == 'pls':
-            pass
-        else:
-            self.build_combined_graph()
-    
-    # Build the graph with optional correspondence info
-    def build_combined_graph(self, corresp=[], corresp_reg=[]):
-        num_cells_total = np.sum([g.shape[0] for g in graph_list])
-        self.full_graph = sp.sparse.csr_matrix(np.zeros((num_cells_total, num_cells_total)))
-        dimsofar = 0
-        # The block diagonal terms...
-        for g in self.graph_list:
-            thisdim = g.shape[0]
-            self.full_graph[(dimsofar):(dimsofar+thisdim), (dimsofar):(dimsofar+thisdim)] = g
-            dimsofar += thisdim
-        # The cross (correspondence) terms...
-        # TODO: Generalize this to multiway correspondences by adding a weight to the graph.
-        for i in range(len(corresp)):
-            subset1 = corresp[i][0]
-            subset2 = corresp[i][1]     # Both assumed to be numpy arrays of length >= 1
-            self.full_graph[subset1, subset2] = g
-            dimsofar += thisdim
-        return
-    
-    # Calculates (eigen)decomposition of matrix as required.
-    def decompose(self, train_pos_ndces=None, train_neg_ndces=None, random_state=None):
-        print("Finding top {} eigenvectors...".format(common_dims))
-        train_mats = []
-
+def umap_embed_inplace(
+    ann_heat, n_components = 2, min_dist = 0.5, spread = 1.0, n_epochs = 0, init_coords = 'spectral', 
+    alpha = 1.0, gamma = 1.0, negative_sample_rate = 5, random_state = 0
+):
+    random_state = check_random_state(random_state)
+    a, b = find_ab_params(spread, min_dist)
+    X_umap = simplicial_set_embedding(
+        ann_heat.X,
+        ann_heat.uns['neighbors']['connectivities'].tocoo(),
+        n_components, alpha, a, b, gamma, negative_sample_rate, n_epochs,
+        init_coords, random_state, 'euclidean', {}, verbose=0
+    )
 
 
 # ===============================================================
