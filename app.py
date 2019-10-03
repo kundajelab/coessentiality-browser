@@ -34,10 +34,10 @@ full_gene_ensIDs = np.array(pd.read_csv(app_config.params['gene_ensID_path'], se
 feat_names = data_ess.columns
 cancer_types = data_ess.columns.str.split('_').str[1:].str.join(' ').str.capitalize().str.replace('Haematopoietic and lymphoid tissue', 'Hematopoietic/lymphoid')
 
-mutation_data = np.load(app_config.params['mutation_arr_path'])
+mutation_data = np.load(app_config.params['mutation_arr_path'], allow_pickle=True)
 # shRNA_df = pd.read_csv(app_config.params['shRNA_data_path'], sep=",", index_col=0)
 
-expr_data = np.load(app_config.params['expression_arr_path'])
+expr_data = np.load(app_config.params['expression_arr_path'], allow_pickle=True)
 expr_cell_lines = np.load(app_config.params['expression_cell_lines_path'])
 
 ctypes = [x for x in np.unique(cancer_types)]
@@ -365,7 +365,7 @@ def update_selected_landscape_data(subset_store):
 # Updates the stored dictionary of boolean panel config variables.
 @app.callback(
     Output('stored-panel-settings', 'data'), 
-    [Input('toggle-debug-panels', 'values')]
+    [Input('toggle-debug-panels', 'value')]
 )
 def update_panel_settings_store(debug_options):
     return {
@@ -432,7 +432,7 @@ def update_geneview_options(geneview_dataset):
 
 @app.callback(
     Output('hm-future-panels', 'children'), 
-    [Input('toggle-future-panels', 'values')]
+    [Input('toggle-future-panels', 'value')]
 )
 def update_future_panels(panel_list):
     graphs = []
@@ -524,7 +524,7 @@ Update the main heatmap.
 @app.callback(
     Output('main-heatmap', 'figure'),
     [Input('stored-landscape-selected', 'data'), 
-     Input('toggle-hm-cols', 'values'), 
+     Input('toggle-hm-cols', 'value'), 
      Input('select-hm-dataset', 'value'), 
      Input('select-geneview', 'value'), 
      Input('landscape-color', 'value')], 
@@ -663,4 +663,4 @@ def update_landscape(
 # =======================================================
 
 if __name__ == '__main__':
-    app.run_server(port=8053, debug=True)
+    app.run_server(port=8052, debug=True)

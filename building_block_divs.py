@@ -224,8 +224,8 @@ def create_div_select_dataset(dataset_options):
                             id='download-layout-button', 
                             children='Get CSV', 
                             style=style_text_box, 
-                            n_clicks='0', 
-                            n_clicks_timestamp='0'
+                            n_clicks=0, 
+                            n_clicks_timestamp=0
                         ), 
                         id='download-layout-link',
                         download="selected_layout.csv", 
@@ -284,7 +284,7 @@ div_reviz_scatter = html.Div(
                     options=[
                         {'label': 'Visualize selection', 'value': 'viz'}
                     ],
-                    values=[], 
+                    value=[], 
                     style={
                         'textAlign': 'center', 
                         # 'width': '80%', 
@@ -435,7 +435,7 @@ def create_div_hm_panel(point_names):
                                 options=[
                                     {'label': 'Tissue legend', 'value': 'legend'}
                                 ],
-                                values=[], 
+                                value=[], 
                                 style={
                                     'display': 'none', 
                                     'textAlign': 'center', 
@@ -522,7 +522,7 @@ def create_div_cosmetic_panel():
                         options=[
                             {'label': 'Diff. feature sets', 'value': 'diff_features'}
                         ],
-                        values=[], 
+                        value=[], 
                         style={
                             'textAlign': 'left', 
                             'width': '80%', 
@@ -538,7 +538,7 @@ def create_div_cosmetic_panel():
                         options=[
                             {'label': 'Debug panel', 'value': 'debug-panel'}
                         ],
-                        values=[], 
+                        value=[], 
                         style={
                             'textAlign': 'left', 
                             'width': '80%', 
@@ -621,7 +621,7 @@ def create_div_mainctrl(
                             dcc.Dropdown(	
                                 id='goterm-lookup', 	
                                 # TODO comment the following out/in
-                                # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+                                options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
                                 value = [], 	
                                 placeholder="GO term...", 
                                 style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
@@ -652,8 +652,8 @@ def create_div_mainctrl(
                                                     id='download-button', 
                                                     children='Save', 
                                                     style=style_text_box, 
-                                                    n_clicks='0', 
-                                                    n_clicks_timestamp='0'
+                                                    n_clicks=0, 
+                                                    n_clicks_timestamp=0
                                                 ), 
                                                 id='download-set-link',
                                                 download="selected_set.csv", 
@@ -677,8 +677,8 @@ def create_div_mainctrl(
                                                         id='upload-button', 
                                                         children='Load', 
                                                         style=style_text_box, 
-                                                        n_clicks='0', 
-                                                        n_clicks_timestamp='0'
+                                                        n_clicks=0, 
+                                                        n_clicks_timestamp=0
                                                     )
         #                                             html.Img( src=upload_asset, #'data:image/png;base64,{}'.format(encoded_image), style={ 'height' : '40%', 'width' : '40%', 'float' : 'right', 'position' : 'relative', 'padding-top' : 0, 'padding-right' : 0 })
                                                 ]),
@@ -779,29 +779,29 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
             dcc.Store(
                 id='stored-landscape-selected', 
                 data={ }, 
-                modified_timestamp='0'
+                modified_timestamp=0
             ), 
             dcc.Store(
                 id='stored-heatmap-selected', 
                 data={ }, 
-                modified_timestamp='0'
+                modified_timestamp=0
             ), 
             dcc.Store(
                 id='stored-recently-highlighted', 
                 data={ }, 
-                modified_timestamp='0'
+                modified_timestamp=0
             ), 
             dcc.Store(
                 id='stored-panel-settings', 
                 data={
                     'debug_panel': False
                 }, 
-                modified_timestamp='0'
+                modified_timestamp=0
             ), 
             dcc.Store(
                 id='stored-goterm-lookup-results', 
                 data={ }, 
-                modified_timestamp='0'
+                modified_timestamp=0
             )
         ],
         style={ 
