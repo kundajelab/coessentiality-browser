@@ -103,7 +103,7 @@ def traces_scatter(
                     'tickfont': building_block_divs.colorbar_font_macro
                 }, 
                 'color': continuous_color_var, 
-                'colorscale': app_config.cmap_custom_orpu_diverging, 
+                'colorscale': app_config.cmap_custom_ylbu_diverging, 
                 'cmin': -max_magnitude, 
                 'cmax': max_magnitude
             }, 
