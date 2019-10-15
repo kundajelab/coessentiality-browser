@@ -3,7 +3,7 @@ import numpy as np, pandas as pd
 
 params = {}
 
-params['title'] = "Gene coessentiality browser"
+params['title'] = "Co-essentiality browser"
 
 
 _DEPLOY_LOCALLY = True
