@@ -103,7 +103,7 @@ def traces_scatter(
                     'tickfont': building_block_divs.colorbar_font_macro
                 }, 
                 'color': continuous_color_var, 
-                'colorscale': app_config.cmap_custom_orpu_diverging, 
+                'colorscale': app_config.cmap_custom_ylbu_diverging, 
                 'cmin': -max_magnitude, 
                 'cmax': max_magnitude
             }, 
@@ -163,8 +163,8 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
                        point_names=None
                       ):
     if highlight:
-        style_selected['marker']['color'] = '#FFFFFF'    # '#ff4f00' # Golden gate bridge red
-        # style_selected['marker']['size'] = 10     # TODO: Change this back on unhighlighting.
+        style_selected['marker']['color'] = '#ff4f00' # Golden gate bridge red
+        style_selected['marker']['size'] = 10     # TODO: Change this back on unhighlighting.
     else:
         style_selected['marker'].pop('color', None)    # Remove color if exists
     trace_list = traces_scatter(
@@ -194,7 +194,7 @@ def hm_row_scatter(scatter_fig, hm_point_names, view_cocluster, row_clustIDs=Non
     all_hm_point_names = []
     hmscat_mode = 'markers'
     # Decide if few enough points are around to display row labels
-    if len(hm_point_names) <= 35:
+    if len(hm_point_names) <= 30:
         hmscat_mode = 'markers+text'
     if (scatter_fig is not None) and ('data' in scatter_fig):
         pts_so_far = 0
@@ -206,7 +206,6 @@ def hm_row_scatter(scatter_fig, hm_point_names, view_cocluster, row_clustIDs=Non
                 trace_markers['line']['width'] = 0.0
             if is_continuous_color is None:
                 is_continuous_color = isinstance(trace_markers['color'], (list, tuple, np.ndarray))
-                print(is_continuous_color)
             # Of the point names, choose the ones in this trace and get their indices...
             hm_point_where_this_trace = np.isin(hm_point_names, trace['text'])
             hm_point_names_this_trace = hm_point_names[hm_point_where_this_trace]
@@ -376,7 +375,6 @@ def order_heatmap_rows_cols(
     if absc_group_labels is not None:
         absc_group_labels = absc_group_labels[ordered_cols]
     return (fit_data, absc_labels, absc_group_labels, row_clustIDs, col_clustIDs)
-
 """
 def display_heatmap_cb(
     hm_raw_data,    # 2D numpy array of selected data
@@ -465,7 +463,7 @@ def display_heatmap_cb(
         'data': [ hm_trace ] + row_scat_traces + col_scat_traces, 
         'layout': building_block_divs.create_hm_layout(
             scatter_frac_domain=scatter_frac_domain, scatter_frac_range=scatter_frac_range, 
-            show_legend=show_legend, clustersep_coords=clustersep_line_coords
+            show_legend=show_legend, clustersep_coords=clustersep_line_coords, yaxis_label=(len(hm_point_names) <= 30)
         )
     }
 #"""
@@ -611,23 +609,23 @@ def get_genes_from_goterm(goterm_re_str, mode='gaf'):
     return toret
 
 
-"""
-# Given a list of GO term IDs, returns a combined list of genes under that ID using gProfiler.
-def get_genes_from_goterm(goterms_req):
-    tmpl = []
-    for termID in goterms_req:
-        gp = GProfiler("MyToolName/0.2")
-        go_results = np.array(gp.gconvert(termID, target="GO"))
-        tmpl.append(np.unique([x[4] for x in go_results]))
-    if len(tmpl) == 0:
-        return ""
-    sel_genes = np.concatenate(tmpl)
-    sieved_genes = []
-    for g in sel_genes:
-        if g is not None:
-            sieved_genes.append(g)
-    return list(np.unique(sieved_genes))
 
+# Given a list of GO term IDs, returns a combined list of genes under that ID using gProfiler.
+# def get_genes_from_goterm(goterms_req):
+#     tmpl = []
+#     for termID in goterms_req:
+#         gp = GProfiler("MyToolName/0.2")
+#         go_results = np.array(gp.gconvert(termID, target="GO"))
+#         tmpl.append(np.unique([x[4] for x in go_results]))
+#     if len(tmpl) == 0:
+#         return ""
+#     sel_genes = np.concatenate(tmpl)
+#     sieved_genes = []
+#     for g in sel_genes:
+#         if g is not None:
+#             sieved_genes.append(g)
+#     return list(np.unique(sieved_genes))
+"""
 Update GO enrichment panel.
 https://biit.cs.ut.ee/gprofiler/page/apis. or 
 g:GOSt API (in class header of gprofiler.py):

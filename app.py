@@ -8,6 +8,7 @@ Author: Akshay Balsubramani
 import base64, io, os, time, json
 import numpy as np, scipy as sp, pandas as pd, dash
 from dash.dependencies import Input, Output, State
+from dash.exceptions import PreventUpdate
 import app_config, app_lib, building_block_divs
 # import matplotlib, matplotlib.pyplot as plt, matplotlib.colors as colors
 """
@@ -39,6 +40,9 @@ mutation_data = np.load(app_config.params['mutation_arr_path'], allow_pickle=Tru
 
 expr_data = np.load(app_config.params['expression_arr_path'], allow_pickle=True)
 expr_cell_lines = np.load(app_config.params['expression_cell_lines_path'])
+
+go_termIDs = np.load(app_config.params['gotermIDs_path'])
+go_termnames = np.load(app_config.params['gotermnames_path'])
 
 ctypes = [x for x in np.unique(cancer_types)]
 colorlist = app_config.cmap_celltypes
@@ -389,38 +393,26 @@ def update_panel_settings_store(
         [sel_landscape, sel_heatmap]
     )
 
-"""
-@app.callback(
-    Output('stored-goterm-lookup-results', 'data'), 
-    [Input('goterm-lookup', 'n_submit')], 
-    [State('goterm-lookup', 'value')]
-)
-def update_goterm_search(lookup_submit, lookup_val):
-    toret = {}
-    for x in app_lib.get_genes_from_goterm(lookup_val, mode='regex'):
-        toret[x.Symbol] = x.description
-    return toret
-"""
 
 # Handle lookups of GO terms and return a gene set.	
 @app.callback(
-    Output('stored-goterm-lookup-results', 'data'), 	
-    [Input('goterm-lookup', 'value')]	
-)	
-def update_goterm_lookup(	
+    Output('stored-goterm-lookup-results', 'data'), 
+    [Input('goterm-lookup', 'value')]
+)
+def update_goterm_lookup(
     goterms_req	
 ):
     tmpl = [app_lib.get_genes_from_goterm(termID) for termID in goterms_req]
-    if len(tmpl) == 0:	
+    if len(tmpl) == 0:
         return ""
     sel_genes = np.concatenate(tmpl)
     return list(np.unique(sel_genes))
 
 
 @app.callback(
-    Output('select-geneview', 'options'), 	
-    [Input('select-hm-dataset', 'value')]	
-)	
+    Output('select-geneview', 'options'), 
+    [Input('select-hm-dataset', 'value')]
+)
 def update_geneview_options(geneview_dataset):
     gene_names = point_names
     if geneview_dataset == 'Mutation':
@@ -428,6 +420,20 @@ def update_geneview_options(geneview_dataset):
     elif geneview_dataset == 'Expression':
         gene_names = np.intersect1d(expr_data[:,0], point_names)
     return [ {'value': gn, 'label': gn} for gn in gene_names ]
+
+
+# @app.callback(
+#     Output('goterm-lookup', 'options'), 
+#     [Input('goterm-lookup', 'search_value')], 
+#     [State('goterm-lookup', 'value'), 
+#      State('goterm-lookup', 'options')]
+# )
+# def update_goterm_options(search_val, val, options):
+#     if not search_val or ((options is not None) and len(options) > 0):
+#         raise PreventUpdate
+#     return [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ]
+#     # Make sure that the set values are in the option list, else they will disappear from the shown select list, but still part of the `value`.
+#     # return [ o for o in options if search_val in o["label"] or o["value"] in (val or []) ]
 
 
 @app.callback(
@@ -453,6 +459,21 @@ def update_numselected_counter(
 ):
     num_selected = len(subset_store['_current_selected_data'])
     return '# selected: {}'.format(num_selected)
+
+
+# Update dialogs.
+@app.callback(
+    [Output('goterm-lookup', 'options'), 
+     Output('load-go-button', 'children')], 
+    [Input('load-go-button', 'n_clicks')]
+)
+def update_go_db(
+    button_clicks
+):
+    if (button_clicks > 0):
+        return ([{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 'Search GO')
+    else:
+        raise PreventUpdate
 
 
 # Link currently selected data to output of gene set selector, so it can be picked too.
@@ -494,7 +515,7 @@ def update_subset_storage(
     subset_store
 ):
     new_sets_dict = {} if subset_store is None else subset_store
-    if len(stored_goterm_lookup) > 0:
+    if stored_goterm_lookup is not None and len(stored_goterm_lookup) > 0:
         new_sets_dict['_current_selected_data'] = { x: {} for x in stored_goterm_lookup }
     else:
         if selected_subsetIDs is not None and len(selected_subsetIDs) > 0:    # Update _current_selected_data by loading subsets.
@@ -527,7 +548,7 @@ Update the main heatmap.
      Input('toggle-hm-cols', 'value'), 
      Input('select-hm-dataset', 'value'), 
      Input('select-geneview', 'value'), 
-     Input('landscape-color', 'value')], 
+     Input('cell-line-lookup', 'value')], 
     [State('landscape-plot', 'figure')]
 )
 def update_main_heatmap(
@@ -575,16 +596,43 @@ def update_main_heatmap(
 
 
 """
+Ensure at most one cell line / tissue lookup selected.
+"""
+# @app.callback(
+#     Output('cell-line-lookup', 'value'), 
+#     [Input('tissue-type-lookup', 'value')], 
+#     [State('cell-line-lookup', 'value')]
+# )
+# def update_cell_line(selected_tissue_color, cell_line_color):
+#     if (selected_tissue_color is not None) and len(selected_tissue_color) > 0:
+#         return None
+#     else:
+#         return cell_line_color
+
+
+@app.callback(
+    Output('tissue-type-lookup', 'value'), 
+    [Input('cell-line-lookup', 'value')], 
+    [State('tissue-type-lookup', 'value')]
+)
+def update_cell_line(cell_line_color, selected_tissue_color):
+    if (cell_line_color is not None) and len(cell_line_color) > 0:
+        return None
+    else:
+        return selected_tissue_color
+
+
+"""
 Update the main graph panel.
 """
 @app.callback(
     Output('landscape-plot', 'figure'), 
-    [Input('landscape-color', 'value'), 
+    [Input('cell-line-lookup', 'value'), 
      Input('tissue-type-lookup', 'value'), 
      Input('points_annot', 'value'), 
      Input('stored-pointsets', 'data'), 
      Input('sourcedata-select', 'value'), 
-     Input('select-ppi', 'value'), 
+     # Input('select-ppi', 'value'), 
      Input('slider-bg-marker-size-factor', 'value'), 
      Input('slider-marker-size-factor', 'value')]
 )
@@ -594,7 +642,7 @@ def update_landscape(
     annotated_points,      # Selected points annotated
     subset_store,          # Store of selected point subsets.
     sourcedata_select, 
-    ppi_selected, 
+    # ppi_selected, 
     bg_marker_size, 
     marker_size
 ):
@@ -623,6 +671,7 @@ def update_landscape(
     )
     # Add landscape edges as necessary.  # NO, too slow!
     itime = time.time()
+    ppi_selected = 'None'
     if ppi_selected != 'None':
         if ppi_selected == 'STRING (v11)':
             adj_mat = sp.sparse.load_npz(app_config.params['string_matrix_ascoess_path']).tocoo()
@@ -633,7 +682,7 @@ def update_landscape(
         for trace in lscape['data']:
             for i in range(len(trace['x'])):
                 pointIDs_to_coords[trace['text'][i]] = (trace['x'][i], trace['y'][i])
-        print(time.time() - itime)
+        
         edges_x = []
         edges_y = []
         row_names = point_names[adj_mat.row]
@@ -643,7 +692,6 @@ def update_landscape(
             coords2 = pointIDs_to_coords[col_names[j]]
             edges_x.append((coords1[0], coords2[0], None))
             edges_y.append((coords1[1], coords2[1], None))
-        print(len(edges_x))
         lscape['data'].append({ 
             'name': 'Data', 
             'x': edges_x, 

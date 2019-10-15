@@ -3,7 +3,7 @@ import numpy as np, pandas as pd
 
 params = {}
 
-params['title'] = "Gene coessentiality browser"
+params['title'] = "Gene co-essentiality browser"
 
 
 _DEPLOY_LOCALLY = True
@@ -14,7 +14,7 @@ else:
     data_pfx = '/Users/akshay/github/coessentiality-browser/'
 
 param_mixes = [
-    "{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in ["_GLS01_CO99", "_GLS01_RC99", "_GLS1_CO0", "_GLS02_CO49_RC49"]
+    "{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in ["_GLS01_CO99", "_GLS1_CO0", "_GLS02_CO49_RC49"]
 ]
 
 clusterone_params = ['0.2', '0.5', '0.8', '0.9', '0.95', '0.99', '0.8_batch_corrected', '0.9_batch_corrected', '0.95_batch_corrected', '0.99_batch_corrected']
@@ -29,6 +29,7 @@ params['shRNA_data_path'] = "{}data/D2_combined_gene_dep_scores.csv".format(data
 params['expression_data_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM_20180718.gct".format(data_pfx)
 params['expression_arr_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM.npy".format(data_pfx)
 params['expression_cell_lines_path'] = "{}data/CCLE_DepMap_18q3_cell_lines.npy".format(data_pfx)
+params['video_path'] = "{}data/45sec_browser_video.mp4".format(data_pfx)
 
 params['string_ppi_names_path'] = "{}data/9606.protein.info.v11.0.txt.gz".format(data_pfx)
 params['string_ppi_network_path'] = "{}data/9606.protein.links.v11.0.txt.gz".format(data_pfx)
@@ -39,7 +40,7 @@ params['cheng_matrix_path'] = "{}data/cheng_mat.npz".format(data_pfx)
 
 # params['dataset_options'] = [x.split('/')[-1].split('.')[0] for x in params['plot_data_df_path']]
 podata = ["ClusterONE clusters (d = {})".format(x) for x in clusterone_params]
-params['dataset_options'] = ["ClusterONE clusters", "Colored Roarke clusters", "GLS", "Mixed"] + podata
+params['dataset_options'] = ["ClusterONE clusters", "GLS", "Mixed"] + podata
 
 params['gene2go_path'] = data_pfx + 'gene2go'
 params['go_obo_path'] = data_pfx + 'data/go-basic.obo'
@@ -128,6 +129,6 @@ params['legend_font_size'] = 16
 params['hm_font_size'] = 6
 
 params['upload_img_path'] = data_pfx + 'assets/upload.png'
-params['download_img_path'] = data_pfx + 'download.png'
+params['download_img_path'] = data_pfx + 'assets/download.png'
 
 # Some things are best left to depend on the size of the data - opacity changes with number of points plotted!

@@ -90,7 +90,8 @@ style_legend = {
 
 def create_hm_layout(
     scatter_frac_domain=0.10, scatter_frac_range=0.08, geneview_range=0.05, 
-    show_legend=False, clustersep_coords=None
+    show_legend=False, clustersep_coords=None, 
+    xaxis_label=True, yaxis_label=True
 ):
     shape_list = []
     for x in clustersep_coords:
@@ -99,17 +100,19 @@ def create_hm_layout(
             'x0': x, 'x1': x, 'y0': -0.3, 'y1': 0.3, 'yref': 'y2', 
             'line': { 'color': 'white', 'width': 2 }
         })
+    xtext = 'Cell lines' if xaxis_label else ''
+    ytext = 'Genes' if yaxis_label else ''
     hm_layout = {
         'annotations': [{
                 'x': 0.5, 'y': 1.05, 'showarrow': False, 
                 'font': { 'family': 'sans-serif', 'size': 15, 'color': app_config.params['legend_font_color'] }, 
-                'text': 'Cell lines',
+                'text': xtext,
                 'xref': 'paper', 'yref': 'paper'
             }, 
             {
                 'x': 0.0, 'y': 0.5, 'showarrow': False, 
                 'font': { 'family': 'sans-serif', 'size': 15, 'color': app_config.params['legend_font_color'] }, 
-                'text': 'Genes', 
+                'text': ytext, 
                 'textangle': -90, 
                 'xref': 'paper', 'yref': 'paper'
             }
@@ -269,7 +272,8 @@ def create_div_ppi():
                         value='None'
                     )], 
                 style={ 'padding-top': '10px' }
-            )]
+            )], 
+        style={'display': 'none'}
     )
 
 
@@ -451,10 +455,14 @@ def create_div_hm_panel(point_names):
                 id='hm-feat-control', 
                 children=[]
             ), 
-            dcc.Graph(
-                id='main-heatmap', 
-                style={ 'height': '60vh' }, 
-                config={'displaylogo': False, 'displayModeBar': True}
+            dcc.Loading(
+                id="loading-heatmap", 
+                children=[
+                    dcc.Graph(
+                        id='main-heatmap', 
+                        style={ 'height': '60vh' }, 
+                        config={'displaylogo': False, 'displayModeBar': True}
+                    )], type="cube"
             )]
     )
 
@@ -561,9 +569,12 @@ def create_div_cosmetic_panel():
 # =================== Aggregating component divs ===================
 # ==================================================================
 
+# import numpy as np
+# go_termIDs = np.load(app_config.params['gotermIDs_path'])
+# go_termnames = np.load(app_config.params['gotermnames_path'])
 
 def create_div_mainctrl(
-    point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset, full_gene_ensIDs
+    point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs
 ):
 #     download_image = app_config.params['download_img_path']#,
 #     encoded_image = base64.b64encode(open(download_image, 'rb').read())
@@ -588,7 +599,7 @@ def create_div_mainctrl(
                         className='four columns', 
                         children=[
                             dcc.Dropdown(
-                                id='landscape-color', 
+                                id='cell-line-lookup', 
                                 options = [{'value': n, 'label': n} for n in more_colorvars] + [{'value': gn, 'label': ' '.join(gn.split('_'))} for gn in feat_names], 
                                 value=app_config.params['default_color_var'], 
                                 placeholder="Cell line...", 
@@ -596,10 +607,12 @@ def create_div_mainctrl(
                                 style={'white-space':'nowrap', 'text-overflow': 'ellipsis', 
                                        'height': '55px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }
                             )], 
-                        style={'fontSize': 12, 'margin': 5}
+                        style={'fontSize': 12, 'margin': 5}, 
+                        n_clicks_timestamp=0
                     ), 
                     html.Div(
                         className='four columns', 
+                        id='div-tissue-lookup', 
                         children=[
                             dcc.Dropdown(
                                 id='tissue-type-lookup', 
@@ -607,7 +620,8 @@ def create_div_mainctrl(
                                 placeholder="Tissue type...", 
                                 style={'height': '55px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )], 
-                        style={'fontSize': 12, 'margin': 5}
+                        style={'fontSize': 12, 'margin': 5}, 
+                        n_clicks_timestamp=0
                     )], 
                 style={}
             ), 
@@ -615,18 +629,37 @@ def create_div_mainctrl(
                 className='row', 
                 children=[
                     html.Div(
-                        id='div-go-lookup', 
-                        className='eight columns', 
+                        id='load-go-db', 
+                        className='two columns', 
                         children=[
-                            dcc.Dropdown(	
-                                id='goterm-lookup', 	
-                                # TODO comment the following out/in
-                                options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
-                                value = [], 	
-                                placeholder="GO term...", 
-                                style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
-                                multi=True
-                            )], 
+                            html.Button(
+                                id='load-go-button', 
+                                children='Load GO', 
+                                style=style_text_box, 
+                                n_clicks=0, 
+                                n_clicks_timestamp=0
+                            )
+                        ], 
+                        style={'fontSize': 11, 'margin': 5}
+                    ), 
+                    html.Div(
+                        id='div-go-lookup', 
+                        className='six columns', 
+                        children=[
+                            dcc.Loading(
+                                id="loading-goterms", 
+                                children=[
+                                dcc.Dropdown(
+                                    id='goterm-lookup', 
+                                    # TODO comment the following out/in
+                                    # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+                                    value = [], 
+                                    placeholder="GO term...", 
+                                    style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
+                                    multi=True
+                                )], type="default"
+                            )
+                        ], 
                         style={'fontSize': 11, 'margin': 5}
                     ), 
                     html.Div(
@@ -697,15 +730,19 @@ def create_div_mainctrl(
     )
 
 
-def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset, full_gene_ensIDs):
+def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs):
     return html.Div(
         className="seven columns",
         children=[
-            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset, full_gene_ensIDs), 
-            dcc.Graph(
-                id='landscape-plot',
-                config={'displaylogo': False, 'displayModeBar': True}, 
-                style={ 'height': '100vh'}
+            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs), 
+            dcc.Loading(
+                id="loading-landscape", 
+                children=[
+                    dcc.Graph(
+                        id='landscape-plot',
+                        config={'displaylogo': False, 'displayModeBar': True}, 
+                        style={ 'height': '100vh'}
+                    )], type="graph"
             ), 
             create_div_select_dataset(app_config.params['dataset_options']), 
             create_div_ppi(), 
@@ -736,24 +773,13 @@ Main layout.
 import numpy as np
 
 def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, download_asset, full_gene_ensIDs, more_colorvars=[]):
-    go_termIDs = np.load(app_config.params['gotermIDs_path'])
-    go_termnames = np.load(app_config.params['gotermnames_path'])
-    return html.Div(
-        className="container", 
+    browser_div = html.Div(
+        className="browser-div", 
         children=[
-            html.Div(
-                className='row', 
-                children=[
-                    html.H1(
-                        id='title', 
-                        children=app_config.params['title'], 
-                        style=style_text_box
-                    )]
-            ), 
             html.Div(
                 className="row", 
                 children=[
-                    create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, go_termIDs, go_termnames, upload_asset, download_asset, full_gene_ensIDs), 
+                    create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs), 
                     create_div_sidepanels(point_names)
                 ]
             ), 
@@ -763,7 +789,7 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
                 className='row', 
                 children=[ 
                     dcc.Markdown(
-                        """Queries? Requests? Contact [Akshay Balsubramani](abalsubr@stanford.edu). """ 
+                        """Queries? Requests? [Contact](abalsubr@stanford.edu). """ 
                         + """Source [repository](https://github.com/kundajelab/coessentiality-browser)."""
                         )], 
                 style={
@@ -809,3 +835,34 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
             'max-width': 'none'
         }
     )
+    return html.Div(
+        className="container", 
+        children=[
+            html.Div(
+                className='row', 
+                children=[
+                    html.H1(
+                        id='title', 
+                        children=app_config.params['title'], 
+                        style=style_text_box
+                    )]
+            ), 
+            browser_div
+#             html.Div([
+#                 html.Video(src='assets/45sec_browser_video.mp4', autoPlay=True)
+#             ])
+#             dcc.Tabs(id="tabs", children=[
+#                 dcc.Tab(label='Tutorial', children=[
+#                     html.Div([
+#                         html.Video(src='assets/45sec_browser_video.mp4', autoPlay=True)
+#                     ])
+#                 ]),
+#                 dcc.Tab(label='Browser', children=[ browser_div ])
+#             ])
+        ],
+        style={ 
+            'width': '100vw', 
+            'max-width': 'none'
+        }
+    )
+    
