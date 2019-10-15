@@ -6,10 +6,11 @@ params = {}
 params['title'] = "Gene co-essentiality browser"
 
 
-_DEPLOY_LOCALLY = True
+_DEPLOY_LOCALLY = False
 
 if not _DEPLOY_LOCALLY:
-    data_pfx = '/var/www/coessentiality-browser/'
+    data_pfx = '/mnt/lab_data/kundaje/abalsubr/coessentiality/'
+    # data_pfx = '/srv/www_coessentiality/coessentiality-browser/'
 else:
     data_pfx = '/Users/akshay/github/coessentiality-browser/'
 
