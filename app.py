@@ -93,7 +93,7 @@ class CustomDash(dash.Dash):
             </div>
         </div>
         """
-        scr = kwargs['scripts'] + '<link rel="stylesheet" href="assets/load_screen.css">\n<link rel="stylesheet" href="assets/master_styles.css">'
+        scr = kwargs['scripts'] + '<link rel="stylesheet" href="assets/load_screen.css">\n<link rel="stylesheet" href="assets/master_styles.css"><link rel="stylesheet" href="assets/loading.js">'
         return '''
         <!DOCTYPE html>
         <html>
