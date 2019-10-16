@@ -233,9 +233,14 @@ def hm_row_scatter(scatter_fig, hm_point_names, view_cocluster, row_clustIDs=Non
 
 
 def hm_col_plot(
-    fit_data, feat_colordict, 
-    reordered_groups=None, reordered_featnames=None, col_clustIDs=None, 
-    geneview_mode='Mutation', geneview_gene=None, geneview_data=None
+    fit_data, 
+    feat_colordict, 
+    reordered_groups=None, 
+    reordered_featnames=None, 
+    col_clustIDs=None, 
+    geneview_mode='Mutation', 
+    geneview_gene=None, 
+    geneview_data=None
 ):
     if reordered_featnames is None:
         reordered_featnames = feat_colordict.keys()
@@ -243,11 +248,11 @@ def hm_col_plot(
         reordered_groups = reordered_featnames
     transform_col_order = np.arange(fit_data.shape[1])
     # Sort genes by color within each cluster, editing ordered_cols appropriately.
-    for cid in np.unique(col_clustIDs):
-        ndcesc = np.where(col_clustIDs == cid)[0]
-        clust_colors = reordered_groups[ndcesc]
-        new_order_perclust = np.argsort(clust_colors)
-        transform_col_order[ndcesc] = transform_col_order[ndcesc][new_order_perclust]
+#     for cid in np.unique(col_clustIDs):
+#         ndcesc = np.where(col_clustIDs == cid)[0]
+#         clust_colors = reordered_groups[ndcesc]
+#         new_order_perclust = np.argsort(clust_colors)
+#         transform_col_order[ndcesc] = transform_col_order[ndcesc][new_order_perclust]
     fit_data = fit_data[:, transform_col_order]
     reordered_groups = reordered_groups[transform_col_order]
     reordered_featnames = reordered_featnames[transform_col_order]
@@ -384,7 +389,9 @@ def display_heatmap_cb(
     view_cocluster, 
     feat_colordict={}, 
     feat_group_names=None, 
-    geneview_mode='Mutation', geneview_gene=None, geneview_data=None, 
+    geneview_mode='Mutation', 
+    geneview_gene=None, 
+    geneview_data=None, 
     scatter_frac_domain=0.13, 
     scatter_frac_range=0.08, 
     show_legend=False
@@ -397,6 +404,8 @@ def display_heatmap_cb(
     absc_labels = feat_names[feat_ndces]
     absc_group_labels = feat_group_names[feat_ndces]
     fit_data = fit_data[:, feat_ndces]
+    
+    #print(fit_data, absc_labels)
     # Quantile normalize the data if necessary to better detect patterns.
     if app_config.params['hm_qnorm_plot']:
         qtiles = np.zeros_like(fit_data)
@@ -414,6 +423,8 @@ def display_heatmap_cb(
         ordered_cols = np.arange(fit_data.shape[1])
     fit_data = fit_data[:, ordered_cols]
     absc_labels = absc_labels[ordered_cols]
+    print('beep', fit_data, absc_labels)
+    
     if absc_group_labels is not None:
         absc_group_labels = absc_group_labels[ordered_cols]
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
@@ -421,11 +432,16 @@ def display_heatmap_cb(
         scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
     )
     col_scat_traces, fit_data = hm_col_plot(
-        fit_data, feat_colordict, 
-        reordered_groups=absc_group_labels, reordered_featnames=absc_labels, 
-        geneview_mode=geneview_mode, geneview_gene=geneview_gene, geneview_data=geneview_data, 
+        fit_data, 
+        feat_colordict, 
+        reordered_groups=absc_group_labels, 
+        reordered_featnames=absc_labels, 
+        geneview_mode=geneview_mode, 
+        geneview_gene=geneview_gene, 
+        geneview_data=geneview_data, 
         col_clustIDs=col_clustIDs
     )
+    print('beep2', fit_data, absc_labels)
     pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
         'z': fit_data, 
@@ -462,8 +478,11 @@ def display_heatmap_cb(
     return {
         'data': [ hm_trace ] + row_scat_traces + col_scat_traces, 
         'layout': building_block_divs.create_hm_layout(
-            scatter_frac_domain=scatter_frac_domain, scatter_frac_range=scatter_frac_range, 
-            show_legend=show_legend, clustersep_coords=clustersep_line_coords, yaxis_label=(len(hm_point_names) <= 30)
+            scatter_frac_domain=scatter_frac_domain, 
+            scatter_frac_range=scatter_frac_range, 
+            show_legend=show_legend, 
+            clustersep_coords=clustersep_line_coords, 
+            yaxis_label=(len(hm_point_names) <= 30)
         )
     }
 #"""

@@ -560,7 +560,7 @@ def create_div_cosmetic_panel():
                 style={'padding-top': '0px'}
             )
         ], 
-        style=style_outer_dialog_box
+        style={'display': 'none'} #style_outer_dialog_box
     )
 
 
@@ -762,7 +762,8 @@ def create_div_sidepanels(point_names):
             create_div_hm_panel(point_names), 
             div_go_panel
             # div_reviz_scatter
-        ], style=style_invis_dialog_box
+        ], 
+        style=style_invis_dialog_box
     )
 
 

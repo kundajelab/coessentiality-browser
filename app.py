@@ -10,17 +10,13 @@ import numpy as np, scipy as sp, pandas as pd, dash
 from dash.dependencies import Input, Output, State
 from dash.exceptions import PreventUpdate
 import app_config, app_lib, building_block_divs
-# import matplotlib, matplotlib.pyplot as plt, matplotlib.colors as colors
-"""
-For more on jobs that take a while: set up workers https://github.com/WileyIntelligentSolutions/wiley-boilerplate-dash-app
-"""
+
 
 
 
 # =========================================================
 # ================== Initialize Dash app ==================
 # =========================================================
-
 
 # Load gene embedded coordinates.
 plot_data_df = pd.read_csv(app_config.params['plot_data_df_path'][0], sep="\t", index_col=False)
@@ -394,7 +390,7 @@ def update_panel_settings_store(
     )
 
 
-# Handle lookups of GO terms and return a gene set.	
+# Handle lookups of GO terms and return a gene set.
 @app.callback(
     Output('stored-goterm-lookup-results', 'data'), 
     [Input('goterm-lookup', 'value')]
@@ -406,6 +402,7 @@ def update_goterm_lookup(
     if len(tmpl) == 0:
         return ""
     sel_genes = np.concatenate(tmpl)
+    print(goterms_req, sel_genes)
     return list(np.unique(sel_genes))
 
 
@@ -464,14 +461,14 @@ def update_numselected_counter(
 # Update dialogs.
 @app.callback(
     [Output('goterm-lookup', 'options'), 
-     Output('load-go-button', 'children')], 
+     Output('load-go-db', 'style')], 
     [Input('load-go-button', 'n_clicks')]
 )
 def update_go_db(
     button_clicks
 ):
     if (button_clicks > 0):
-        return ([{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 'Search GO')
+        return ([{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], {'display': 'none'})#'Search GO')
     else:
         raise PreventUpdate
 
