@@ -217,7 +217,7 @@ def create_div_select_dataset(dataset_options):
                                 value=dataset_options[0]
                             )]
                     )], 
-                style=style_outer_dialog_box
+                style={ 'display': 'none' }#style_outer_dialog_box
             ), 
             html.Div(
                 className='three columns', 
@@ -656,7 +656,8 @@ def create_div_mainctrl(
                                     value = [], 
                                     placeholder="GO term...", 
                                     style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
-                                    multi=True
+                                    multi=True, 
+                                    disabled=True
                                 )], type="default"
                             )
                         ], 
@@ -760,7 +761,10 @@ def create_div_sidepanels(point_names):
         className='five columns', 
         children=[
             create_div_hm_panel(point_names), 
-            div_go_panel
+            dcc.Loading(
+                id="loading-gopanel", 
+                children=[div_go_panel], type="graph"
+            )
             # div_reviz_scatter
         ], 
         style=style_invis_dialog_box
@@ -790,9 +794,9 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
                 className='row', 
                 children=[ 
                     dcc.Markdown(
-                        """Queries? Requests? [Contact](abalsubr@stanford.edu). """ 
-                        + """Source [repository](https://github.com/kundajelab/coessentiality-browser)."""
-                        )], 
+                        """Source [repository](https://github.com/kundajelab/coessentiality-browser). """
+                         + """Queries? [Contact](abalsubr@stanford.edu). """
+                    )], 
                 style={
                     'textAlign': 'center', 
                     'color': app_config.params['font_color'], 

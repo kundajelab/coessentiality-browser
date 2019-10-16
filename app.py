@@ -48,7 +48,76 @@ additional_colorvars = []# ['roarke_clusters']
 
 raw_data = data_ess.values
 
-app = dash.Dash(__name__)    #, external_stylesheets=external_stylesheets)
+
+# ====================================================
+# ===================== Main app =====================
+# ====================================================
+
+meta_tags=[
+    # A description of the app, used by e.g.
+    # search engines when displaying search results.
+    {
+        'name': 'description',
+        'content': 'My description'
+    },
+    # A tag that tells Internet Explorer (IE)
+    # to use the latest renderer version available
+    # to that browser (e.g. Edge)
+    {
+        'http-equiv': 'X-UA-Compatible',
+        'content': 'IE=edge'
+    },
+    # A tag that tells the browser not to scale
+    # desktop widths to fit mobile screens.
+    # Sets the width of the viewport (browser)
+    # to the width of the device, and the zoom level
+    # (initial scale) to 1.
+    #
+    # Necessary for "true" mobile support.
+    {
+      'name': 'viewport',
+      'content': 'width=device-width, initial-scale=1.0'
+    }
+]
+
+
+class CustomDash(dash.Dash):
+    def interpolate_index(self, **kwargs):
+        # Inspect the arguments by printing them
+        print(kwargs['app_entry'])
+        print(kwargs['scripts'])
+        app_ntr = """
+        <div id="react-entry-point">
+            <div class="_dash-loading">
+                <div style="color:#ff0000">Loading (may take up to 30 seconds)...</div>
+            </div>
+        </div>
+        """
+        scr = kwargs['scripts'] + '<link rel="stylesheet" href="/assets/load_screen.css">\n<link rel="stylesheet" href="/assets/master_styles.css">'
+        return '''
+        <!DOCTYPE html>
+        <html>
+            <head>
+                <title>Co-essentiality browser</title>
+            </head>
+            <body>
+                <div id="custom-header">\n</div>
+                {app_entry}
+                {config}
+                {scripts}
+                {renderer}
+                <div id="custom-footer">\n</div>
+            </body>
+        </html>
+        '''.format(
+            app_entry=app_ntr,
+            config=kwargs['config'],
+            scripts=scr, #kwargs['scripts'],
+            renderer=kwargs['renderer'])
+
+
+app = CustomDash(__name__, meta_tags=meta_tags)    #, external_stylesheets=external_stylesheets)
+
 if not app_config._DEPLOY_LOCALLY:
     app.config.update({'routes_pathname_prefix':'/coessentiality/', 'requests_pathname_prefix':'/coessentiality/'})
 
@@ -68,7 +137,6 @@ app.layout = building_block_divs.create_div_mainapp(
 # =====================================================
 # ===================== Callbacks =====================
 # =====================================================
-
 
 # All the callback logic 
 
@@ -402,8 +470,7 @@ def update_goterm_lookup(
     if len(tmpl) == 0:
         return ""
     sel_genes = np.concatenate(tmpl)
-    print(goterms_req, sel_genes)
-    return list(np.unique(sel_genes))
+    return list(np.unique(sel_genes)) 
 
 
 @app.callback(
@@ -461,14 +528,19 @@ def update_numselected_counter(
 # Update dialogs.
 @app.callback(
     [Output('goterm-lookup', 'options'), 
-     Output('load-go-db', 'style')], 
+     Output('load-go-db', 'style'), 
+     Output('goterm-lookup', 'disabled')], 
     [Input('load-go-button', 'n_clicks')]
 )
 def update_go_db(
     button_clicks
 ):
     if (button_clicks > 0):
-        return ([{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], {'display': 'none'})#'Search GO')
+        return (
+            [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+            {'display': 'none'}, 
+            False
+        )#'Search GO')
     else:
         raise PreventUpdate
 

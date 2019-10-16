@@ -6,7 +6,7 @@ params = {}
 params['title'] = "Co-essentiality browser"
 
 
-_DEPLOY_LOCALLY = False
+_DEPLOY_LOCALLY = True
 
 if not _DEPLOY_LOCALLY:
     data_pfx = '/mnt/lab_data/kundaje/abalsubr/coessentiality/'

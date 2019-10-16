@@ -405,7 +405,6 @@ def display_heatmap_cb(
     absc_group_labels = feat_group_names[feat_ndces]
     fit_data = fit_data[:, feat_ndces]
     
-    #print(fit_data, absc_labels)
     # Quantile normalize the data if necessary to better detect patterns.
     if app_config.params['hm_qnorm_plot']:
         qtiles = np.zeros_like(fit_data)
@@ -423,7 +422,6 @@ def display_heatmap_cb(
         ordered_cols = np.arange(fit_data.shape[1])
     fit_data = fit_data[:, ordered_cols]
     absc_labels = absc_labels[ordered_cols]
-    print('beep', fit_data, absc_labels)
     
     if absc_group_labels is not None:
         absc_group_labels = absc_group_labels[ordered_cols]
@@ -441,7 +439,6 @@ def display_heatmap_cb(
         geneview_data=geneview_data, 
         col_clustIDs=col_clustIDs
     )
-    print('beep2', fit_data, absc_labels)
     pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
         'z': fit_data, 
@@ -482,7 +479,7 @@ def display_heatmap_cb(
             scatter_frac_range=scatter_frac_range, 
             show_legend=show_legend, 
             clustersep_coords=clustersep_line_coords, 
-            yaxis_label=(len(hm_point_names) <= 30)
+            yaxis_label=(len(hm_point_names) > 30)
         )
     }
 #"""
@@ -604,17 +601,32 @@ def generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list, featID
 
 
 
-
 # Given a gene set, returns GO+other database enrichment results using gProfiler.
 def get_goenrichment_from_genes(gene_list):
     return goterm_caller.gprofiler(gene_list)
 
 
+with open("go2gene_dict.txt", "r") as f:
+    w2 = f.read().strip()
+go2gene_dict = json.loads(w2)
+
 # Given a GO term query, returns a combined list of genes under that ID.
 def get_genes_from_goterm(goterm_re_str, mode='gaf'):
     if len(goterm_re_str) == 0:
         return []
-    go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
+    if mode == 'regex':      # Given a regex, return using GO's association files; else given GO term ID(s).
+        go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
+        srchhelp = goterm_caller.GoSearch(app_config.params['go_obo_path'], go2items=go2geneids_human)
+        gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
+    else:
+        gos = [goterm_re_str]
+    return go2gene_dict[gos[0]] if gos[0] in go2gene_dict else []
+
+
+"""
+def get_genes_from_goterm(goterm_re_str, mode='gaf'):
+    if len(goterm_re_str) == 0:
+        return []
     srchhelp = goterm_caller.GoSearch(app_config.params['go_obo_path'], go2items=go2geneids_human)
     if mode == 'regex':      # Given a regex, return using GO's association files; else given GO term ID(s).
         gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
@@ -630,20 +642,23 @@ def get_genes_from_goterm(goterm_re_str, mode='gaf'):
 
 
 # Given a list of GO term IDs, returns a combined list of genes under that ID using gProfiler.
-# def get_genes_from_goterm(goterms_req):
-#     tmpl = []
-#     for termID in goterms_req:
-#         gp = GProfiler("MyToolName/0.2")
-#         go_results = np.array(gp.gconvert(termID, target="GO"))
-#         tmpl.append(np.unique([x[4] for x in go_results]))
-#     if len(tmpl) == 0:
-#         return ""
-#     sel_genes = np.concatenate(tmpl)
-#     sieved_genes = []
-#     for g in sel_genes:
-#         if g is not None:
-#             sieved_genes.append(g)
-#     return list(np.unique(sieved_genes))
+def get_genes_from_goterm(goterms_req):
+    tmpl = []
+    for termID in goterms_req:
+        gp = GProfiler("MyToolName/0.2")
+        go_results = np.array(gp.gconvert(termID, target="GO"))
+        tmpl.append(np.unique([x[4] for x in go_results]))
+    if len(tmpl) == 0:
+        return ""
+    sel_genes = np.concatenate(tmpl)
+    sieved_genes = []
+    for g in sel_genes:
+        if g is not None:
+            sieved_genes.append(g)
+    return list(np.unique(sieved_genes))
+"""
+
+
 """
 Update GO enrichment panel.
 https://biit.cs.ut.ee/gprofiler/page/apis. or 
@@ -680,10 +695,12 @@ def display_goenrich_panel_func(selected_genes, topk=20):
         'orientation': 90,
         'autosize': True,
         'xaxis': {
+            'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
             'title': {'text': '-log(p)', 'font': building_block_divs.legend_font_macro }, 
             'tickfont': building_block_divs.legend_font_macro 
         }, 
         'yaxis': {
+            'showgrid': False, 'showline': False, 'zeroline': False, 'visible': False, 
             'showticklabels': False,
             'automargin': True, 
             'ticks': 'outside', 
