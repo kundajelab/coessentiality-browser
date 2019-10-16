@@ -199,15 +199,15 @@ def create_div_select_dataset(dataset_options):
             html.Div(
                 className='eight columns', 
                 children=[
-                    html.Div(
-                        className='four columns', 
-                        children=[
-                            html.P(
-                                "Browse layout: ", 
-                                style=style_text_box
-                            )], 
-                        style={'padding-top': '10px'}
-                    ), 
+                    # html.Div(
+                    #     className='four columns', 
+                    #     children=[
+                    #         html.P(
+                    #             "Browse layout: ", 
+                    #             style=style_text_box
+                    #         )], 
+                    #     style={'padding-top': '10px'}
+                    # ), 
                     html.Div(
                         className='eight columns', 
                         children=[
