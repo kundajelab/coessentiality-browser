@@ -606,7 +606,7 @@ def get_goenrichment_from_genes(gene_list):
     return goterm_caller.gprofiler(gene_list)
 
 
-with open("go2gene_dict.txt", "r") as f:
+with open(app_config.data_pfx + "go2gene_dict.txt", "r") as f:
     w2 = f.read().strip()
 go2gene_dict = json.loads(w2)
 
