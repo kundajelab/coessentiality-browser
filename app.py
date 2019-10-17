@@ -80,43 +80,7 @@ meta_tags=[
     }
 ]
 
-
-class CustomDash(dash.Dash):
-    def interpolate_index(self, **kwargs):
-        # Inspect the arguments by printing them
-        print(kwargs['app_entry'])
-        print(kwargs['scripts'])
-        app_ntr = """
-        <div id="react-entry-point">
-            <div class="_dash-loading">
-                <div style="color:#ff0000">Loading (may take up to 30 seconds)...</div>
-            </div>
-        </div>
-        """
-        scr = kwargs['scripts'] + '<link rel="stylesheet" href="assets/load_screen.css">\n<link rel="stylesheet" href="assets/master_styles.css"><link rel="stylesheet" href="assets/loading.js">'
-        return '''
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <title>Co-essentiality browser</title>
-            </head>
-            <body>
-                <div id="custom-header">\n</div>
-                {app_entry}
-                {config}
-                {scripts}
-                {renderer}
-                <div id="custom-footer">\n</div>
-            </body>
-        </html>
-        '''.format(
-            app_entry=app_ntr,
-            config=kwargs['config'],
-            scripts=scr, #kwargs['scripts'],
-            renderer=kwargs['renderer'])
-
-
-app = CustomDash(__name__, meta_tags=meta_tags)    #, external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, meta_tags=meta_tags)    #, external_stylesheets=external_stylesheets)
 
 if not app_config._DEPLOY_LOCALLY:
     app.config.update({'routes_pathname_prefix':'/coessentiality/', 'requests_pathname_prefix':'/coessentiality/'})
@@ -131,8 +95,7 @@ app.layout = building_block_divs.create_div_mainapp(
     full_gene_ensIDs, 
     more_colorvars=additional_colorvars
 )
-
-
+app.title = 'Co-essentiality browser'
 
 # =====================================================
 # ===================== Callbacks =====================
