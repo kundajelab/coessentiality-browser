@@ -136,12 +136,6 @@ def make_selected(stored_dict):
     return toret
 
 
-def choose_most_recent_store(times_list, stores_list):
-    # times_list.append(0)
-    most_recent_time_index = np.argmax(times_list)
-    return stores_list[most_recent_time_index]
-
-
 """
 Update the main graph panel with selected points annotated, using the given dataset.
 """
@@ -299,28 +293,24 @@ def update_subset_options(stored_setlist):
     [Input('stored-panel-settings', 'data'), 
      Input('stored-landscape-selected', 'data'), 
      Input('stored-pointsets', 'data'), 
-     Input('stored-heatmap-selected', 'data'), 
-     Input('stored-goterm-lookup-results', 'data')]
+     Input('stored-heatmap-selected', 'data')]
 )
 def display_test(
     panel_data, 
     sel_data, 
     data_store, 
-    hm_store, 
-    goterms_sel
+    hm_store
 ):
     see_sel = "0" if sel_data is None else str(len(sel_data))
     see_hm = "0" if hm_store is None else str(len(hm_store))
-    see_gn = str(len(goterms_sel))
     toret = ""
     for setname in data_store:
         toret = toret + "{}\t{}\n".format(str(len(data_store[setname])), setname)
     if panel_data['debug_panel']:
-        return "***STORED SELECTED DATA***\n{}\n***Landscape SELECTED DATA***\n{}\n***Heatmap SELECTED DATA***\n{}\n***GO term lookup:\t{}".format(
+        return "***STORED SELECTED DATA***\n{}\n***Landscape SELECTED DATA***\n{}\n***Heatmap SELECTED DATA***\n{}".format(
             toret, 
             see_sel, 
-            see_hm, 
-            see_gn
+            see_hm
         )
     else:
         return ""
@@ -353,20 +343,20 @@ def update_download_layout_link(sourcedata_select):
     return "data:text/csv;charset=utf-8," + csvString
 
 
-@app.callback(
-    Output('display-bg-marker-size-factor', 'children'), 
-    [Input('slider-bg-marker-size-factor', 'value')]
-)
-def update_bgmarker_size(bg_size):
-    return 'Unannotated marker size: {}'.format(bg_size)
+# @app.callback(
+#     Output('display-bg-marker-size-factor', 'children'), 
+#     [Input('slider-bg-marker-size-factor', 'value')]
+# )
+# def update_bgmarker_size(bg_size):
+#     return 'Unannotated marker size: {}'.format(bg_size)
 
 
-@app.callback(
-    Output('display-marker-size-factor', 'children'), 
-    [Input('slider-marker-size-factor', 'value')]
-)
-def update_marker_size(marker_size):
-    return 'Marker size: {}'.format(marker_size)
+# @app.callback(
+#     Output('display-marker-size-factor', 'children'), 
+#     [Input('slider-marker-size-factor', 'value')]
+# )
+# def update_marker_size(marker_size):
+#     return 'Marker size: {}'.format(marker_size)
 
 
 @app.callback(
@@ -393,34 +383,6 @@ def update_selected_landscape_data(subset_store):
     return make_selected(subset_store['_current_selected_data'])
 
 
-# Updates the stored dictionary of boolean panel config variables.
-@app.callback(
-    Output('stored-panel-settings', 'data'), 
-    [Input('toggle-debug-panels', 'value')]
-)
-def update_panel_settings_store(debug_options):
-    return {
-        'debug_panel': ('debug-panel' in debug_options)
-    }
-
-
-# Updates the stored dictionary of boolean panel config variables.
-@app.callback(
-    Output('stored-recently-highlighted', 'data'), 
-    [Input('stored-landscape-selected', 'modified_timestamp'), 
-     Input('stored-heatmap-selected', 'modified_timestamp')], 
-    [State('stored-landscape-selected', 'data'), 
-     State('stored-heatmap-selected', 'data')]
-)
-def update_panel_settings_store(
-    time_sel_landscape, time_sel_heatmap, sel_landscape, sel_heatmap
-):
-    return choose_most_recent_store(
-        [int(time_sel_landscape), int(time_sel_heatmap)], 
-        [sel_landscape, sel_heatmap]
-    )
-
-
 # Handle lookups of GO terms and return a gene set.
 @app.callback(
     Output('stored-goterm-lookup-results', 'data'), 
@@ -433,7 +395,42 @@ def update_goterm_lookup(
     if len(tmpl) == 0:
         return ""
     sel_genes = np.concatenate(tmpl)
-    return list(np.unique(sel_genes)) 
+    return list(np.unique(sel_genes))
+
+
+# Updates the stored dictionary of boolean panel config variables.
+@app.callback(
+    [Output('stored-recently-highlighted', 'data'), 
+     Output('goterm-lookup', 'value')], 
+    [Input('stored-landscape-selected', 'modified_timestamp'), 
+     Input('stored-heatmap-selected', 'modified_timestamp'), 
+     Input('stored-goterm-lookup-results', 'modified_timestamp')], 
+    [State('stored-landscape-selected', 'data'), 
+     State('stored-heatmap-selected', 'data'), 
+     State('stored-goterm-lookup-results', 'data'), 
+     State('goterm-lookup', 'value')]
+)
+def update_hlight_data_store(
+    time_sel_landscape, 
+    time_sel_heatmap, 
+    time_sel_goterm, 
+    sel_landscape, 
+    sel_heatmap, 
+    sel_goterm, 
+    goterm_lookup
+):
+    times_list = [int(time_sel_landscape), int(time_sel_heatmap), int(time_sel_goterm)]
+    stores_list = [sel_landscape, sel_heatmap, { x: {} for x in sel_goterm }]
+    times_list.append(0)
+    most_recent_time_index = np.argmax(times_list)
+    if most_recent_time_index < len(times_list):
+        dt = []
+        if most_recent_time_index == 2:
+            print(stores_list[2])
+            dt = goterm_lookup
+        return stores_list[most_recent_time_index], dt
+    else:
+        return {}, []
 
 
 @app.callback(
@@ -448,32 +445,44 @@ def update_geneview_options(geneview_dataset):
         gene_names = np.intersect1d(expr_data[:,0], point_names)
     return [ {'value': gn, 'label': gn} for gn in gene_names ]
 
+"""
+@app.callback(
+    [Output('goterm-lookup', 'options'), 
+     Output('load-go-db', 'style'), 
+     Output('goterm-lookup', 'disabled')], 
+    [Input('load-go-button', 'n_clicks')], 
+    [State('goterm-lookup', 'options')]
+)
+def update_go_db(
+    button_clicks, 
+    options
+):
+    if (button_clicks == 0) or ((options is not None) and len(options) > 0):
+        raise PreventUpdate
+    else:
+        return (
+            [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+            {'display': 'none'}, 
+            False
+        )#'Search GO')
+"""
+# def update_goterm_options(search_val, val, options):
+#     return [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ]
+    # Make sure that the set values are in the option list, else they will disappear from the shown select list, but still part of the `value`.
+    # return [ o for o in options if search_val in o["label"] or o["value"] in (val or []) ]
+
 
 # @app.callback(
-#     Output('goterm-lookup', 'options'), 
-#     [Input('goterm-lookup', 'search_value')], 
-#     [State('goterm-lookup', 'value'), 
-#      State('goterm-lookup', 'options')]
+#     Output('hm-future-panels', 'children'), 
+#     [Input('toggle-future-panels', 'value')]
 # )
-# def update_goterm_options(search_val, val, options):
-#     if not search_val or ((options is not None) and len(options) > 0):
-#         raise PreventUpdate
-#     return [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ]
-#     # Make sure that the set values are in the option list, else they will disappear from the shown select list, but still part of the `value`.
-#     # return [ o for o in options if search_val in o["label"] or o["value"] in (val or []) ]
-
-
-@app.callback(
-    Output('hm-future-panels', 'children'), 
-    [Input('toggle-future-panels', 'value')]
-)
-def update_future_panels(panel_list):
-    graphs = []
-    cell_cluster_list = np.array([])  # List of cluster IDs for resp. cells
-    cell_color_list = np.array([])
-    if 'diff_features' in panel_list:
-        graphs.append(building_block_divs.create_div_diff_features())
-    return graphs
+# def update_future_panels(panel_list):
+#     graphs = []
+#     cell_cluster_list = np.array([])  # List of cluster IDs for resp. cells
+#     cell_color_list = np.array([])
+#     if 'diff_features' in panel_list:
+#         graphs.append(building_block_divs.create_div_diff_features())
+#     return graphs
 
 
 # Update dialogs.
@@ -486,26 +495,6 @@ def update_numselected_counter(
 ):
     num_selected = len(subset_store['_current_selected_data'])
     return '# selected: {}'.format(num_selected)
-
-
-# Update dialogs.
-@app.callback(
-    [Output('goterm-lookup', 'options'), 
-     Output('load-go-db', 'style'), 
-     Output('goterm-lookup', 'disabled')], 
-    [Input('load-go-button', 'n_clicks')]
-)
-def update_go_db(
-    button_clicks
-):
-    if (button_clicks > 0):
-        return (
-            [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
-            {'display': 'none'}, 
-            False
-        )#'Search GO')
-    else:
-        raise PreventUpdate
 
 
 # Link currently selected data to output of gene set selector, so it can be picked too.
@@ -531,8 +520,7 @@ Contains control logic for subset selection and storage.
     Output('stored-pointsets', 'data'), 
     [Input('list-pointsets', 'value'), 
      Input('upload-pointsets', 'contents'), 
-     Input('stored-recently-highlighted', 'data'), 
-     Input('stored-goterm-lookup-results', 'data')],
+     Input('stored-recently-highlighted', 'data')],
     [State('upload-pointsets', 'filename'), 
      State('pointset-name', 'value'), 
      State('stored-pointsets', 'data')]
@@ -541,21 +529,17 @@ def update_subset_storage(
     selected_subsetIDs, 
     file_contents, 
     selected_hlight_data, 
-    stored_goterm_lookup, 
     file_paths, 
     newset_name, 
     subset_store
 ):
     new_sets_dict = {} if subset_store is None else subset_store
-    if stored_goterm_lookup is not None and len(stored_goterm_lookup) > 0:
-        new_sets_dict['_current_selected_data'] = { x: {} for x in stored_goterm_lookup }
-    else:
-        if selected_subsetIDs is not None and len(selected_subsetIDs) > 0:    # Update _current_selected_data by loading subsets.
-            new_sets_dict['_current_selected_data'] = union_of_selections(selected_subsetIDs, subset_store)
-        else:   # Update _current_selected_data from the main plot / heatmap.
-            # Logic to display points as selected from an auxplot (most recently used for selection). 
-            # A small subset selected_heatmap_points should not change selected_landscape_points, but should change _current_selected_data
-            new_sets_dict['_current_selected_data'] = selected_hlight_data
+    if selected_subsetIDs is not None and len(selected_subsetIDs) > 0:    # Update _current_selected_data by loading subsets.
+        new_sets_dict['_current_selected_data'] = union_of_selections(selected_subsetIDs, subset_store)
+    else:   # Update _current_selected_data from the main plot / heatmap.
+        # Logic to display points as selected from an auxplot (most recently used for selection). 
+        # A small subset selected_heatmap_points should not change selected_landscape_points, but should change _current_selected_data
+        new_sets_dict['_current_selected_data'] = selected_hlight_data
     # Store current selected data as a new set if in that mode.
     if ((newset_name is not None) and 
         (newset_name not in new_sets_dict) and 

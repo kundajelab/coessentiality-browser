@@ -610,7 +610,7 @@ with open(app_config.data_pfx + "go2gene_dict.txt", "r") as f:
     w2 = f.read().strip()
 go2gene_dict = json.loads(w2)
 
-# Given a GO term query, returns a combined list of genes under that ID.
+# Given a GO term query, returns a combined list of genes uxnder that ID.
 def get_genes_from_goterm(goterm_re_str, mode='gaf'):
     if len(goterm_re_str) == 0:
         return []
@@ -624,6 +624,7 @@ def get_genes_from_goterm(goterm_re_str, mode='gaf'):
 
 
 """
+go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
 def get_genes_from_goterm(goterm_re_str, mode='gaf'):
     if len(goterm_re_str) == 0:
         return []
@@ -638,7 +639,6 @@ def get_genes_from_goterm(goterm_re_str, mode='gaf'):
         if geneID is not None:
             toret.append(geneID.Symbol)
     return toret
-
 
 
 # Given a list of GO term IDs, returns a combined list of genes under that ID using gProfiler.

@@ -526,22 +526,6 @@ def create_div_cosmetic_panel():
                 className='row', 
                 children=[
                     dcc.Checklist(
-                        id='toggle-future-panels', 
-                        options=[
-                            {'label': 'Diff. feature sets', 'value': 'diff_features'}
-                        ],
-                        value=[], 
-                        style={
-                            'textAlign': 'left', 
-                            'width': '80%', 
-                            'color': app_config.params['font_color']
-                        }, 
-                        labelStyle={
-                            'display': 'inline-block', 
-                            'margin-right': '5px'
-                        }
-                    ), 
-                    dcc.Checklist(
                         id='toggle-debug-panels', 
                         options=[
                             {'label': 'Debug panel', 'value': 'debug-panel'}
@@ -569,9 +553,9 @@ def create_div_cosmetic_panel():
 # =================== Aggregating component divs ===================
 # ==================================================================
 
-# import numpy as np
-# go_termIDs = np.load(app_config.params['gotermIDs_path'])
-# go_termnames = np.load(app_config.params['gotermnames_path'])
+import numpy as np
+go_termIDs = np.load(app_config.params['gotermIDs_path'])
+go_termnames = np.load(app_config.params['gotermnames_path'])
 
 def create_div_mainctrl(
     point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs
@@ -628,41 +612,6 @@ def create_div_mainctrl(
             html.Div(
                 className='row', 
                 children=[
-                    html.Div(
-                        id='load-go-db', 
-                        className='two columns', 
-                        children=[
-                            html.Button(
-                                id='load-go-button', 
-                                children='Load GO', 
-                                style=style_text_box, 
-                                n_clicks=0, 
-                                n_clicks_timestamp=0
-                            )
-                        ], 
-                        style={'fontSize': 11, 'margin': 5}
-                    ), 
-                    html.Div(
-                        id='div-go-lookup', 
-                        className='six columns', 
-                        children=[
-                            dcc.Loading(
-                                id="loading-goterms", 
-                                children=[
-                                dcc.Dropdown(
-                                    id='goterm-lookup', 
-                                    # TODO comment the following out/in
-                                    # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
-                                    value = [], 
-                                    placeholder="GO term...", 
-                                    style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center' }, 
-                                    multi=True, 
-                                    disabled=True
-                                )], type="default"
-                            )
-                        ], 
-                        style={'fontSize': 11, 'margin': 5}
-                    ), 
                     html.Div(
                         className='four columns', 
                         children=[
@@ -725,6 +674,42 @@ def create_div_mainctrl(
                                             )]
                                     )]
                             )], style={ 'border': 'thin lightgrey solid',  'margin': 5 }
+                    ), 
+                    html.Div(
+                        id='load-go-db', 
+                        className='two columns', 
+                        children=[
+                            html.Button(
+                                id='load-go-button', 
+                                children='Load GO', 
+                                style=style_text_box, 
+                                n_clicks=0, 
+                                n_clicks_timestamp=0
+                            )
+                        ], 
+                        style={'fontSize': 11, 'margin': 5, 'display': 'none'}
+                    ), 
+                    html.Div(
+                        id='div-go-lookup', 
+                        className='six columns', 
+                        children=[
+                            dcc.Loading(
+                                id="loading-goterms", 
+                                children=[
+                                dcc.Dropdown(
+                                    id='goterm-lookup', 
+                                    # TODO comment the following out/in
+                                    # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+                                    value = [], 
+                                    placeholder="GO term...", 
+                                    style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center', 'display': 'none'}, 
+                                    multi=True, 
+                                    searchable=False, 
+                                    disabled=False
+                                )], type="default"
+                            )
+                        ], 
+                        style={'fontSize': 11, 'margin': 5}
                     )], 
                 style={}
             )]
@@ -747,11 +732,7 @@ def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types,
             ), 
             create_div_select_dataset(app_config.params['dataset_options']), 
             create_div_ppi(), 
-            div_landscape_select, 
-            html.Div(
-                id='hm-future-panels', 
-                children=[]
-            )
+            div_landscape_select
         ]
     )
 

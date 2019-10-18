@@ -4,5 +4,8 @@
 }
 
 ._dash-loading::after {
-  content: ' (may take up to 30 seconds)'
+  content: ' (may take up to 30 seconds)';
+  background-image: 'Fig1.pdf';
+  background-position: center center;
+  background-repeat: no-repeat
 }
