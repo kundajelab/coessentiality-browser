@@ -50,7 +50,7 @@ params['gotermIDs_path'] = data_pfx + 'gotermIDs.npy'
 
 params['bg_color'] = '#000000'
 
-params['hm_colorvar_name'] = 'More ess-\nential'
+params['hm_colorvar_name'] = 'Less essential'
 params['hm_diverging'] = True
 params['default_color_var'] = 'Colors'
 
