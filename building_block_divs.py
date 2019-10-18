@@ -225,13 +225,13 @@ def create_div_select_dataset(dataset_options):
                     html.A(
                         html.Button(
                             id='download-layout-button', 
-                            children='Get CSV', 
+                            children='Get TSV', 
                             style=style_text_box, 
                             n_clicks=0, 
                             n_clicks_timestamp=0
                         ), 
                         id='download-layout-link',
-                        download="selected_layout.csv", 
+                        download="selected_layout.tsv", 
                         href="",
                         target="_blank", 
                         style={

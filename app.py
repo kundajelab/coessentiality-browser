@@ -168,7 +168,7 @@ def highlight_landscape_func(
                 'color': 'white', 
                 'size': 15 
             }, 
-            'arrowcolor': 'white', 
+            'arrowcolor': '#ff69b4', 
             'showarrow': True, 
             'arrowhead': 2, 'arrowwidth': 2, 'arrowsize': 2, 
             'ax': 0, 
