@@ -452,7 +452,7 @@ def display_heatmap_cb(
             'thickness': 20, 
             'xanchor': 'left', 
             'yanchor': 'top', 
-            'title': 'Ess. score',
+            'title': 'More ess-\nential',
             'titleside': 'top',
             'ticks': 'outside', 
             'titlefont': building_block_divs.colorbar_font_macro, 
