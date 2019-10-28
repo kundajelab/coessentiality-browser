@@ -118,7 +118,7 @@ def create_hm_layout(
             }
         ], 
         'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 30 }, 
-        'clickmode': 'event+select',  # https://github.com/plotly/plotly.js/pull/2944/
+        'clickmode': 'event',  # https://github.com/plotly/plotly.js/pull/2944/
         'hovermode': 'closest', 
         'uirevision': 'Default dataset', 
         'xaxis': {
@@ -163,7 +163,7 @@ def create_hm_layout(
 def create_scatter_layout(annotations):
     return {
         'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 20}, 
-        'clickmode': 'event+select',  # https://github.com/plotly/plotly.js/pull/2944/
+        'clickmode': 'event',  # https://github.com/plotly/plotly.js/pull/2944/
         'hovermode': 'closest', 
         'uirevision': 'Default dataset',     # https://github.com/plotly/plotly.js/pull/3236
         'xaxis': {
@@ -581,6 +581,7 @@ def create_div_mainctrl(
                     ), 
                     html.Div(
                         className='four columns', 
+                        id='div-cell-line-lookup', 
                         children=[
                             dcc.Dropdown(
                                 id='cell-line-lookup', 
@@ -602,6 +603,7 @@ def create_div_mainctrl(
                                 id='tissue-type-lookup', 
                                 options = [{'value': n, 'label': n} for n in cancer_types], 
                                 placeholder="Tissue type...", 
+                                value='', 
                                 style={'height': '55px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )], 
                         style={'fontSize': 12, 'margin': 5}, 
@@ -693,21 +695,32 @@ def create_div_mainctrl(
                         id='div-go-lookup', 
                         className='six columns', 
                         children=[
-                            dcc.Loading(
-                                id="loading-goterms", 
-                                children=[
-                                dcc.Dropdown(
-                                    id='goterm-lookup', 
-                                    # TODO comment the following out/in
-                                    # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
-                                    value = [], 
-                                    placeholder="GO term...", 
-                                    style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center', 'display': 'none'}, 
-                                    multi=True, 
-                                    searchable=False, 
-                                    disabled=False
-                                )], type="default"
+                            dcc.Dropdown(
+                                id='goterm-lookup', 
+                                # TODO comment the following out/in
+                                # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+                                value = [], 
+                                placeholder="GO term...", 
+                                style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center', 'display': 'none'}, 
+                                multi=True, 
+                                searchable=False, 
+                                disabled=False
                             )
+#                             dcc.Loading(
+#                                 id="loading-goterms", 
+#                                 children=[
+#                                 dcc.Dropdown(
+#                                     id='goterm-lookup', 
+#                                     # TODO comment the following out/in
+#                                     # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
+#                                     value = [], 
+#                                     placeholder="GO term...", 
+#                                     style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center', 'display': 'none'}, 
+#                                     multi=True, 
+#                                     searchable=False, 
+#                                     disabled=False
+#                                 )], type="default"
+#                             )
                         ], 
                         style={'fontSize': 11, 'margin': 5}
                     )], 
@@ -802,6 +815,14 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
                 id='stored-recently-highlighted', 
                 data={ }, 
                 modified_timestamp=0
+            ), 
+            dcc.Store(
+                id='time-recently-highlighted', 
+                data=0
+            ), 
+            dcc.Store(
+                id='tissue-or-cell-line', 
+                data=''
             ), 
             dcc.Store(
                 id='stored-panel-settings', 

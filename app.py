@@ -401,7 +401,8 @@ def update_goterm_lookup(
 # Updates the stored dictionary of boolean panel config variables.
 @app.callback(
     [Output('stored-recently-highlighted', 'data'), 
-     Output('goterm-lookup', 'value')], 
+     Output('goterm-lookup', 'value'), 
+     Output('time-recently-highlighted', 'data')], 
     [Input('stored-landscape-selected', 'modified_timestamp'), 
      Input('stored-heatmap-selected', 'modified_timestamp'), 
      Input('stored-goterm-lookup-results', 'modified_timestamp')], 
@@ -426,11 +427,11 @@ def update_hlight_data_store(
     if most_recent_time_index < len(times_list):
         dt = []
         if most_recent_time_index == 2:
-            print(stores_list[2])
             dt = goterm_lookup
-        return stores_list[most_recent_time_index], dt
+        # print(stores_list[most_recent_time_index], dt, times_list[most_recent_time_index])
+        return stores_list[most_recent_time_index], dt, times_list[most_recent_time_index]
     else:
-        return {}, []
+        return {}, [], 0
 
 
 @app.callback(
@@ -521,16 +522,18 @@ Contains control logic for subset selection and storage.
     [Input('list-pointsets', 'value'), 
      Input('upload-pointsets', 'contents'), 
      Input('stored-recently-highlighted', 'data')],
-    [State('upload-pointsets', 'filename'), 
-     State('pointset-name', 'value'), 
+    [State('upload-button', 'n_clicks_timestamp'), 
+     State('upload-pointsets', 'filename'), 
+     State('time-recently-highlighted', 'data'), 
      State('stored-pointsets', 'data')]
 )
 def update_subset_storage(
     selected_subsetIDs, 
     file_contents, 
     selected_hlight_data, 
+    upload_time, 
     file_paths, 
-    newset_name, 
+    time_hlight_data, 
     subset_store
 ):
     new_sets_dict = {} if subset_store is None else subset_store
@@ -541,12 +544,10 @@ def update_subset_storage(
         # A small subset selected_heatmap_points should not change selected_landscape_points, but should change _current_selected_data
         new_sets_dict['_current_selected_data'] = selected_hlight_data
     # Store current selected data as a new set if in that mode.
-    if ((newset_name is not None) and 
-        (newset_name not in new_sets_dict) and 
-        (newset_name != '')):
-        new_sets_dict[newset_name] = new_sets_dict['_current_selected_data']
+    # if ((newset_name is not None) and (newset_name not in new_sets_dict) and (newset_name != '')):
+    #     new_sets_dict[newset_name] = new_sets_dict['_current_selected_data']
     # Load a bunch of cell sets with names equal to their filenames.
-    if file_contents is not None and len(file_contents) > 0:
+    if (time_hlight_data is not None) and (upload_time > time_hlight_data) and (file_contents is not None and len(file_contents) > 0):
         for contents, fname in zip(file_contents, file_paths):   # fname here is a relative (NOT an absolute) file path
             fname_root = fname.split('/')[-1].split('.')[0]
             # Now make and save a new subset.
@@ -625,17 +626,58 @@ Ensure at most one cell line / tissue lookup selected.
 #     else:
 #         return cell_line_color
 
+@app.callback(
+    [Output('tissue-type-lookup', 'value'), 
+     Output('cell-line-lookup', 'value')], 
+    [Input('tissue-or-cell-line', 'data')], 
+    [State('tissue-type-lookup', 'value'), 
+     State('cell-line-lookup', 'value')]
+)
+def update_color_dropdowns(
+    selected_color, 
+    selected_tissue_color, 
+    selected_cell_line_color
+):
+    print(selected_color)
+    if selected_color == 'cell-line':
+        return '', selected_cell_line_color
+    else:
+        return selected_tissue_color, app_config.params['default_color_var']
+
 
 @app.callback(
-    Output('tissue-type-lookup', 'value'), 
-    [Input('cell-line-lookup', 'value')], 
-    [State('tissue-type-lookup', 'value')]
+    Output('tissue-or-cell-line', 'data'), 
+    [Input('div-tissue-lookup', 'n_clicks_timestamp'), 
+     Input('div-cell-line-lookup', 'n_clicks_timestamp')], 
+    [State('tissue-or-cell-line', 'data')]
 )
-def update_cell_line(cell_line_color, selected_tissue_color):
-    if (cell_line_color is not None) and len(cell_line_color) > 0:
-        return None
+def update_cell_line_tissue(
+    time_tissue, 
+    time_cellline, 
+    old_state
+):
+    print (time_tissue, time_cellline)
+    if (time_tissue is not None) and (time_cellline is not None):
+        if (time_tissue > time_cellline) and (old_state != 'tissue'):
+            return 'tissue'
+        elif (time_tissue < time_cellline) and (old_state != 'cell-line'):
+            return 'cell-line'
+        else:
+            raise PreventUpdate
     else:
-        return selected_tissue_color
+        raise PreventUpdate
+
+
+# @app.callback(
+#     Output('tissue-type-lookup', 'value'), 
+#     [Input('cell-line-lookup', 'value')], 
+#     [State('tissue-type-lookup', 'value')]
+# )
+# def update_cell_line(cell_line_color, selected_tissue_color):
+#     if (cell_line_color is not None) and len(cell_line_color) > 0:
+#         return None
+#     else:
+#         return selected_tissue_color
 
 
 """
@@ -715,7 +757,8 @@ def update_landscape(
             'line': { 'width': 0.5, 'color': 'white'},
             'hoverinfo': 'none', 
             'mode': 'lines', 
-            'type': 'scatter'
+            # 'render_mode': 'svg', 
+            'type': 'scattergl'
         })
     return lscape
         
