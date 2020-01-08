@@ -171,13 +171,12 @@ def min_t_for_energy(eigvals, desired_dim, min_energy_frac, max_t=None):
 
 
 """
-* SLOW, NAIVE IMPLEMENTATION - WHEN UMAP ISN'T AVAILABLE
 Build kNN graph, returning a sparse matrix. First, we build the matrix accretively from zero, cycling through the nodes in some arbitrary order and setting the kNN's of each to be nonzero. So the degree of each vertex is \geq k. Call the matrix A.
 Then symmetrize (or not) A in some way:
 - 'mutual': min(A, A^T), making degree \leq k
 - 'inclusive': max(A, A^T), making degree \geq k
-- 'matching': TODO solve an OT problem! Called b-matching in the literature.
-See \cite{JebaraWC09}. 
+
+* NOTE: This is a relatively slow, naive implementation of exact nearest neighbors.
 """
 def build_knn(mat, k=10, symmetrize_type='inclusive'):
     sparse_adj = sp.sparse.csr_matrix(np.zeros(mat.shape))
@@ -189,8 +188,6 @@ def build_knn(mat, k=10, symmetrize_type='inclusive'):
         return sparse_adj.minimum(sparse_adj.transpose())
     elif (symmetrize_type == 'inclusive'):
         return sparse_adj.maximum(sparse_adj.transpose())
-    elif (symmetrize_type == 'fuzzy'):
-        return sparse_adj.maximum(sparse_adj.transpose())
     else:
         print("Mode not yet implemented.")
         return sparse_adj
@@ -198,8 +195,6 @@ def build_knn(mat, k=10, symmetrize_type='inclusive'):
 
 # Return a (target_dim x source_dim) linear projection matrix U where U^T U = I, i.e. the cols are an orthonormal basis.
 # X U is a low-dimensional representation of X that preserves pairwise L2-norms. If projections == True, return this projected data instead of basis.
-# TODO add diffmap embedding
-# TODO use target_energy to auto-choose components
 def dimreduce_basis(target_dim, source_dim, data=None, target_energy=0.0, mode='random', projections=False, random_state=None):
     if mode == 'random':
         toret = np.random.random(size=(source_dim, target_dim))
@@ -207,7 +202,7 @@ def dimreduce_basis(target_dim, source_dim, data=None, target_energy=0.0, mode='
     elif mode == 'random_sparse':
         basis = sklearn.random_projection.sparse_random_matrix(n_components=target_dim, n_features=source_dim, density='auto', random_state=random_state).transpose()
     elif mode == 'diff_map':
-        return "Not yet implemented"     # TODO proper centralized error logging
+        return "Not yet implemented"
     elif mode == 'pca':
         # Assume sparse count data, so don't zero-center!
         mpc = sc.pp.pca(data, zero_center=False, n_comps=target_dim, return_info=True)
