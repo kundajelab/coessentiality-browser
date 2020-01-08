@@ -54,8 +54,6 @@ params['hm_colorvar_name'] = 'Less essential'
 params['hm_diverging'] = True
 params['default_color_var'] = 'Colors'
 
-
-
 params['display_coordinates'] = { 'x': 'hUMAP_x',  'y': 'hUMAP_y' }
 params['qnorm_plot'] = False
 params['hm_qnorm_plot'] = False
