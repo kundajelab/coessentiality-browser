@@ -7,6 +7,8 @@ From the paper:
 ## Installation/dependencies
 In a conda environment, run:
 `pip install -r requirements.txt` 
+The main requirement is Dash (https://github.com/plotly/dash/), a framework for building the interactive interface.
+
 
 ## Launching interactive browser
 From the conda environment, run
