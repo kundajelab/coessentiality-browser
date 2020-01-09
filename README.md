@@ -1,5 +1,7 @@
 # coessentiality-browser
-Gene browser using coessentiality and related data
+Gene browser using coessentiality and related data.
+From the paper: 
+> A genome-wide almanac of co-essential modules assigns function to uncharacterized genes. (https://www.biorxiv.org/content/10.1101/827071v1)
 
 
 ## Installation/dependencies
