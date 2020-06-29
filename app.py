@@ -656,7 +656,6 @@ def update_cell_line_tissue(
     time_cellline, 
     old_state
 ):
-    print (time_tissue, time_cellline)
     if (time_tissue is not None) and (time_cellline is not None):
         if (time_tissue > time_cellline) and (old_state != 'tissue'):
             return 'tissue'

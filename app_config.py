@@ -20,7 +20,7 @@ param_mixes = [
 ]
 
 clusterone_params = ['0.2', '0.5', '0.8', '0.9', '0.95', '0.99', '0.8_batch_corrected', '0.9_batch_corrected', '0.95_batch_corrected', '0.99_batch_corrected']
-params['plot_data_df_path'] = param_mixes + [data_pfx + "data/vizdf_GLS01_CO99_d_{}.csv".format(x) for x in clusterone_params]
+params['plot_data_df_path'] = [param_mixes[0]] #+ [data_pfx + "data/vizdf_GLS01_CO99_d_{}.csv".format(x) for x in clusterone_params]
 params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
 params['mutation_data_path'] = "{}data/CCLE_DepMap_18q3_maf_20180718.txt".format(data_pfx)
 params['mutation_arr_path'] = "{}data/CCLE_DepMap_18q3_mutations.npy".format(data_pfx)
@@ -54,8 +54,6 @@ params['bg_color'] = '#000000'
 params['hm_colorvar_name'] = 'Less essential'
 params['hm_diverging'] = True
 params['default_color_var'] = 'Colors'
-
-
 
 params['display_coordinates'] = { 'x': 'hUMAP_x',  'y': 'hUMAP_y' }
 params['qnorm_plot'] = False
