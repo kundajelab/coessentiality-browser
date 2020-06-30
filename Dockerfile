@@ -32,5 +32,4 @@ RUN git clone https://github.com/kundajelab/coessentiality-browser.git
 WORKDIR /var/www/coessentiality-browser
 RUN gsutil -m cp -r gs://coessentiality-browser/data /var/www/coessentiality-browser/
 RUN pip install -r requirements.txt
-
 CMD ["python", "app.py"]

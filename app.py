@@ -769,4 +769,6 @@ def update_landscape(
 # =======================================================
 
 if __name__ == '__main__':
-    app.run_server(port=8052, debug=True)
+    from waitress import serve
+    serve(app,host='localhost',port=8080)
+    #app.run_server(port=8052, debug=True)
