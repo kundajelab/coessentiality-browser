@@ -3,8 +3,8 @@
 
 import base64, io, os, time, json, numpy as np, scipy as sp, pandas as pd, diffmap as dm
 import app_config, building_block_divs, goterm_caller
-from goatools.associations import read_ncbi_gene2go
-from goatools.test_data.genes_NCBI_9606_ProteinCoding import GENEID2NT
+# from goatools.associations import read_ncbi_gene2go
+# from goatools.test_data.genes_NCBI_9606_ProteinCoding import GENEID2NT
 import re
 import umap
 from sklearn.decomposition import TruncatedSVD
@@ -450,6 +450,7 @@ with open(app_config.data_pfx + "go2gene_dict.txt", "r") as f:
     w2 = f.read().strip()
 go2gene_dict = json.loads(w2)
 
+"""
 # Given a GO term query, returns a combined list of genes uxnder that ID.
 def get_genes_from_goterm(goterm_re_str, mode='gaf'):
     if len(goterm_re_str) == 0:
@@ -461,6 +462,7 @@ def get_genes_from_goterm(goterm_re_str, mode='gaf'):
     else:
         gos = [goterm_re_str]
     return go2gene_dict[gos[0]] if gos[0] in go2gene_dict else []
+"""
 
 
 """
