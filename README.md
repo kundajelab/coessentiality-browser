@@ -14,3 +14,5 @@ The main requirement is Dash (https://github.com/plotly/dash/), a framework for 
 ## Launching interactive browser
 From the conda environment, run
 `python app.py`
+
+The default IP is 0.0.0.0:5000 .

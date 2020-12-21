@@ -6,7 +6,7 @@ params = {}
 params['title'] = "Co-essentiality browser"
 
 
-_DEPLOY_LOCALLY = False
+_DEPLOY_LOCALLY = True
 
 if not _DEPLOY_LOCALLY:
     # data_pfx = '/mnt/lab_data/kundaje/abalsubr/coessentiality/'
@@ -21,15 +21,15 @@ param_mixes = [
 
 clusterone_params = ['0.2', '0.5', '0.8', '0.9', '0.95', '0.99', '0.8_batch_corrected', '0.9_batch_corrected', '0.95_batch_corrected', '0.99_batch_corrected']
 params['plot_data_df_path'] = [param_mixes[0]] #+ [data_pfx + "data/vizdf_GLS01_CO99_d_{}.csv".format(x) for x in clusterone_params]
-params['raw_ess_data_path'] = "{}data/essentiality.tsv.gz".format(data_pfx)
+params['raw_ess_data_path'] = "{}data/essentiality_float16.tsv.gz".format(data_pfx)
 params['mutation_data_path'] = "{}data/CCLE_DepMap_18q3_maf_20180718.txt".format(data_pfx)
-params['mutation_arr_path'] = "{}data/CCLE_DepMap_18q3_mutations.npy".format(data_pfx)
+params['mutation_arr_path'] = "{}data/CCLE_DepMap_18q3_mutations.csv.gz".format(data_pfx)
 params['gene_fullnames_path'] = "{}data/hgnc_gene_symbol_to_name.tsv".format(data_pfx)
 params['genenames_path'] = "{}data/gene_long_names.tsv".format(data_pfx)
 params['gene_ensID_path'] = "{}data/gene_ensIDs.tsv".format(data_pfx)
 params['shRNA_data_path'] = "{}data/D2_combined_gene_dep_scores.csv".format(data_pfx)
 params['expression_data_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM_20180718.gct".format(data_pfx)
-params['expression_arr_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM.npy".format(data_pfx)
+params['expression_arr_path'] = "{}data/CCLE_DepMap_18q3_RNAseq_RPKM.csv.gz".format(data_pfx)
 params['expression_cell_lines_path'] = "{}data/CCLE_DepMap_18q3_cell_lines.npy".format(data_pfx)
 params['video_path'] = "{}data/45sec_browser_video.mp4".format(data_pfx)
 

@@ -71,6 +71,7 @@ def traces_scatter(
     cumu_color_dict = {}
     # Check to see if color_var is continuous or discrete and plot points accordingly
     if isinstance(color_var, (list, tuple, np.ndarray)):     # Color_var is an array, not a col index.
+        print("op1")
         continuous_color_var = color_var
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
         colorbar_title = app_config.params['hm_colorvar_name']
@@ -112,6 +113,7 @@ def traces_scatter(
         })
     else:    # Categorical color scheme, one trace per color
         cnt = 0
+        print("op2")
         for idx, val in data_df.groupby(color_var):
             point_ids_this_trace = list(val['gene_names'])
             spoint_ndces_this_trace = np.where(np.isin(point_ids_this_trace, selected_point_ids))[0]
@@ -120,7 +122,7 @@ def traces_scatter(
                 cnt += 1
                 cumu_color_dict[idx] = trace_color
             trace_opacity = 1.0
-            full_ids_this_trace = full_gene_names[np.isin(point_names, point_ids_this_trace)]
+            full_ids_this_trace = full_gene_names#[np.isin(point_names, point_ids_this_trace)]
             pt_text = ["{}<br>{}".format(point_ids_this_trace[i], full_ids_this_trace[i]) for i in range(len(point_ids_this_trace))]
             # pt_text = ["{}".format(point_ids_this_trace[i]) for i in range(len(point_ids_this_trace))]
             trace_info = {
@@ -149,19 +151,14 @@ def traces_scatter(
     return traces_list
 
 
-def layout_scatter(annots):
-    display_ndces = app_config.params['display_coordinates']
-    new_layout = building_block_divs.create_scatter_layout(annots)
-    return new_layout
-
-
-def build_main_scatter(data_df, color_var, colorscale, highlight=False, 
-                       bg_marker_size=app_config.params['bg_marker_size_factor'], 
-                       marker_size=app_config.params['marker_size_factor'], 
-                       annots=[], selected_point_ids=[], 
-                       style_selected = building_block_divs.style_selected, 
-                       point_names=None
-                      ):
+def build_main_scatter(
+    data_df, color_var, colorscale, highlight=False, 
+    bg_marker_size=app_config.params['bg_marker_size_factor'], 
+    marker_size=app_config.params['marker_size_factor'], 
+    annots=[], selected_point_ids=[], 
+    style_selected = building_block_divs.style_selected, 
+    point_names=None
+):
     if highlight:
         style_selected['marker']['color'] = '#ff4f00' # Golden gate bridge red
         style_selected['marker']['size'] = 10     # TODO: Change this back on unhighlighting.
@@ -177,9 +174,10 @@ def build_main_scatter(data_df, color_var, colorscale, highlight=False,
         style_selected=style_selected, 
         point_names=point_names
     )
+    display_ndces = app_config.params['display_coordinates']
     return { 
         'data': trace_list, 
-        'layout': layout_scatter(annots)
+        'layout': building_block_divs.create_scatter_layout(annots)
     }
 
 
@@ -247,12 +245,6 @@ def hm_col_plot(
     if reordered_groups is None:
         reordered_groups = reordered_featnames
     transform_col_order = np.arange(fit_data.shape[1])
-    # Sort genes by color within each cluster, editing ordered_cols appropriately.
-#     for cid in np.unique(col_clustIDs):
-#         ndcesc = np.where(col_clustIDs == cid)[0]
-#         clust_colors = reordered_groups[ndcesc]
-#         new_order_perclust = np.argsort(clust_colors)
-#         transform_col_order[ndcesc] = transform_col_order[ndcesc][new_order_perclust]
     fit_data = fit_data[:, transform_col_order]
     reordered_groups = reordered_groups[transform_col_order]
     reordered_featnames = reordered_featnames[transform_col_order]
@@ -346,41 +338,7 @@ def hm_hovertext(data, rownames, colnames):
             pt_text[r][c] += "<br>Cell line: {}<br>Essentiality score: {}".format(str(colnames[c]), str(round(data[r][c], 3)))
     return pt_text
 
-"""
-def order_heatmap_rows_cols(
-    fit_data, 
-    feat_names,     # col labels of hm_raw_data
-    hm_point_names, 
-    feat_group_names=None
-):
-    if fit_data is None or len(fit_data.shape) < 2:
-        return
-    # Identify (interesting) cell lines to plot. Currently: high-variance ones
-    feat_ndces = interesting_feat_ndces(fit_data)
-    absc_labels = feat_names[feat_ndces]
-    fit_data = fit_data[:, feat_ndces]
-    # Quantile normalize the data if necessary to better detect patterns.
-    if app_config.params['hm_qnorm_plot']:
-        qtiles = np.zeros_like(fit_data)
-        nnz_ndces = np.nonzero(fit_data)
-        qtiles[nnz_ndces] = sp.stats.rankdata(fit_data[nnz_ndces]) / len(fit_data[nnz_ndces])
-        fit_data = qtiles
-    # Spectral coclustering to cluster the heatmap. We always order rows (points) by spectral projection, but cols (features) can have different orderings for different viewing options.
-    row_clustIDs = np.zeros(fit_data.shape[0])
-    col_clustIDs = np.zeros(fit_data.shape[1])
-    if (fit_data.shape[0] > 1):
-        ordered_rows, ordered_cols, row_clustIDs, col_clustIDs = dm.compute_coclustering(fit_data)
-        fit_data = fit_data[ordered_rows, :]
-        hm_point_names = hm_point_names[ordered_rows]
-    else:
-        ordered_cols = np.arange(fit_data.shape[1])
-    fit_data = fit_data[:, ordered_cols]
-    absc_labels = absc_labels[ordered_cols]
-    absc_group_labels = None if feat_group_names is None else feat_group_names[feat_ndces]
-    if absc_group_labels is not None:
-        absc_group_labels = absc_group_labels[ordered_cols]
-    return (fit_data, absc_labels, absc_group_labels, row_clustIDs, col_clustIDs)
-"""
+
 def display_heatmap_cb(
     hm_raw_data,    # 2D numpy array of selected data
     feat_names,     # col labels of hm_raw_data
@@ -426,18 +384,17 @@ def display_heatmap_cb(
     if absc_group_labels is not None:
         absc_group_labels = absc_group_labels[ordered_cols]
     # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
-    row_scat_traces, hm_point_names = hm_row_scatter(
-        scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
-    )
+    row_scat_traces = []
+    row_scat_traces, hm_point_names = hm_row_scatter(scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs)
     col_scat_traces, fit_data = hm_col_plot(
         fit_data, 
         feat_colordict, 
         reordered_groups=absc_group_labels, 
         reordered_featnames=absc_labels, 
+        col_clustIDs=col_clustIDs, 
         geneview_mode=geneview_mode, 
         geneview_gene=geneview_gene, 
-        geneview_data=geneview_data, 
-        col_clustIDs=col_clustIDs
+        geneview_data=geneview_data
     )
     pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
@@ -482,123 +439,6 @@ def display_heatmap_cb(
             yaxis_label=(len(hm_point_names) > 30)
         )
     }
-#"""
-
-
-"""
-def display_heatmap_cb(
-    hm_raw_data,    # 2D numpy array of selected data
-    feat_names, 
-    hm_point_names,    # (unique!) row labels of hm_raw_data
-    scatter_fig,    # Scatterplot panel which this is mirroring.
-    view_cocluster, 
-    feat_colordict={}, 
-    geneview_mode='Mutation', geneview_gene=None, geneview_data=None, 
-    feat_group_names=None, 
-    scatter_frac_domain=0.13, 
-    scatter_frac_range=0.08, 
-    show_legend=False
-):
-    fit_data, absc_labels, absc_group_labels, row_clustIDs, col_clustIDs = order_heatmap_rows_cols(
-        hm_raw_data, feat_names, hm_point_names, feat_group_names=feat_group_names)
-    # Copy trace metadata from scatter_fig, in order of hm_point_names, to preserve colors etc.
-    row_scat_traces, hm_point_names = hm_row_scatter(
-        scatter_fig, hm_point_names, view_cocluster, row_clustIDs=row_clustIDs
-    )
-    col_scat_traces, fit_data = hm_col_plot(
-        fit_data, feat_colordict, 
-        reordered_groups=absc_group_labels, reordered_featnames=absc_labels, 
-        geneview_mode=geneview_mode, geneview_gene=geneview_gene, geneview_data=geneview_data, 
-        col_clustIDs=col_clustIDs
-    )
-    pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
-    hm_trace = {
-        'z': fit_data, 
-        'x': absc_labels, 
-        'customdata': hm_point_names, 
-        'hoverinfo': 'text',
-        'text': pt_text, 
-        'colorscale': app_config.params['hm_colorscale'], 
-        'colorbar': {
-            'len': 0.3, 
-            'thickness': 20, 
-            'xanchor': 'left', 
-            'yanchor': 'top', 
-            'title': 'Ess. score',
-            'titleside': 'top',
-            'ticks': 'outside', 
-            'titlefont': building_block_divs.colorbar_font_macro, 
-            'tickfont': building_block_divs.colorbar_font_macro
-        }, 
-        'type': 'heatmap'
-    }
-    if app_config.params['hm_diverging']:
-        max_magnitude = np.percentile(np.abs(fit_data), 99) if fit_data.shape[0] > 0 else 2
-        hm_trace['zmin'] = -max_magnitude
-        hm_trace['zmax'] = max_magnitude
-    # assemble coordinates of lines adumbrating clusters.
-    clustersep_line_coords = []
-    for cid in np.unique(col_clustIDs):
-        ndcesc = np.where(col_clustIDs == cid)[0]
-        clustersep_line_coords.append(np.min(ndcesc) - 0.5)
-    if len(fit_data.shape) > 1:
-        clustersep_line_coords.append(fit_data.shape[1] - 0.5)
-    return {
-        'data': [ hm_trace ] + row_scat_traces + col_scat_traces, 
-        'layout': building_block_divs.create_hm_layout(
-            scatter_frac_domain=scatter_frac_domain, scatter_frac_range=scatter_frac_range, 
-            show_legend=show_legend, clustersep_coords=clustersep_line_coords
-        )
-    }
-"""
-
-
-"""
-# TODO: Finish this function, which plots mean feature values over each heatmap cluster.
-
-def generate_percluster_viz(raw_data, cell_cluster_list, cell_color_list, featID='Gene'):
-    cluster_IDs = np.unique(cell_cluster_list)
-    plot_values = np.zeros((len(cluster_IDs), raw_data.shape[1]))
-    for i in range(len(cluster_IDs)):
-        plot_values[i, :] = np.mean(raw_data[cell_cluster_list == cluster_IDs[i], :], axis=0)
-    panel_layout = {
-        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 0}, 
-        'hovermode': 'closest', 
-        'autosize': True,
-        'xaxis': {
-            'title': {'text': featID, 'font': building_block_divs.legend_font_macro }, 
-            'tickfont': building_block_divs.legend_font_macro 
-        }, 
-        'yaxis': {
-            'showticklabels': False,
-            'automargin': True, 
-            'ticks': 'outside', 
-            'tickcolor': app_config.params['legend_font_color']
-        },
-        'plot_bgcolor': app_config.params['bg_color'],
-        'paper_bgcolor': app_config.params['bg_color'], 
-        'showlegend': True, 
-        'legend': {
-            'font': building_block_divs.legend_font_macro
-        }
-    }
-    go_results = np.array(selected_genes)
-    top_go_logpvals = np.array([])
-    top_go_termnames = np.array([])
-    top_go_dbIDs = np.array([])
-    if go_results.shape[0] > 0:
-        go_results = go_results[:topk, :]
-        top_go_logpvals = -np.log10(go_results[:,2].astype(float))
-        top_go_dbIDs = go_results[:,9]
-        top_go_termnames = go_results[:,11]
-    database_colors = { 'MF': '#CB3C19'}
-    database_IDs = {'MF': 'Molecular function'}
-    bar_colors = np.array([database_colors[x] for x in top_go_dbIDs])
-    panel_data = []
-    ordi = np.arange(len(top_go_dbIDs))[::-1]
-    return {'data': panel_data, 'layout': panel_layout }
-"""
-
 
 
 # Given a gene set, returns GO+other database enrichment results using gProfiler.
@@ -621,42 +461,6 @@ def get_genes_from_goterm(goterm_re_str, mode='gaf'):
     else:
         gos = [goterm_re_str]
     return go2gene_dict[gos[0]] if gos[0] in go2gene_dict else []
-
-
-"""
-go2geneids_human = read_ncbi_gene2go(app_config.params['gene2go_path'], taxids=[9606], go2geneids=True)
-def get_genes_from_goterm(goterm_re_str, mode='gaf'):
-    if len(goterm_re_str) == 0:
-        return []
-    srchhelp = goterm_caller.GoSearch(app_config.params['go_obo_path'], go2items=go2geneids_human)
-    if mode == 'regex':      # Given a regex, return using GO's association files; else given GO term ID(s).
-        gos = srchhelp.get_matching_gos(re.compile(goterm_re_str))
-    else:
-        gos = [goterm_re_str]
-    toret = []
-    for gid in srchhelp.get_items(gos):
-        geneID = GENEID2NT.get(gid, None)
-        if geneID is not None:
-            toret.append(geneID.Symbol)
-    return toret
-
-
-# Given a list of GO term IDs, returns a combined list of genes under that ID using gProfiler.
-def get_genes_from_goterm(goterms_req):
-    tmpl = []
-    for termID in goterms_req:
-        gp = GProfiler("MyToolName/0.2")
-        go_results = np.array(gp.gconvert(termID, target="GO"))
-        tmpl.append(np.unique([x[4] for x in go_results]))
-    if len(tmpl) == 0:
-        return ""
-    sel_genes = np.concatenate(tmpl)
-    sieved_genes = []
-    for g in sel_genes:
-        if g is not None:
-            sieved_genes.append(g)
-    return list(np.unique(sieved_genes))
-"""
 
 
 """

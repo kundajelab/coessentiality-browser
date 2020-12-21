@@ -197,29 +197,6 @@ def create_div_select_dataset(dataset_options):
         className='row', 
         children=[
             html.Div(
-                className='eight columns', 
-                children=[
-                    html.Div(
-                        className='four columns', 
-                        children=[
-                            html.P(
-                                "Browse layout: ", 
-                                style=style_text_box
-                            )], 
-                        style={'padding-top': '10px'}
-                    ), 
-                    html.Div(
-                        className='eight columns', 
-                        children=[
-                            dcc.Dropdown(
-                                id='sourcedata-select', 
-                                options = [ {'value': dn, 'label': dn} for dn in dataset_options ], # style={'height': '30px'}, 
-                                value=dataset_options[0]
-                            )]
-                    )], 
-                style={ 'display': 'none' }#style_outer_dialog_box
-            ), 
-            html.Div(
                 className='three columns', 
                 children=[
                     html.A(
@@ -242,38 +219,6 @@ def create_div_select_dataset(dataset_options):
                     )], 
                 style={ 'padding-top': '10px' }
             )]
-    )
-
-
-def create_div_ppi():
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='three columns', 
-                children=[
-                    html.P(
-                        "View PPI: ", 
-                        style=style_text_box
-                    )], 
-                style={'padding-top': '10px'}  #style_outer_dialog_box
-            ), 
-            html.Div(
-                className='eight columns', 
-                children=[
-                    dcc.RadioItems(
-                        id='select-ppi', 
-                        options=[ {'label': v, 'value': v} for v in ['None', 'STRING (v11)', 'Cheng et al.'] ], 
-                        style=legend_font_macro, 
-                        labelStyle={
-                            'display': 'inline-block', 
-                            'margin-right': '5px'
-                        }, 
-                        value='None'
-                    )], 
-                style={ 'padding-top': '10px' }
-            )], 
-        style={'display': 'none'}
     )
 
 
@@ -388,7 +333,7 @@ def create_div_hm_panel(point_names):
                 children=[
                     html.Div(
                         id='num-selected-counter', 
-                        className='two columns', 
+                        className='four columns', 
                         children='# selected: ', 
                         style={
                             # 'display': 'none', 
@@ -419,41 +364,9 @@ def create_div_hm_panel(point_names):
                                 placeholder="View gene", #multi=True, 
                                 style={'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )]
-                    ), 
-#                     html.Div(
-#                         id='enriched-genes-per-cluster', 
-#                         className='four columns', 
-#                         children='Enriched in a cluster: ', 
-#                         style={
-#                             # 'display': 'none', 
-#                             'textAlign': 'center', 
-#                             'color': app_config.params['font_color'], 
-#                             'padding-top': '0px'
-#                         }
-#                     ), 
-                    html.Div(
-                        className='three columns', 
-                        children = [
-                            dcc.Checklist(
-                                id='toggle-hm-cols', 
-                                options=[
-                                    {'label': 'Tissue legend', 'value': 'legend'}
-                                ],
-                                value=[], 
-                                style={
-                                    'display': 'none', 
-                                    'textAlign': 'center', 
-                                    'width': '100%', 
-                                    'color': app_config.params['font_color']
-                                }
-                            )]
                     )
                 ], 
                 style={'margin': 5}
-            ), 
-            html.Div(
-                id='hm-feat-control', 
-                children=[]
             ), 
             dcc.Loading(
                 id="loading-heatmap", 
@@ -466,99 +379,16 @@ def create_div_hm_panel(point_names):
             )]
     )
 
-
-
-# ================================================================
-# =================== Component divs: cosmetic ===================
-# ================================================================
-
-
-# Default dataset first in the given list of dataset options.
-def create_div_cosmetic_panel():
-    return html.Div(
-        className='row', 
-        children=[
-            html.Div(
-                className='two columns', 
-                children=[
-                    html.P(
-                        "Interface options: ", 
-                        style=style_text_box
-                    )], 
-                style={'padding-top': '10px'}
-            ), 
-            html.Div(
-                className='three columns', 
-                children=[
-                    dcc.Slider(
-                        id='slider-bg-marker-size-factor', # marks={ 4: {'label': '4'} }
-                        min=0, max=8, step=0.2, 
-                        value=app_config.params['bg_marker_size_factor']
-                    ), 
-                    html.Div(
-                        id='display-bg-marker-size-factor', 
-                        style={
-                            'textAlign': 'center', 
-                            'color': app_config.params['font_color'], 
-                            'padding-top': '10px'
-                        }
-                    )], 
-                style={'display': 'none'}
-            ), 
-            html.Div(
-                className='three columns', 
-                children=[
-                    dcc.Slider(
-                        id='slider-marker-size-factor',
-                        min=0, max=8, step=0.2, 
-                        value=app_config.params['marker_size_factor']
-                    ), 
-                    html.Div(
-                        id='display-marker-size-factor', 
-                        style={
-                            'textAlign': 'center', 
-                            'color': app_config.params['font_color'], 
-                            'padding-top': '10px'
-                        }
-                    )]
-            ), 
-            html.Div(
-                className='row', 
-                children=[
-                    dcc.Checklist(
-                        id='toggle-debug-panels', 
-                        options=[
-                            {'label': 'Debug panel', 'value': 'debug-panel'}
-                        ],
-                        value=[], 
-                        style={
-                            'textAlign': 'left', 
-                            'width': '80%', 
-                            'color': app_config.params['font_color']
-                        }, 
-                        labelStyle={
-                            'display': 'inline-block', 
-                            'margin-right': '5px'
-                        }
-                    )], 
-                style={'padding-top': '0px'}
-            )
-        ], 
-        style={'display': 'none'} #style_outer_dialog_box
-    )
-
-
-
 # ==================================================================
 # =================== Aggregating component divs ===================
 # ==================================================================
 
 import numpy as np
-go_termIDs = np.load(app_config.params['gotermIDs_path'])
-go_termnames = np.load(app_config.params['gotermnames_path'])
+# go_termIDs = np.load(app_config.params['gotermIDs_path'])
+# go_termnames = np.load(app_config.params['gotermnames_path'])
 
 def create_div_mainctrl(
-    point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs
+    point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset
 ):
 #     download_image = app_config.params['download_img_path']#,
 #     encoded_image = base64.b64encode(open(download_image, 'rb').read())
@@ -572,8 +402,8 @@ def create_div_mainctrl(
                         className='four columns', 
                         children=[
                             dcc.Dropdown(
-                                id='points_annot', 
-                                options = [ {'value': point_names[i], 'label': "{} ({})".format(point_names[i], full_gene_ensIDs[i])} for i in range(len(point_names)) ], 
+                                id='gene-selection', 
+                                options = [ {'value': point_names[i], 'label': "{}".format(point_names[i])} for i in range(len(point_names)) ], 
                                 placeholder="Gene...", multi=True, 
                                 style={'height': '55px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center'}
                             )], 
@@ -615,7 +445,7 @@ def create_div_mainctrl(
                 className='row', 
                 children=[
                     html.Div(
-                        className='four columns', 
+                        className='five columns', 
                         children=[
                             html.Div(
                                 className='row', 
@@ -664,8 +494,7 @@ def create_div_mainctrl(
                                                         style=style_text_box, 
                                                         n_clicks=0, 
                                                         n_clicks_timestamp=0
-                                                    )
-        #                                             html.Img( src=upload_asset, #'data:image/png;base64,{}'.format(encoded_image), style={ 'height' : '40%', 'width' : '40%', 'float' : 'right', 'position' : 'relative', 'padding-top' : 0, 'padding-right' : 0 })
+                                                    ) # html.Img( src=upload_asset, #'data:image/png;base64,{}'.format(encoded_image), style={ 'height' : '40%', 'width' : '40%', 'float' : 'right', 'position' : 'relative', 'padding-top' : 0, 'padding-right' : 0 })
                                                 ]),
                                                 style={
                                                     'width': '100%', 
@@ -678,90 +507,21 @@ def create_div_mainctrl(
                             )], style={ 'border': 'thin lightgrey solid',  'margin': 5 }
                     ), 
                     html.Div(
-                        id='load-go-db', 
-                        className='two columns', 
+                        # id='num-selected-counter', 
+                        className='five columns', 
                         children=[
                             html.Button(
-                                id='load-go-button', 
-                                children='Load GO', 
+                                id='hm-button', 
+                                children='Plot essentiality >>', 
                                 style=style_text_box, 
                                 n_clicks=0, 
                                 n_clicks_timestamp=0
-                            )
-                        ], 
-                        style={'fontSize': 11, 'margin': 5, 'display': 'none'}
-                    ), 
-                    html.Div(
-                        id='div-go-lookup', 
-                        className='six columns', 
-                        children=[
-                            dcc.Dropdown(
-                                id='goterm-lookup', 
-                                # TODO comment the following out/in
-                                # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
-                                value = [], 
-                                placeholder="GO term...", 
-                                style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center', 'display': 'none'}, 
-                                multi=True, 
-                                searchable=False, 
-                                disabled=False
-                            )
-#                             dcc.Loading(
-#                                 id="loading-goterms", 
-#                                 children=[
-#                                 dcc.Dropdown(
-#                                     id='goterm-lookup', 
-#                                     # TODO comment the following out/in
-#                                     # options = [{'value': '{}'.format(go_termIDs[i]), 'label': '{}: \t{}'.format(go_termIDs[i], go_termnames[i])} for i in range(len(go_termIDs)) ], 
-#                                     value = [], 
-#                                     placeholder="GO term...", 
-#                                     style={ 'height': '45px', 'display': 'inline-block', 'width': '100%', 'textAlign': 'center', 'display': 'none'}, 
-#                                     multi=True, 
-#                                     searchable=False, 
-#                                     disabled=False
-#                                 )], type="default"
-#                             )
-                        ], 
-                        style={'fontSize': 11, 'margin': 5}
-                    )], 
-                style={}
-            )]
-    )
-
-
-def create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs):
-    return html.Div(
-        className="seven columns",
-        children=[
-            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs), 
-            dcc.Loading(
-                id="loading-landscape", 
-                children=[
-                    dcc.Graph(
-                        id='landscape-plot',
-                        config={'displaylogo': False, 'displayModeBar': True}, 
-                        style={ 'height': '100vh'}
-                    )], type="graph"
-            ), 
-            create_div_select_dataset(app_config.params['dataset_options']), 
-            create_div_ppi(), 
-            div_landscape_select
-        ]
-    )
-
-
-def create_div_sidepanels(point_names):
-    return html.Div(
-        className='five columns', 
-        children=[
-            create_div_hm_panel(point_names), 
-            dcc.Loading(
-                id="loading-gopanel", 
-                children=[div_go_panel], type="graph"
+                            )], 
+                        style={'padding-top': '0px'}
+                    )
+                ], style={}
             )
-            # div_reviz_scatter
-        ], 
-        style=style_invis_dialog_box
+        ]
     )
 
 
@@ -771,18 +531,35 @@ Main layout.
 """
 import numpy as np
 
-def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, download_asset, full_gene_ensIDs, more_colorvars=[]):
+def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, download_asset, more_colorvars=[]):
     browser_div = html.Div(
         className="browser-div", 
         children=[
             html.Div(
                 className="row", 
                 children=[
-                    create_div_landscapes(point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset, full_gene_ensIDs), 
-                    create_div_sidepanels(point_names)
-                ]
+                    html.Div(
+                        className="seven columns",
+                        children=[
+                            create_div_mainctrl(point_names, feat_names, more_colorvars, cancer_types, upload_asset, download_asset), 
+                            dcc.Graph(
+                                id='landscape-plot',
+                                config={'displaylogo': False, 'displayModeBar': True}, 
+                                style={ 'height': '100vh'}
+                            ), 
+                            create_div_select_dataset(app_config.params['dataset_options']), 
+                            div_landscape_select
+                        ]
+                    ), 
+                    html.Div(
+                        className='five columns', 
+                        children=[
+                            create_div_hm_panel(point_names), 
+                            div_go_panel
+                        ], 
+                        style=style_invis_dialog_box
+                    )]
             ), 
-            create_div_cosmetic_panel(), 
             html.Div([ html.Pre(id='test-select-data', style={ 'color': app_config.params['font_color'], 'overflowX': 'scroll' } ) ]),     # For testing purposes only!
             html.Div(
                 className='row', 
@@ -796,47 +573,7 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
                     'color': app_config.params['font_color'], 
                     'padding-bottom': '10px'
                 }
-            ), 
-            dcc.Store(
-                id='stored-pointsets', 
-                data={ '_current_selected_data': {} }    # Maintained as the short-term state of a point subset.
-            ), 
-            dcc.Store(
-                id='stored-landscape-selected', 
-                data={ }, 
-                modified_timestamp=0
-            ), 
-            dcc.Store(
-                id='stored-heatmap-selected', 
-                data={ }, 
-                modified_timestamp=0
-            ), 
-            dcc.Store(
-                id='stored-recently-highlighted', 
-                data={ }, 
-                modified_timestamp=0
-            ), 
-            dcc.Store(
-                id='time-recently-highlighted', 
-                data=0
-            ), 
-            dcc.Store(
-                id='tissue-or-cell-line', 
-                data=''
-            ), 
-            dcc.Store(
-                id='stored-panel-settings', 
-                data={
-                    'debug_panel': False
-                }, 
-                modified_timestamp=0
-            ), 
-            dcc.Store(
-                id='stored-goterm-lookup-results', 
-                data={ }, 
-                modified_timestamp=0
-            )
-        ],
+            )],
         style={ 
             'width': '100vw', 
             'max-width': 'none'
@@ -855,17 +592,6 @@ def create_div_mainapp(point_names, feat_names, cancer_types, upload_asset, down
                     )]
             ), 
             browser_div
-#             html.Div([
-#                 html.Video(src='assets/45sec_browser_video.mp4', autoPlay=True)
-#             ])
-#             dcc.Tabs(id="tabs", children=[
-#                 dcc.Tab(label='Tutorial', children=[
-#                     html.Div([
-#                         html.Video(src='assets/45sec_browser_video.mp4', autoPlay=True)
-#                     ])
-#                 ]),
-#                 dcc.Tab(label='Browser', children=[ browser_div ])
-#             ])
         ],
         style={ 
             'width': '100vw', 
