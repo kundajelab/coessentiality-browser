@@ -233,7 +233,7 @@ div_reviz_scatter = html.Div(
                     options=[
                         {'label': 'Visualize selection', 'value': 'viz'}
                     ],
-                    value=[], 
+                    values=[], 
                     style={
                         'textAlign': 'center', 
                         # 'width': '80%', 
