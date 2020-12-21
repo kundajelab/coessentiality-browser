@@ -278,7 +278,7 @@ def hm_col_plot(
             exprdata_celllines = geneview_celllines
             exprdata_genes = geneview_data[:, 0]
             # where_exprdata = np.isin(reordered_featnames, exprdata_celllines)
-            print(np.mean(where_exprdata), len(reordered_featnames), len(exprdata_celllines))
+            # print(np.mean(where_exprdata), len(reordered_featnames), len(exprdata_celllines))
             for i in range(len(reordered_featnames)):
                 newtext = "Cell line: {}".format(reordered_featnames[i])
                 if reordered_featnames[i] in exprdata_celllines:
