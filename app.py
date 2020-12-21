@@ -33,7 +33,7 @@ cancer_types = data_ess.columns.str.split('_').str[1:].str.join(' ').str.capital
 
 mutation_data = pd.read_csv(app_config.params['mutation_arr_path'], sep='\t').values
 # shRNA_df = pd.read_csv(app_config.params['shRNA_data_path'], sep=",", index_col=0)
-expr_data = pd.read_csv(app_config.params['expression_arr_path'], sep='\t').values
+expr_data = pd.read_csv(app_config.params['expression_arr_path'], sep='\t', header=0)
 
 # go_termIDs = np.load(app_config.params['gotermIDs_path'])
 # go_termnames = np.load(app_config.params['gotermnames_path'])
@@ -327,7 +327,7 @@ def update_geneview_options(geneview_dataset):
     if geneview_dataset == 'Mutation':
         gene_names = np.intersect1d(mutation_data[:,0], point_names)
     elif geneview_dataset == 'Expression':
-        gene_names = np.intersect1d(expr_data[:,0], point_names)
+        gene_names = np.intersect1d(expr_data.values[:,0], point_names)
     return [ {'value': gn, 'label': gn} for gn in gene_names ]
 
 
@@ -353,10 +353,12 @@ def update_main_heatmap(
     landscape_scatter_fig, 
     num_points_to_sample=10000
 ):
+    geneview_celllines = None
     if geneview_mode == 'Mutation':
         geneview_data = mutation_data
     elif geneview_mode == 'Expression':
-        geneview_data = expr_data
+        geneview_data = expr_data.values
+        geneview_celllines = expr_data.columns
     subset_store = make_store_points(landscape_data)
     col_names = feat_names
     point_names_to_use = point_names
@@ -382,6 +384,7 @@ def update_main_heatmap(
         geneview_mode=geneview_mode, 
         geneview_gene=geneview_gene, 
         geneview_data=geneview_data, 
+        geneview_celllines=geneview_celllines, 
         feat_group_names=cancer_types,
         feat_colordict=cell_line_colordict, 
         show_legend=False

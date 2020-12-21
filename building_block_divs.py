@@ -222,44 +222,6 @@ def create_div_select_dataset(dataset_options):
     )
 
 
-div_reviz_scatter = html.Div(
-    className='row', 
-    children=[
-        html.Div(
-            className='four columns', 
-            children=[ 
-                dcc.Checklist(
-                    id='reviz-status', 
-                    options=[
-                        {'label': 'Visualize selection', 'value': 'viz'}
-                    ],
-                    values=[], 
-                    style={
-                        'textAlign': 'center', 
-                        # 'width': '80%', 
-                        'color': app_config.params['font_color']
-                    }
-                )], 
-            style={'padding-top': '10px'}
-        ), 
-        html.Div(
-            className='eight columns', 
-            children=[
-                dcc.RadioItems(
-                    id='reviz-method-selection', 
-                    options=[ {'label': v, 'value': v} for v in ['dummy', 'UMAP'] ], 
-                    style=legend_font_macro, 
-                    labelStyle={
-                        'display': 'inline-block', 
-                        'margin-right': '5px'
-                    }, 
-                    value='dummy'
-                )], 
-            style={'padding-top': '10px'}
-        )]
-)
-
-
 div_landscape_select = html.Div(
     className='row', 
     children=[

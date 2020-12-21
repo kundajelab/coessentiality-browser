@@ -71,7 +71,6 @@ def traces_scatter(
     cumu_color_dict = {}
     # Check to see if color_var is continuous or discrete and plot points accordingly
     if isinstance(color_var, (list, tuple, np.ndarray)):     # Color_var is an array, not a col index.
-        print("op1")
         continuous_color_var = color_var
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
         colorbar_title = app_config.params['hm_colorvar_name']
@@ -113,7 +112,6 @@ def traces_scatter(
         })
     else:    # Categorical color scheme, one trace per color
         cnt = 0
-        print("op2")
         for idx, val in data_df.groupby(color_var):
             point_ids_this_trace = list(val['gene_names'])
             spoint_ndces_this_trace = np.where(np.isin(point_ids_this_trace, selected_point_ids))[0]
@@ -238,7 +236,8 @@ def hm_col_plot(
     col_clustIDs=None, 
     geneview_mode='Mutation', 
     geneview_gene=None, 
-    geneview_data=None
+    geneview_data=None, 
+    geneview_celllines=None
 ):
     if reordered_featnames is None:
         reordered_featnames = feat_colordict.keys()
@@ -276,12 +275,13 @@ def hm_col_plot(
                 'marker': { 'color': 'white' }, 'type': 'bar'
             }]
         elif geneview_mode == 'Expression':
-            exprdata_celllines = geneview_data[0, :]
+            exprdata_celllines = geneview_celllines
             exprdata_genes = geneview_data[:, 0]
-            where_exprdata = np.isin(reordered_featnames, exprdata_celllines)
+            # where_exprdata = np.isin(reordered_featnames, exprdata_celllines)
+            print(np.mean(where_exprdata), len(reordered_featnames), len(exprdata_celllines))
             for i in range(len(reordered_featnames)):
                 newtext = "Cell line: {}".format(reordered_featnames[i])
-                if where_exprdata[i]:
+                if reordered_featnames[i] in exprdata_celllines:
                     gvdata[i] = geneview_data[(exprdata_genes == geneview_gene), (exprdata_celllines == reordered_featnames[i])][0]
                     newtext = newtext + "<br>Expression: {}".format(gvdata[i])
                 pt_text.append(newtext)
@@ -350,6 +350,7 @@ def display_heatmap_cb(
     geneview_mode='Mutation', 
     geneview_gene=None, 
     geneview_data=None, 
+    geneview_celllines=None, 
     scatter_frac_domain=0.13, 
     scatter_frac_range=0.08, 
     show_legend=False
@@ -394,7 +395,8 @@ def display_heatmap_cb(
         col_clustIDs=col_clustIDs, 
         geneview_mode=geneview_mode, 
         geneview_gene=geneview_gene, 
-        geneview_data=geneview_data
+        geneview_data=geneview_data, 
+        geneview_celllines=geneview_celllines
     )
     pt_text = hm_hovertext(fit_data, hm_point_names, absc_labels)
     hm_trace = {
