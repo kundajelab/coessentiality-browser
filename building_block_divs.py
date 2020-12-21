@@ -117,7 +117,7 @@ def create_hm_layout(
                 'xref': 'paper', 'yref': 'paper'
             }
         ], 
-        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 30 }, 
+        'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 70 }, 
         'clickmode': 'event',  # https://github.com/plotly/plotly.js/pull/2944/
         'hovermode': 'closest', 
         'uirevision': 'Default dataset', 
@@ -470,18 +470,18 @@ def create_div_mainctrl(
                     ), 
                     html.Div(
                         # id='num-selected-counter', 
-                        className='five columns', 
+                        className='six columns', 
                         children=[
                             html.Button(
                                 id='hm-button', 
                                 children='Plot essentiality >>', 
-                                style=style_text_box, 
+                                style={ 'align-items': 'right', 'textAlign': 'center', 'width': '100%', 'color': app_config.params['font_color'] }, 
                                 n_clicks=0, 
                                 n_clicks_timestamp=0
                             )], 
-                        style={'padding-top': '0px'}
+                        style={'padding-left': '55px'}
                     )
-                ], style={}
+                ], style={'align-items': 'right', 'justify-content': 'center'}
             )
         ]
     )

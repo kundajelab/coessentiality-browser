@@ -305,13 +305,14 @@ def update_numselected_counter(
 # Link currently selected data to output of gene set selector, so it can be picked too.
 @app.callback(
     Output('goenrich-panel', 'figure'),
-    [Input('landscape-plot', 'selectedData'), 
+    [Input('hm-button', 'n_clicks'), 
      Input('select-topk-goterms', 'n_submit'),
      Input('select-topk-goterms', 'n_blur')],
-    [State('select-topk-goterms', 'value')]
+    [State('landscape-plot', 'selectedData'), 
+     State('select-topk-goterms', 'value')]
 )
 def display_goenrich_panel(
-    landscape_data, dummy1, dummy2, topk
+    button_numclicks, dummy1, dummy2, landscape_data, topk
 ):
     sel_hlight = make_store_points(landscape_data)
     selected_genes = [x for x in sel_hlight.keys()]

@@ -69,10 +69,14 @@ def traces_scatter(
     traces_list = []
     display_ndces = app_config.params['display_coordinates']
     cumu_color_dict = {}
+    
+    itime = time.time()
+    
     # Check to see if color_var is continuous or discrete and plot points accordingly
     if isinstance(color_var, (list, tuple, np.ndarray)):     # Color_var is an array, not a col index.
         continuous_color_var = color_var
         spoints = np.where(np.isin(point_names, selected_point_ids))[0]
+        # print(time.time() - itime, spoints, selected_point_ids)
         colorbar_title = app_config.params['hm_colorvar_name']
         pt_text = ["{}<br>{}<br>Essentiality score: {}".format(
             point_names[i], full_gene_names[i], round(continuous_color_var[i], 3)) for i in range(len(point_names))]
@@ -115,6 +119,7 @@ def traces_scatter(
         for idx, val in data_df.groupby(color_var):
             point_ids_this_trace = list(val['gene_names'])
             spoint_ndces_this_trace = np.where(np.isin(point_ids_this_trace, selected_point_ids))[0]
+            # print('idx', time.time() - itime)
             if idx not in cumu_color_dict:
                 trace_color = colorscale[cnt]
                 cnt += 1
@@ -255,10 +260,9 @@ def hm_col_plot(
         if geneview_mode == 'Mutation':
             mutdata = geneview_data[geneview_data[:, 0] == geneview_gene, :]
             mutdata_celllines = mutdata[:, 6]
-            where_mutations = np.isin(reordered_featnames, mutdata_celllines)
             for i in range(len(reordered_featnames)):
                 newtext = "Cell line: {}".format(reordered_featnames[i])
-                if where_mutations[i]:
+                if reordered_featnames[i] in mutdata_celllines:
                     query_results = mutdata[(mutdata_celllines == reordered_featnames[i]), :]
                     gvdata[i] = query_results.shape[0]
                     qwe = ["chr{}:{}    {}    Protein: {}    Codon: {}".format(
