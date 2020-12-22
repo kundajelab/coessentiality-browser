@@ -370,7 +370,9 @@ def update_main_heatmap(
     if len(pointIDs_to_display) > num_points_to_sample:
         pointIDs_to_display = np.random.choice(pointIDs_to_display, num_points_to_sample, replace=False)
     # If any points (genes) are selected but not in the heatmap, they won't be displayed.
+    itime = time.time()
     point_ndces_to_display = np.isin(point_names_to_use, pointIDs_to_display)
+    print('sdfs', time.time() - itime)
     subset_point_names = point_names_to_use[point_ndces_to_display]
     subset_raw_data = raw_data_to_use[point_ndces_to_display, :]
     if sp.sparse.issparse(raw_data_to_use):
@@ -399,6 +401,28 @@ def update_main_heatmap(
 )
 def update_stored_heatmap_data(hm_selection):
     return hm_selection#make_store_points(hm_selection)
+
+
+@app.callback(
+    Output('cell-line-lookup', 'value'), 
+    [Input('tissue-type-lookup', 'value')], 
+    [State('cell-line-lookup', 'value')]
+)
+def update_cellline_data(tissue_sel, cellline_sel):
+    if (tissue_sel is None) and (cellline_sel is not None):
+        return cellline_sel
+    else:
+        return None
+
+
+@app.callback(
+    Output('genes-selected', 'value'), 
+    [Input('landscape-plot', 'selectedData')]
+)
+def update_selected_genes(landscape_data):
+    subset_store = make_store_points(landscape_data)
+    return ', '.join(list(subset_store.keys()))
+
 
 
 """

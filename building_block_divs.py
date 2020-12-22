@@ -165,6 +165,7 @@ def create_scatter_layout(annotations):
         'margin': { 'l': 0, 'r': 0, 'b': 0, 't': 20}, 
         'clickmode': 'event',  # https://github.com/plotly/plotly.js/pull/2944/
         'hovermode': 'closest', 
+        'dragmode': 'select', 
         'uirevision': 'Default dataset',     # https://github.com/plotly/plotly.js/pull/3236
         'xaxis': {
             'automargin': True, 
@@ -407,7 +408,7 @@ def create_div_mainctrl(
                 className='row', 
                 children=[
                     html.Div(
-                        className='five columns', 
+                        className='four columns', 
                         children=[
                             html.Div(
                                 className='row', 
@@ -470,18 +471,30 @@ def create_div_mainctrl(
                     ), 
                     html.Div(
                         # id='num-selected-counter', 
-                        className='six columns', 
+                        className='four columns', 
+                        children=[
+                            dcc.Textarea(
+                                id='genes-selected',
+                                value='Selected genes...', 
+                                contentEditable=False, 
+                                style={'width': '100%', 'height': '55px'},
+                            )], 
+                        style={'padding-left': '5px', 'fontSize': 12, 'margin': 5}
+                    ), 
+                    html.Div(
+                        # id='num-selected-counter', 
+                        className='four columns', 
                         children=[
                             html.Button(
                                 id='hm-button', 
                                 children='Plot essentiality >>', 
-                                style={ 'align-items': 'right', 'textAlign': 'center', 'width': '100%', 'color': app_config.params['font_color'] }, 
+                                style={ 'align-items': 'right', 'textAlign': 'center', 'height': '55px', 'color': app_config.params['font_color'], 'margin': 5 }, 
                                 n_clicks=0, 
                                 n_clicks_timestamp=0
                             )], 
-                        style={'padding-left': '55px'}
+                        style={'padding-left': '55px', 'display': 'inline-block', 'textAlign': 'center'}
                     )
-                ], style={'align-items': 'right', 'justify-content': 'center'}
+                ], style={'align-items': 'right', 'justify-content': 'right'}
             )
         ]
     )
