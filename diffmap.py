@@ -4,7 +4,7 @@ Author: Akshay Balsubramani
 """
 import numpy as np, os, time, scipy as sp, sklearn
 from sklearn import preprocessing
-from sklearn.cluster.bicluster import SpectralCoclustering
+from sklearn.cluster import SpectralCoclustering
 from scipy.sparse import issparse
 
 """

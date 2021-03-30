@@ -13,7 +13,7 @@ if not _DEPLOY_LOCALLY:
     # data_pfx = '/srv/www_coessentiality/coessentiality-browser/'
     data_pfx = '/var/www/coessentiality-browser/'
 else:
-    data_pfx = '/Users/akshay/github/coessentiality-browser/'
+    data_pfx = '/var/www/coessentiality-browser/'
 
 param_mixes = [
     "{}data/vizdf{}.csv".format(data_pfx, sffix) for sffix in ["_GLS01_CO99", "_GLS1_CO0", "_GLS02_CO49_RC49"]
