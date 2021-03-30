@@ -492,7 +492,7 @@ def create_div_mainctrl(
                                 n_clicks=0, 
                                 n_clicks_timestamp=0
                             )], 
-                        style={'padding-left': '55px', 'display': 'inline-block', 'textAlign': 'center'}
+                        style={ 'display': 'inline-block', 'textAlign': 'center'}
                     )
                 ], style={'align-items': 'right', 'justify-content': 'right'}
             )
