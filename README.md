@@ -5,6 +5,11 @@ From the paper:
 
 
 ## Installation/dependencies
+
+```
+sudo apt-get install libblas-dev liblapack-dev gfortran
+```
+
 In a conda environment, run:
 `pip install -r requirements.txt`.
 
